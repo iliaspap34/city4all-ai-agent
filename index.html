@@ -1,99 +1,172 @@
 <!DOCTYPE html>
+
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>City4All AI</title>
+
+  <!-- ArcGIS Maps SDK -->
+
+  <link
+    rel="stylesheet"
+    href="https://js.arcgis.com/4.31/esri/themes/light/main.css"
+  />
+
+  <script src="https://js.arcgis.com/4.31/"></script>
 
   <style>
     * {
       box-sizing: border-box;
     }
 
+    html,
     body {
       margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
       font-family: Arial, Helvetica, sans-serif;
-      background: #f4f7fb;
+      background: #f5f7fa;
       color: #172033;
+      overflow: hidden;
     }
 
-    header {
+    /* ==============================
+       APP
+    ============================== */
+
+    .app {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ==============================
+       HEADER
+    ============================== */
+
+    .header {
+      height: 64px;
       background: #ffffff;
-      border-bottom: 1px solid #e3e8ef;
-      padding: 18px 24px;
+      border-bottom: 1px solid #dfe4ea;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      position: sticky;
-      top: 0;
+      padding: 0 22px;
+      flex-shrink: 0;
       z-index: 10;
     }
 
     .logo {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 700;
+      letter-spacing: -0.4px;
     }
 
     .logo span {
       color: #1976d2;
     }
 
-    .status {
-      font-size: 13px;
-      color: #16803c;
+    .header-right {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      color: #16803c;
+      font-size: 13px;
+      font-weight: 600;
     }
 
     .status-dot {
       width: 9px;
       height: 9px;
-      background: #20a464;
       border-radius: 50%;
-      display: inline-block;
+      background: #20a464;
     }
 
-    main {
-      width: min(1100px, 94%);
-      margin: 35px auto;
+    /* ==============================
+       MAIN
+    ============================== */
+
+    .main {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(380px, 0.65fr);
+      gap: 0;
     }
 
-    .hero {
-      text-align: center;
-      margin-bottom: 30px;
+    /* ==============================
+       MAP
+    ============================== */
+
+    .map-panel {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      background: #e9eef4;
+      border-right: 1px solid #dfe4ea;
     }
 
-    .hero h1 {
-      margin: 0 0 10px;
-      font-size: clamp(30px, 5vw, 48px);
+    #map {
+      width: 100%;
+      height: 100%;
     }
 
-    .hero p {
-      margin: 0 auto;
-      max-width: 700px;
-      color: #667085;
-      font-size: 17px;
-      line-height: 1.6;
+    .map-label {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 5;
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 10px;
+      padding: 9px 13px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+      font-size: 14px;
+      font-weight: 600;
     }
 
-    .chat-card {
+    /* ==============================
+       ASSISTANT
+    ============================== */
+
+    .assistant-panel {
+      min-width: 0;
+      min-height: 0;
       background: #ffffff;
-      border-radius: 18px;
-      box-shadow: 0 8px 35px rgba(0, 0, 0, 0.08);
-      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
+
+    .assistant-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      flex-shrink: 0;
+    }
+
+    .assistant-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .assistant-subtitle {
+      color: #667085;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    /* ==============================
+       MESSAGES
+    ============================== */
 
     .messages {
-      min-height: 420px;
-      max-height: 650px;
+      flex: 1;
+      min-height: 0;
       overflow-y: auto;
-      padding: 24px;
+      padding: 20px;
     }
 
     .message {
@@ -106,15 +179,17 @@
     }
 
     .bubble {
-      max-width: 78%;
-      padding: 13px 16px;
-      border-radius: 16px;
+      max-width: 88%;
+      padding: 12px 14px;
+      border-radius: 14px;
       line-height: 1.55;
+      font-size: 14px;
       white-space: pre-wrap;
     }
 
     .message.ai .bubble {
-      background: #eef5ff;
+      background: #f0f5fb;
+      color: #172033;
       border-bottom-left-radius: 5px;
     }
 
@@ -124,48 +199,105 @@
       border-bottom-right-radius: 5px;
     }
 
+    .welcome {
+      color: #344054;
+    }
+
     .typing {
       color: #667085;
       font-style: italic;
     }
 
+    /* ==============================
+       QUICK QUESTIONS
+    ============================== */
+
+    .quick-actions {
+      padding: 0 20px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .quick-button {
+      border: 1px solid #d9e2ec;
+      background: #ffffff;
+      color: #344054;
+      padding: 8px 10px;
+      border-radius: 18px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .quick-button:hover {
+      background: #f2f6fa;
+    }
+
+    /* ==============================
+       INPUT
+    ============================== */
+
     .input-area {
       border-top: 1px solid #e5e7eb;
-      padding: 16px;
+      padding: 12px;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       background: #ffffff;
+      flex-shrink: 0;
     }
 
     textarea {
       flex: 1;
-      min-height: 52px;
-      max-height: 150px;
+      min-width: 0;
+      min-height: 48px;
+      max-height: 130px;
       resize: vertical;
       border: 1px solid #d0d5dd;
-      border-radius: 12px;
-      padding: 14px;
-      font-size: 15px;
+      border-radius: 11px;
+      padding: 12px;
+      font-size: 14px;
       font-family: inherit;
       outline: none;
     }
 
     textarea:focus {
       border-color: #1976d2;
+      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.08);
     }
 
     button {
+      font-family: inherit;
+    }
+
+    .voice-button,
+    .send-button {
       border: none;
       cursor: pointer;
-      border-radius: 12px;
+      border-radius: 11px;
       font-weight: 600;
-      transition: 0.2s;
+    }
+
+    .voice-button {
+      width: 48px;
+      background: #eef2f7;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .voice-button:hover {
+      background: #e1e7ef;
+    }
+
+    .voice-button.active {
+      background: #d93025;
+      color: #ffffff;
     }
 
     .send-button {
+      padding: 0 17px;
       background: #1976d2;
-      color: white;
-      padding: 0 22px;
+      color: #ffffff;
+      flex-shrink: 0;
     }
 
     .send-button:hover {
@@ -177,200 +309,345 @@
       cursor: not-allowed;
     }
 
-    .voice-button {
-      width: 52px;
-      background: #eef2f7;
-      font-size: 20px;
-    }
-
-    .voice-button:hover {
-      background: #dfe6ef;
-    }
-
-    .voice-button.active {
-      background: #d93025;
-      color: white;
-    }
+    /* ==============================
+       RESULTS
+    ============================== */
 
     .results {
-      margin-top: 25px;
-      display: grid;
-      gap: 14px;
+      border-top: 1px solid #e5e7eb;
+      max-height: 260px;
+      overflow-y: auto;
+      padding: 12px;
+      background: #f8fafc;
+      display: none;
+    }
+
+    .results.has-results {
+      display: block;
     }
 
     .result-card {
-      background: white;
-      border: 1px solid #e3e8ef;
-      border-radius: 14px;
-      padding: 18px;
+      background: #ffffff;
+      border: 1px solid #e1e7ef;
+      border-radius: 11px;
+      padding: 13px;
+      margin-bottom: 9px;
+    }
+
+    .result-card:last-child {
+      margin-bottom: 0;
     }
 
     .result-card h3 {
-      margin: 0 0 8px;
-      font-size: 18px;
+      margin: 0 0 5px;
+      font-size: 15px;
     }
 
     .result-type {
       color: #667085;
-      font-size: 14px;
-      margin-bottom: 12px;
+      font-size: 12px;
+      margin-bottom: 8px;
     }
 
     .info-row {
-      margin: 7px 0;
-      line-height: 1.5;
+      margin: 5px 0;
+      line-height: 1.45;
+      font-size: 13px;
     }
 
     .accessibility {
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .route-button {
       display: inline-block;
-      margin-top: 13px;
-      padding: 10px 14px;
+      margin-top: 8px;
+      padding: 8px 10px;
       background: #1976d2;
-      color: white;
+      color: #ffffff;
       text-decoration: none;
-      border-radius: 9px;
-      font-size: 14px;
+      border-radius: 8px;
+      font-size: 12px;
       font-weight: 600;
     }
 
-    .route-button:hover {
-      background: #125ea7;
-    }
+    /* ==============================
+       MOBILE
+    ============================== */
 
-    .error {
-      color: #b42318;
-      background: #fef3f2;
-      border: 1px solid #fecdca;
-      padding: 12px;
-      border-radius: 10px;
-    }
-
-    .welcome {
-      color: #667085;
-    }
-
-    @media (max-width: 700px) {
-      header {
-        padding: 15px;
+    @media (max-width: 850px) {
+      html,
+      body {
+        overflow: auto;
       }
 
-      main {
-        width: 96%;
-        margin: 20px auto;
+      .app {
+        min-height: 100vh;
+        height: auto;
+      }
+
+      .main {
+        grid-template-columns: 1fr;
+        grid-template-rows: 48vh auto;
+      }
+
+      .map-panel {
+        border-right: none;
+        border-bottom: 1px solid #dfe4ea;
+      }
+
+      .assistant-panel {
+        min-height: 52vh;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .header {
+        padding: 0 14px;
+      }
+
+      .logo {
+        font-size: 19px;
+      }
+
+      .assistant-header {
+        padding: 14px;
       }
 
       .messages {
-        min-height: 380px;
-        padding: 16px;
+        padding: 14px;
       }
 
-      .bubble {
-        max-width: 90%;
-      }
-
-      .input-area {
-        padding: 10px;
-      }
-
-      .send-button {
-        padding: 0 15px;
+      .quick-actions {
+        padding: 0 14px 12px;
       }
     }
   </style>
+
 </head>
 
 <body>
 
-  <header>
-    <div class="logo">
-      City4<span>All</span> AI
-    </div>
+<div class="app">
 
-    <div class="status">
-      <span class="status-dot"></span>
-      AI Online
-    </div>
+  <!-- HEADER -->
+
+  <header class="header">
+
+```
+<div class="logo">
+  City4<span>All</span> AI
+</div>
+
+<div class="header-right">
+  <span class="status-dot"></span>
+  AI Online
+</div>
+```
+
   </header>
 
-  <main>
+  <!-- MAIN -->
 
-    <section class="hero">
-      <h1>City4All AI</h1>
+  <main class="main">
 
-      <p>
-        Ο έξυπνος βοηθός προσβασιμότητας του City4All.
-        Ρώτησέ με για προσβάσιμα σημεία,
-        χαρακτηριστικά προσβασιμότητας και διαδρομές.
-      </p>
-    </section>
+```
+<!-- MAP -->
 
-    <section class="chat-card">
+<section class="map-panel">
 
-      <div
-        id="messages"
-        class="messages"
-      >
+  <div
+    id="map"
+    aria-label="City4All Web Map"
+  ></div>
 
-        <div class="message ai">
-          <div class="bubble welcome">
-            👋 Γεια σου! Είμαι ο AI Assistant του City4All.
-            <br><br>
-            Μπορώ να σε βοηθήσω να βρεις σημεία
-            και πληροφορίες προσβασιμότητας.
-            <br><br>
-            Για παράδειγμα:
-            <br>
-            «Βρες μου καφετέριες με ράμπα στην Καλλιθέα»
-            <br><br>
-            ή
-            <br>
-            «Ποια σημεία έχουν τουαλέτα ΑμεΑ;»
-          </div>
-        </div>
+  <div class="map-label">
+    🗺️ City4All Map
+  </div>
+
+</section>
+
+
+<!-- AI ASSISTANT -->
+
+<section class="assistant-panel">
+
+  <div class="assistant-header">
+
+    <div class="assistant-title">
+      City4All Assistant
+    </div>
+
+    <div class="assistant-subtitle">
+      Ρώτησέ με για προσβάσιμα σημεία,
+      χαρακτηριστικά προσβασιμότητας
+      και διαδρομές.
+    </div>
+
+  </div>
+
+
+  <!-- CHAT -->
+
+  <div
+    id="messages"
+    class="messages"
+  >
+
+    <div class="message ai">
+
+      <div class="bubble welcome">
+
+        👋 Γεια σου! Είμαι ο City4All AI Assistant.
+
+        <br><br>
+
+        Μπορούμε να συζητήσουμε για την
+        προσβασιμότητα στην πόλη σου και να
+        βρούμε πραγματικά σημεία από το City4All.
+
+        <br><br>
+
+        Μπορείς να με ρωτήσεις κάτι όπως:
+
+        <br><br>
+
+        «Βρες μου καφετέριες με ράμπα
+        στην Καλλιθέα»
+
+        <br><br>
+
+        ή απλώς να ξεκινήσεις μια συζήτηση
+        για την προσβασιμότητα.
 
       </div>
 
-      <div class="input-area">
+    </div>
 
-        <button
-          id="voiceButton"
-          class="voice-button"
-          type="button"
-          title="Φωνητική εισαγωγή"
-        >
-          🎤
-        </button>
+  </div>
 
-        <textarea
-          id="messageInput"
-          placeholder="Γράψε την ερώτησή σου..."
-          aria-label="Μήνυμα"
-        ></textarea>
 
-        <button
-          id="sendButton"
-          class="send-button"
-          type="button"
-        >
-          Αποστολή
-        </button>
+  <!-- QUICK ACTIONS -->
 
-      </div>
+  <div class="quick-actions">
 
-    </section>
+    <button
+      class="quick-button"
+      type="button"
+      data-question="Βρες μου προσβάσιμα σημεία κοντά μου."
+    >
+      📍 Προσβάσιμα σημεία
+    </button>
 
-    <section
-      id="results"
-      class="results"
-    ></section>
+    <button
+      class="quick-button"
+      type="button"
+      data-question="Ποια σημεία έχουν ράμπα;"
+    >
+      ♿ Σημεία με ράμπα
+    </button>
+
+    <button
+      class="quick-button"
+      type="button"
+      data-question="Ποια σημεία έχουν προσβάσιμο WC;"
+    >
+      🚻 Προσβάσιμο WC
+    </button>
+
+    <button
+      class="quick-button"
+      type="button"
+      data-question="Θέλω να μάθω περισσότερα για την προσβασιμότητα."
+    >
+      💡 Μάθε για την προσβασιμότητα
+    </button>
+
+  </div>
+
+
+  <!-- RESULTS -->
+
+  <section
+    id="results"
+    class="results"
+  ></section>
+
+
+  <!-- INPUT -->
+
+  <div class="input-area">
+
+    <button
+      id="voiceButton"
+      class="voice-button"
+      type="button"
+      title="Φωνητική εισαγωγή"
+    >
+      🎤
+    </button>
+
+    <textarea
+      id="messageInput"
+      placeholder="Ρώτησε τον City4All Assistant..."
+      aria-label="Μήνυμα"
+    ></textarea>
+
+    <button
+      id="sendButton"
+      class="send-button"
+      type="button"
+    >
+      Αποστολή
+    </button>
+
+  </div>
+
+</section>
+```
 
   </main>
 
-  <script src="app.js"></script>
+</div>
+
+<script src="app.js"></script>
+
+<!-- MAP INITIALIZATION -->
+
+<script>
+  require(
+    [
+      "esri/WebMap",
+      "esri/views/MapView"
+    ],
+    function (
+      WebMap,
+      MapView
+    ) {
+
+      /*
+       * ΠΡΟΣΟΧΗ:
+       * Εδώ θα βάλουμε το πραγματικό
+       * City4All Web Map ID στο επόμενο βήμα.
+       */
+
+      const webmap = new WebMap({
+        basemap: "streets-navigation-vector"
+      });
+
+      const view = new MapView({
+        container: "map",
+        map: webmap,
+        center: [
+          23.7275,
+          37.9838
+        ],
+        zoom: 11
+      });
+
+    }
+  );
+</script>
 
 </body>
 </html>
