@@ -37,10 +37,6 @@
       flex-direction: column;
     }
 
-    /* =========================
-       HEADER
-    ========================= */
-
     .header {
       height: 68px;
       background: #ffffff;
@@ -107,20 +103,12 @@
       background: #20a464;
     }
 
-    /* =========================
-       MAIN
-    ========================= */
-
     .main {
       flex: 1;
       min-height: 0;
       display: grid;
       grid-template-columns: minmax(0, 1.55fr) minmax(390px, 0.65fr);
     }
-
-    /* =========================
-       MAP
-    ========================= */
 
     .map-panel {
       position: relative;
@@ -139,18 +127,14 @@
       top: 18px;
       left: 18px;
       z-index: 5;
-
       display: flex;
       align-items: center;
       gap: 8px;
-
       background: rgba(255, 255, 255, 0.96);
       border: 1px solid rgba(0, 0, 0, 0.06);
       border-radius: 12px;
       padding: 10px 14px;
-
       box-shadow: 0 3px 15px rgba(0, 0, 0, 0.12);
-
       font-size: 13px;
       font-weight: 700;
     }
@@ -160,29 +144,20 @@
       left: 18px;
       bottom: 18px;
       z-index: 5;
-
       background: rgba(255, 255, 255, 0.94);
       border-radius: 11px;
       padding: 9px 12px;
-
       color: #667085;
       font-size: 11px;
-
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
     }
-
-    /* =========================
-       ASSISTANT
-    ========================= */
 
     .assistant-panel {
       min-width: 0;
       min-height: 0;
       background: #ffffff;
-
       display: flex;
       flex-direction: column;
-
       border-left: 1px solid #e5e7eb;
     }
 
@@ -204,11 +179,9 @@
       border-radius: 12px;
       background: #eaf3ff;
       color: #1976d2;
-
       display: flex;
       align-items: center;
       justify-content: center;
-
       font-size: 20px;
     }
 
@@ -223,10 +196,6 @@
       line-height: 1.45;
       margin-top: 2px;
     }
-
-    /* =========================
-       MESSAGES
-    ========================= */
 
     .messages {
       flex: 1;
@@ -267,10 +236,6 @@
       border-bottom-right-radius: 5px;
     }
 
-    /* =========================
-       QUICK ACTIONS
-    ========================= */
-
     .quick-actions {
       padding: 0 18px 13px;
       display: flex;
@@ -283,13 +248,10 @@
       border: 1px solid #dfe5ec;
       background: #ffffff;
       color: #344054;
-
       padding: 8px 10px;
       border-radius: 20px;
-
       font-size: 11px;
       font-weight: 600;
-
       cursor: pointer;
       transition: 0.15s;
     }
@@ -304,19 +266,12 @@
       transform: scale(0.97);
     }
 
-    /* =========================
-       RESULTS
-    ========================= */
-
     .results {
       border-top: 1px solid #e5e7eb;
-
       max-height: 250px;
       overflow-y: auto;
-
       padding: 11px;
       background: #f7f9fc;
-
       display: none;
       flex-shrink: 0;
     }
@@ -329,7 +284,6 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-
       margin-bottom: 9px;
       padding: 0 2px;
     }
@@ -388,13 +342,10 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-
       padding: 7px 9px;
-
       border-radius: 8px;
       font-size: 11px;
       font-weight: 700;
-
       text-decoration: none;
       cursor: pointer;
     }
@@ -404,23 +355,19 @@
       color: #ffffff;
     }
 
+    .route-button:hover {
+      background: #125ea7;
+    }
+
     .map-button {
       border: 1px solid #d7dee8;
       background: #ffffff;
       color: #344054;
     }
 
-    .route-button:hover {
-      background: #125ea7;
-    }
-
     .map-button:hover {
       background: #f5f7fa;
     }
-
-    /* =========================
-       INPUT
-    ========================= */
 
     .input-area {
       border-top: 1px solid #e5e7eb;
@@ -434,21 +381,15 @@
     textarea {
       flex: 1;
       min-width: 0;
-
       height: 45px;
       min-height: 45px;
       max-height: 110px;
-
       resize: none;
-
       border: 1px solid #d0d5dd;
       border-radius: 11px;
-
       padding: 12px;
-
       font-size: 13px;
       font-family: inherit;
-
       outline: none;
     }
 
@@ -498,10 +439,6 @@
       opacity: 0.55;
       cursor: not-allowed;
     }
-
-    /* =========================
-       MOBILE
-    ========================= */
 
     @media (max-width: 850px) {
       html,
@@ -606,7 +543,6 @@
 
   </header>
 
-
   <main class="main">
 
     <section class="map-panel">
@@ -625,7 +561,6 @@
       </div>
 
     </section>
-
 
     <section class="assistant-panel">
 
@@ -653,7 +588,6 @@
         </div>
 
       </div>
-
 
       <div
         id="messages"
@@ -684,7 +618,6 @@
         </div>
 
       </div>
-
 
       <div class="quick-actions">
 
@@ -722,12 +655,10 @@
 
       </div>
 
-
       <section
         id="results"
         class="results"
       ></section>
-
 
       <div class="input-area">
 
@@ -762,9 +693,7 @@
 
 </div>
 
-
 <script src="app.js"></script>
-
 
 <script>
   require(
@@ -797,8 +726,7 @@
         zoom: 13
       });
 
-      const resultsLayer =
-        new GraphicsLayer();
+      const resultsLayer = new GraphicsLayer();
 
       webmap.add(resultsLayer);
 
@@ -812,6 +740,17 @@
 
         console.log(
           "City4All map loaded."
+        );
+
+        window.dispatchEvent(
+          new Event("city4all-map-ready")
+        );
+
+      }).catch(function (error) {
+
+        console.error(
+          "City4All map loading error:",
+          error
         );
 
       });
