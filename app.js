@@ -1,4 +1,4 @@
-```javascript
+javascript
 const API_URL =
   "https://city4allfinalai.ilias-pap-net.workers.dev";
 
