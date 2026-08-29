@@ -15,16 +15,11 @@ SEND MESSAGE
 ========================================= */
 
 async function sendMessage() {
-
-if (isLoading) {
-return;
-}
+if (isLoading) return;
 
 const message = inputEl.value.trim();
 
-if (!message) {
-return;
-}
+if (!message) return;
 
 addMessage(message, "user");
 
@@ -33,49 +28,48 @@ autoResizeTextarea();
 
 setLoading(true);
 
-const typingId = addMessage(
+const typingMessage = addMessage(
 "Το City4All AI ψάχνει...",
 "ai",
 true
 );
 
 try {
+const response = await fetch(`${API_URL}/chat`, {
+method: "POST",
 
 ```
-/*
- * Στέλνουμε στον Worker:
- *
- * 1. Το νέο μήνυμα
- * 2. Όλο το προηγούμενο conversation
- * 3. Τα προηγούμενα αποτελέσματα
- *
- * Έτσι ο Worker μπορεί να καταλάβει
- * follow-up ερωτήσεις.
- */
+  headers: {
+    "Content-Type": "application/json"
+  },
 
-const response = await fetch(
-  `${API_URL}/chat`,
-  {
-    method: "POST",
+  body: JSON.stringify({
+    message: message,
 
-    headers: {
-      "Content-Type": "application/json"
-    },
+    conversation: conversation,
 
-    body: JSON.stringify({
-      message,
-      conversation,
-      previousFeatures: lastFeatures
-    })
-  }
-);
+    /*
+     * ΠΟΛΥ ΣΗΜΑΝΤΙΚΟ:
+     * Στέλνουμε τα προηγούμενα πραγματικά
+     * αποτελέσματα στον Worker.
+     */
+    previousFeatures: lastFeatures
+  })
+});
 
-const data = await response.json();
+let data;
 
-removeMessage(typingId);
+try {
+  data = await response.json();
+} catch {
+  throw new Error(
+    "Ο Worker επέστρεψε μη έγκυρη απάντηση."
+  );
+}
+
+removeMessage(typingMessage);
 
 if (!response.ok || !data.success) {
-
   throw new Error(
     data.error ||
     "Παρουσιάστηκε σφάλμα."
@@ -84,7 +78,7 @@ if (!response.ok || !data.success) {
 
 
 /* =========================================
-   SAVE CONVERSATION
+   UPDATE CONVERSATION
 ========================================= */
 
 conversation.push({
@@ -97,21 +91,17 @@ conversation.push({
   content: data.answer || ""
 });
 
-
 /*
- * Κρατάμε αρκετό ιστορικό ώστε να
- * λειτουργούν τα follow-ups.
+ * Κρατάμε αρκετό context ώστε το AI
+ * να μπορεί να καταλάβει follow-ups.
  */
-
 if (conversation.length > 20) {
-
-  conversation =
-    conversation.slice(-20);
+  conversation = conversation.slice(-20);
 }
 
 
 /* =========================================
-   AI ANSWER
+   DISPLAY AI ANSWER
 ========================================= */
 
 addMessage(
@@ -122,74 +112,27 @@ addMessage(
 
 
 /* =========================================
-   SAVE RESULTS
+   UPDATE RESULTS
 ========================================= */
 
-/*
- * Αν ο Worker επέστρεψε νέα features,
- * τα αποθηκεύουμε.
- *
- * Αν δεν επέστρεψε features, ΔΕΝ
- * διαγράφουμε τα προηγούμενα.
- *
- * Αυτό είναι σημαντικό για follow-ups
- * όπως:
- *
- * "Ποιο από αυτά έχει WC;"
- */
+lastFeatures = Array.isArray(data.features)
+  ? data.features
+  : [];
 
-if (Array.isArray(data.features)) {
+displayResults(lastFeatures);
 
-  if (data.features.length > 0) {
-
-    lastFeatures = data.features;
-
-  }
-
-}
-
-
-/* =========================================
-   DISPLAY RESULTS
-========================================= */
-
-if (lastFeatures.length > 0) {
-
-  displayResults(
-    lastFeatures
-  );
-
-}
-else {
-
-  displayResults([]);
-
-}
-
-
-/* =========================================
-   SHOW RESULTS ON MAP
-========================================= */
-
-if (lastFeatures.length > 0) {
-
-  showResultsOnMap(
-    lastFeatures
-  );
-
-}
+showResultsOnMap(lastFeatures);
 ```
 
-}
-catch (error) {
+} catch (error) {
 
 ```
 console.error(
-  "Chat error:",
+  "City4All Chat Error:",
   error
 );
 
-removeMessage(typingId);
+removeMessage(typingMessage);
 
 addMessage(
   "❌ Δεν μπόρεσα να συνδεθώ με το City4All AI. " +
@@ -198,8 +141,7 @@ addMessage(
 );
 ```
 
-}
-finally {
+} finally {
 
 ```
 setLoading(false);
@@ -225,30 +167,24 @@ wrapper.className =
 `message ${role}`;
 
 if (temporary) {
-
-```
-wrapper.dataset.temporary =
-  "true";
-```
-
+wrapper.dataset.temporary = "true";
 }
 
 const bubble =
 document.createElement("div");
 
-bubble.className =
-"bubble";
+bubble.className = "bubble";
 
-bubble.textContent =
-text;
+/*
 
-wrapper.appendChild(
-bubble
-);
+* textContent ώστε το AI να μην μπορεί
+* να εισάγει HTML μέσα στο chat.
+  */
+  bubble.textContent = text;
 
-messagesEl.appendChild(
-wrapper
-);
+wrapper.appendChild(bubble);
+
+messagesEl.appendChild(wrapper);
 
 messagesEl.scrollTop =
 messagesEl.scrollHeight;
@@ -260,21 +196,13 @@ return wrapper;
 REMOVE MESSAGE
 ========================================= */
 
-function removeMessage(
-element
-) {
+function removeMessage(element) {
 
 if (
 element &&
 element.parentNode
 ) {
-
-```
-element.parentNode.removeChild(
-  element
-);
-```
-
+element.parentNode.removeChild(element);
 }
 }
 
@@ -282,63 +210,27 @@ element.parentNode.removeChild(
 LOADING
 ========================================= */
 
-function setLoading(
+function setLoading(loading) {
+
+isLoading = loading;
+
+sendButton.disabled = loading;
+inputEl.disabled = loading;
+voiceButton.disabled = loading;
+
+sendButton.textContent =
 loading
-) {
-
-isLoading =
-loading;
-
-sendButton.disabled =
-loading;
-
-inputEl.disabled =
-loading;
-
-/*
-
-* Δεν απενεργοποιούμε μόνιμα
-* το voice button όταν δεν γίνεται
-* request.
-  */
-
-if (voiceButton) {
-
-```
-voiceButton.disabled =
-  loading;
-```
-
-}
-
-if (loading) {
-
-```
-sendButton.textContent =
-  "Αναζήτηση...";
-```
-
-}
-else {
-
-```
-sendButton.textContent =
-  "Αποστολή";
-```
-
-}
+? "Αναζήτηση..."
+: "Αποστολή";
 }
 
 /* =========================================
 DISPLAY RESULTS
 ========================================= */
 
-function displayResults(
-features
-) {
+function displayResults(features) {
 
-resultsEl.innerHTML =
-"";
+resultsEl.innerHTML = "";
 
 if (
 !Array.isArray(features) ||
@@ -360,13 +252,11 @@ resultsEl.classList.add(
 );
 
 /* =========================================
-RESULTS HEADER
+HEADER
 ========================================= */
 
 const header =
-document.createElement(
-"div"
-);
+document.createElement("div");
 
 header.className =
 "results-header";
@@ -376,22 +266,16 @@ header.innerHTML = ` <div class="results-title">
 
 ```
 <div class="results-count">
-  ${features.length} ${
-    features.length === 1
-      ? "σημείο"
-      : "σημεία"
-  }
+  ${features.length} σημεία
 </div>
 ```
 
 `;
 
-resultsEl.appendChild(
-header
-);
+resultsEl.appendChild(header);
 
 /* =========================================
-RESULT CARDS
+CARDS
 ========================================= */
 
 features.forEach(
@@ -399,9 +283,7 @@ features.forEach(
 
 ```
   const card =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   card.className =
     "result-card";
@@ -447,7 +329,6 @@ features.forEach(
     <h3>
       ${title}
     </h3>
-
 
     <div class="result-type">
       ${type}
@@ -501,6 +382,7 @@ features.forEach(
 
     <div class="result-actions">
 
+
       ${
         feature.googleMapsUrl
           ? `
@@ -526,6 +408,7 @@ features.forEach(
       >
         📍 Χάρτης
       </button>
+
 
     </div>
 
@@ -553,9 +436,7 @@ features.forEach(
   }
 
 
-  resultsEl.appendChild(
-    card
-  );
+  resultsEl.appendChild(card);
 
 }
 ```
@@ -567,30 +448,30 @@ features.forEach(
 SHOW RESULTS ON MAP
 ========================================= */
 
-function showResultsOnMap(
-features
-) {
+function showResultsOnMap(features) {
 
 if (
 !window.city4allMap ||
 !window.city4allMap.view ||
 !window.city4allMap.resultsLayer
 ) {
-
-```
 return;
-```
-
 }
 
 const {
 view,
 resultsLayer,
 Graphic
-} =
-window.city4allMap;
+} = window.city4allMap;
 
 resultsLayer.removeAll();
+
+if (
+!Array.isArray(features) ||
+features.length === 0
+) {
+return;
+}
 
 const graphics = [];
 
@@ -598,22 +479,12 @@ features.forEach(
 feature => {
 
 ```
-  const latitude =
-    Number(
-      feature.latitude
-    );
-
-  const longitude =
-    Number(
-      feature.longitude
-    );
-
-
   if (
-    !Number.isFinite(latitude) ||
-    !Number.isFinite(longitude)
+    typeof feature.latitude !==
+      "number" ||
+    typeof feature.longitude !==
+      "number"
   ) {
-
     return;
   }
 
@@ -622,30 +493,26 @@ feature => {
 
     type: "point",
 
-    longitude,
+    longitude:
+      feature.longitude,
 
-    latitude
+    latitude:
+      feature.latitude
 
   };
 
 
   const symbol = {
 
-    type:
-      "simple-marker",
+    type: "simple-marker",
 
     size: 13,
 
-    color:
-      "#1976d2",
+    color: "#1976d2",
 
     outline: {
-
-      color:
-        "#ffffff",
-
+      color: "#ffffff",
       width: 2
-
     }
 
   };
@@ -654,8 +521,10 @@ feature => {
   const popupTemplate = {
 
     title:
-      feature.name ||
-      "City4All σημείο",
+      escapeHTML(
+        feature.name ||
+        "City4All σημείο"
+      ),
 
     content: `
 
@@ -677,24 +546,6 @@ feature => {
         feature.accessibility || ""
       )}
 
-      ${
-        feature.comments
-          ? `
-
-            <br><br>
-
-            <strong>
-              Παρατηρήσεις:
-            </strong>
-
-            ${escapeHTML(
-              feature.comments
-            )}
-
-          `
-          : ""
-      }
-
     `
 
   };
@@ -704,13 +555,11 @@ feature => {
 
     new Graphic({
 
-      geometry:
-        point,
+      geometry: point,
 
       symbol,
 
-      attributes:
-        feature,
+      attributes: feature,
 
       popupTemplate
 
@@ -726,11 +575,7 @@ feature => {
 if (
 graphics.length === 0
 ) {
-
-```
 return;
-```
-
 }
 
 resultsLayer.addMany(
@@ -744,28 +589,18 @@ graphic.geometry
 );
 
 view.goTo(
+{
+target: geometries,
 
 ```
-{
-
-  target:
-    geometries,
-
-  padding:
-    70
-
+  padding: 70
 },
-
 {
-
-  duration:
-    900
-
+  duration: 900
 }
 ```
 
-)
-.catch(
+).catch(
 error => {
 
 ```
@@ -792,63 +627,42 @@ if (
 !window.city4allMap ||
 !window.city4allMap.view
 ) {
-
-```
 return;
-```
-
 }
 
-const latitude =
-Number(
-feature.latitude
-);
-
-const longitude =
-Number(
-feature.longitude
-);
-
 if (
-!Number.isFinite(latitude) ||
-!Number.isFinite(longitude)
+typeof feature.latitude !==
+"number" ||
+typeof feature.longitude !==
+"number"
 ) {
-
-```
 return;
-```
-
 }
 
 const {
 view
-} =
-window.city4allMap;
+} = window.city4allMap;
 
 view.goTo(
+{
+center: [
 
 ```
-{
+    feature.longitude,
 
-  center: [
-    longitude,
-    latitude
+    feature.latitude
+
   ],
 
   zoom: 17
-
 },
 
 {
-
-  duration:
-    700
-
+  duration: 700
 }
 ```
 
-)
-.catch(
+).catch(
 error => {
 
 ```
@@ -867,9 +681,7 @@ error => {
 ESCAPE HTML
 ========================================= */
 
-function escapeHTML(
-value
-) {
+function escapeHTML(value) {
 
 return String(value)
 
@@ -906,9 +718,7 @@ return String(value)
 ESCAPE ATTRIBUTE
 ========================================= */
 
-function escapeAttribute(
-value
-) {
+function escapeAttribute(value) {
 
 return String(value)
 
@@ -985,18 +795,27 @@ button => {
     "click",
     () => {
 
+      if (isLoading) {
+        return;
+      }
+
+
       const question =
         button.dataset.question ||
         "";
+
 
       if (!question) {
         return;
       }
 
+
       inputEl.value =
         question;
 
+
       autoResizeTextarea();
+
 
       sendMessage();
 
@@ -1033,11 +852,9 @@ inputEl.scrollHeight,
 VOICE INPUT
 ========================================= */
 
-let recognition =
-null;
+let recognition = null;
 
-let isListening =
-false;
+let isListening = false;
 
 const SpeechRecognition =
 window.SpeechRecognition ||
@@ -1064,9 +881,11 @@ recognition.onstart =
   isListening =
     true;
 
+
   voiceButton.classList.add(
     "active"
   );
+
 
   voiceButton.textContent =
     "⏹️";
@@ -1089,13 +908,6 @@ event => {
 
 
   autoResizeTextarea();
-
-  /*
-   * Το voice input γράφει
-   * το κείμενο στο textarea.
-   *
-   * Δεν στέλνουμε αυτόματα.
-   */
 
 };
 ```
@@ -1153,8 +965,7 @@ voiceButton.addEventListener(
 
     recognition.start();
 
-  }
-  catch (error) {
+  } catch (error) {
 
     console.error(
       "Voice start error:",
@@ -1168,8 +979,7 @@ voiceButton.addEventListener(
 
 );
 
-}
-else {
+} else {
 
 voiceButton.disabled =
 true;
@@ -1182,8 +992,6 @@ voiceButton.title =
 /* =========================================
 INITIAL STATE
 ========================================= */
-
-autoResizeTextarea();
 
 console.log(
 "City4All AI interface loaded."
