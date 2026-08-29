@@ -11,16 +11,22 @@ let conversation = [];
 let isLoading = false;
 let lastFeatures = [];
 
+
 /* =========================================
    SEND MESSAGE
 ========================================= */
 
 async function sendMessage() {
-  if (isLoading) return;
+
+  if (isLoading) {
+    return;
+  }
 
   const message = inputEl.value.trim();
 
-  if (!message) return;
+  if (!message) {
+    return;
+  }
 
   addMessage(message, "user");
 
@@ -36,35 +42,49 @@ async function sendMessage() {
   );
 
   try {
-    const response = await fetch(`${API_URL}/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: message,
-        conversation: conversation,
-        previousFeatures: lastFeatures
-      })
-    });
+
+    const response = await fetch(
+      API_URL + "/chat",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          message: message,
+          conversation: conversation,
+          previousFeatures: lastFeatures
+        })
+      }
+    );
 
     let data;
 
     try {
+
       data = await response.json();
-    } catch {
+
+    } catch (error) {
+
       throw new Error(
         "Ο Worker επέστρεψε μη έγκυρη απάντηση."
       );
+
     }
 
     removeMessage(typingMessage);
 
     if (!response.ok || !data.success) {
+
       throw new Error(
-        data.error || "Παρουσιάστηκε σφάλμα."
+        data.error ||
+        "Παρουσιάστηκε σφάλμα."
       );
+
     }
+
 
     /* =========================================
        UPDATE CONVERSATION
@@ -81,30 +101,40 @@ async function sendMessage() {
     });
 
     if (conversation.length > 20) {
-      conversation = conversation.slice(-20);
+
+      conversation =
+        conversation.slice(-20);
+
     }
 
+
     /* =========================================
-       DISPLAY AI ANSWER
+       DISPLAY ANSWER
     ========================================= */
 
     addMessage(
-      data.answer || "Δεν υπήρξε απάντηση.",
+      data.answer ||
+      "Δεν υπήρξε απάντηση.",
       "ai"
     );
+
 
     /* =========================================
        UPDATE RESULTS
     ========================================= */
 
-    lastFeatures = Array.isArray(data.features)
-      ? data.features
-      : [];
+    lastFeatures =
+      Array.isArray(data.features)
+        ? data.features
+        : [];
 
     displayResults(lastFeatures);
+
     showResultsOnMap(lastFeatures);
 
+
   } catch (error) {
+
     console.error(
       "City4All Chat Error:",
       error
@@ -118,10 +148,15 @@ async function sendMessage() {
       "ai"
     );
 
+
   } finally {
+
     setLoading(false);
+
   }
+
 }
+
 
 /* =========================================
    ADD MESSAGE
@@ -130,30 +165,33 @@ async function sendMessage() {
 function addMessage(
   text,
   role,
-  temporary = false
+  temporary
 ) {
+
   const wrapper =
     document.createElement("div");
 
   wrapper.className =
-    `message ${role}`;
+    "message " + role;
 
   if (temporary) {
-    wrapper.dataset.temporary = "true";
+
+    wrapper.dataset.temporary =
+      "true";
+
   }
 
   const bubble =
     document.createElement("div");
 
-  bubble.className = "bubble";
+  bubble.className =
+    "bubble";
 
-  /*
-   * textContent ώστε το AI να μην μπορεί
-   * να εισάγει HTML μέσα στο chat.
-   */
-  bubble.textContent = text;
+  bubble.textContent =
+    text;
 
   wrapper.appendChild(bubble);
+
   messagesEl.appendChild(wrapper);
 
   messagesEl.scrollTop =
@@ -162,47 +200,65 @@ function addMessage(
   return wrapper;
 }
 
+
 /* =========================================
    REMOVE MESSAGE
 ========================================= */
 
 function removeMessage(element) {
+
   if (
     element &&
     element.parentNode
   ) {
-    element.parentNode.removeChild(element);
+
+    element.parentNode.removeChild(
+      element
+    );
+
   }
+
 }
+
 
 /* =========================================
    LOADING
 ========================================= */
 
 function setLoading(loading) {
+
   isLoading = loading;
 
-  sendButton.disabled = loading;
-  inputEl.disabled = loading;
-  voiceButton.disabled = loading;
+  sendButton.disabled =
+    loading;
+
+  inputEl.disabled =
+    loading;
+
+  voiceButton.disabled =
+    loading;
 
   sendButton.textContent =
     loading
       ? "Αναζήτηση..."
       : "Αποστολή";
+
 }
+
 
 /* =========================================
    DISPLAY RESULTS
 ========================================= */
 
 function displayResults(features) {
+
   resultsEl.innerHTML = "";
 
   if (
     !Array.isArray(features) ||
     features.length === 0
   ) {
+
     resultsEl.classList.remove(
       "has-results"
     );
@@ -214,6 +270,7 @@ function displayResults(features) {
     "has-results"
   );
 
+
   /* =========================================
      HEADER
   ========================================= */
@@ -224,176 +281,302 @@ function displayResults(features) {
   header.className =
     "results-header";
 
-  header.innerHTML = `
-    <div class="results-title">
-      Αποτελέσματα City4All
-    </div>
+  const title =
+    document.createElement("div");
 
-    <div class="results-count">
-      ${features.length} σημεία
-    </div>
-  `;
+  title.className =
+    "results-title";
+
+  title.textContent =
+    "Αποτελέσματα City4All";
+
+  const count =
+    document.createElement("div");
+
+  count.className =
+    "results-count";
+
+  count.textContent =
+    features.length + " σημεία";
+
+  header.appendChild(title);
+  header.appendChild(count);
 
   resultsEl.appendChild(header);
+
 
   /* =========================================
      CARDS
   ========================================= */
 
   features.forEach(
-    (feature, index) => {
+    function(feature, index) {
+
       const card =
         document.createElement("div");
 
       card.className =
         "result-card";
 
-      const title =
-        escapeHTML(
-          feature.name ||
-          "Χωρίς ονομασία"
-        );
+
+      const titleText =
+        feature.name ||
+        "Χωρίς ονομασία";
+
+      const typeText =
+        feature.type ||
+        "Σημείο";
+
+      const accessibilityText =
+        feature.accessibility ||
+        "Δεν υπάρχει καταγεγραμμένη πληροφορία.";
+
+      const commentsText =
+        feature.comments ||
+        "Δεν υπάρχει καταγεγραμμένη παρατήρηση.";
+
+      const areaText =
+        feature.area ||
+        "";
+
+
+      const heading =
+        document.createElement("h3");
+
+      heading.textContent =
+        titleText;
+
 
       const type =
-        escapeHTML(
-          feature.type ||
-          "Σημείο"
-        );
+        document.createElement("div");
 
-      const accessibility =
-        escapeHTML(
-          feature.accessibility ||
-          "Δεν υπάρχει καταγεγραμμένη πληροφορία."
-        );
+      type.className =
+        "result-type";
 
-      const comments =
-        escapeHTML(
-          feature.comments ||
-          "Δεν υπάρχει καταγεγραμμένη παρατήρηση."
-        );
+      type.textContent =
+        typeText;
 
-      const area =
-        escapeHTML(
-          feature.area ||
-          ""
-        );
 
-      card.innerHTML = `
-        <h3>
-          ${title}
-        </h3>
+      card.appendChild(heading);
+      card.appendChild(type);
 
-        <div class="result-type">
-          ${type}
-        </div>
 
-        ${
-          area
-            ? `
-              <div class="info-row">
-                📍 ${area}
-              </div>
-            `
-            : ""
-        }
+      /* AREA */
 
-        <div class="info-row">
-          ♿ <strong>
-            Προσβασιμότητα:
-          </strong>
+      if (areaText) {
 
-          <br>
+        const area =
+          document.createElement("div");
 
-          <span class="accessibility">
-            ${accessibility}
-          </span>
-        </div>
+        area.className =
+          "info-row";
 
-        ${
-          feature.comments
-            ? `
-              <div class="info-row">
-                📝 <strong>
-                  Παρατηρήσεις:
-                </strong>
+        area.textContent =
+          "📍 " + areaText;
 
-                <br>
+        card.appendChild(area);
 
-                ${comments}
-              </div>
-            `
-            : ""
-        }
-
-        <div class="result-actions">
-
-          ${
-            feature.googleMapsUrl
-              ? `
-                <a
-                  class="route-button"
-                  href="${escapeAttribute(
-                    feature.googleMapsUrl
-                  )}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  🗺️ Οδηγίες
-                </a>
-              `
-              : ""
-          }
-
-          <button
-            class="map-button"
-            type="button"
-            data-result-index="${index}"
-          >
-            📍 Χάρτης
-          </button>
-
-        </div>
-      `;
-
-      const mapButton =
-        card.querySelector(
-          ".map-button"
-        );
-
-      if (mapButton) {
-        mapButton.addEventListener(
-          "click",
-          () => {
-            focusFeatureOnMap(
-              feature
-            );
-          }
-        );
       }
 
+
+      /* ACCESSIBILITY */
+
+      const accessibility =
+        document.createElement("div");
+
+      accessibility.className =
+        "info-row";
+
+      const accessibilityStrong =
+        document.createElement("strong");
+
+      accessibilityStrong.textContent =
+        "♿ Προσβασιμότητα:";
+
+      const accessibilityBreak =
+        document.createElement("br");
+
+      const accessibilitySpan =
+        document.createElement("span");
+
+      accessibilitySpan.className =
+        "accessibility";
+
+      accessibilitySpan.textContent =
+        accessibilityText;
+
+      accessibility.appendChild(
+        accessibilityStrong
+      );
+
+      accessibility.appendChild(
+        accessibilityBreak
+      );
+
+      accessibility.appendChild(
+        accessibilitySpan
+      );
+
+      card.appendChild(
+        accessibility
+      );
+
+
+      /* COMMENTS */
+
+      if (feature.comments) {
+
+        const comments =
+          document.createElement("div");
+
+        comments.className =
+          "info-row";
+
+        const commentsStrong =
+          document.createElement("strong");
+
+        commentsStrong.textContent =
+          "📝 Παρατηρήσεις:";
+
+        const commentsBreak =
+          document.createElement("br");
+
+        const commentsTextElement =
+          document.createElement("span");
+
+        commentsTextElement.textContent =
+          commentsText;
+
+        comments.appendChild(
+          commentsStrong
+        );
+
+        comments.appendChild(
+          commentsBreak
+        );
+
+        comments.appendChild(
+          commentsTextElement
+        );
+
+        card.appendChild(
+          comments
+        );
+
+      }
+
+
+      /* ACTIONS */
+
+      const actions =
+        document.createElement("div");
+
+      actions.className =
+        "result-actions";
+
+
+      /* GOOGLE MAPS */
+
+      if (feature.googleMapsUrl) {
+
+        const routeButton =
+          document.createElement("a");
+
+        routeButton.className =
+          "route-button";
+
+        routeButton.href =
+          feature.googleMapsUrl;
+
+        routeButton.target =
+          "_blank";
+
+        routeButton.rel =
+          "noopener noreferrer";
+
+        routeButton.textContent =
+          "🗺️ Οδηγίες";
+
+        actions.appendChild(
+          routeButton
+        );
+
+      }
+
+
+      /* MAP BUTTON */
+
+      const mapButton =
+        document.createElement("button");
+
+      mapButton.className =
+        "map-button";
+
+      mapButton.type =
+        "button";
+
+      mapButton.textContent =
+        "📍 Χάρτης";
+
+      mapButton.addEventListener(
+        "click",
+        function() {
+
+          focusFeatureOnMap(
+            feature
+          );
+
+        }
+      );
+
+      actions.appendChild(
+        mapButton
+      );
+
+      card.appendChild(actions);
+
       resultsEl.appendChild(card);
+
     }
   );
+
 }
+
 
 /* =========================================
    SHOW RESULTS ON MAP
 ========================================= */
 
 function showResultsOnMap(features) {
+
   if (
     !window.city4allMap ||
     !window.city4allMap.view ||
     !window.city4allMap.resultsLayer
   ) {
+
     return;
+
   }
 
-  const {
-    view,
-    resultsLayer,
-    Graphic
-  } = window.city4allMap;
+  const view =
+    window.city4allMap.view;
+
+  const resultsLayer =
+    window.city4allMap.resultsLayer;
+
+  const Graphic =
+    window.city4allMap.Graphic;
+
+  if (!Graphic) {
+
+    console.warn(
+      "City4All Graphic class unavailable."
+    );
+
+    return;
+
+  }
 
   resultsLayer.removeAll();
 
@@ -401,87 +584,116 @@ function showResultsOnMap(features) {
     !Array.isArray(features) ||
     features.length === 0
   ) {
+
     return;
+
   }
 
   const graphics = [];
 
+
   features.forEach(
-    feature => {
+    function(feature) {
+
       if (
         typeof feature.latitude !== "number" ||
         typeof feature.longitude !== "number"
       ) {
+
         return;
+
       }
 
+
       const point = {
+
         type: "point",
-        longitude: feature.longitude,
-        latitude: feature.latitude
+
+        longitude:
+          feature.longitude,
+
+        latitude:
+          feature.latitude
+
       };
 
+
       const symbol = {
+
         type: "simple-marker",
+
         size: 13,
+
         color: "#1976d2",
+
         outline: {
           color: "#ffffff",
           width: 2
         }
+
       };
+
+
+      const popupContent =
+        "<strong>Τύπος:</strong> " +
+        escapeHTML(
+          feature.type || ""
+        ) +
+        "<br><br>" +
+        "<strong>Προσβασιμότητα:</strong> " +
+        escapeHTML(
+          feature.accessibility || ""
+        );
+
 
       const popupTemplate = {
-        title: escapeHTML(
-          feature.name ||
-          "City4All σημείο"
-        ),
 
-        content: `
-          <strong>
-            Τύπος:
-          </strong>
+        title:
+          escapeHTML(
+            feature.name ||
+            "City4All σημείο"
+          ),
 
-          ${escapeHTML(
-            feature.type || ""
-          )}
+        content:
+          popupContent
 
-          <br><br>
-
-          <strong>
-            Προσβασιμότητα:
-          </strong>
-
-          ${escapeHTML(
-            feature.accessibility || ""
-          )}
-        `
       };
 
+
       graphics.push(
+
         new Graphic({
           geometry: point,
           symbol: symbol,
           attributes: feature,
           popupTemplate: popupTemplate
         })
+
       );
+
     }
   );
 
+
   if (graphics.length === 0) {
+
     return;
+
   }
+
 
   resultsLayer.addMany(
     graphics
   );
 
+
   const geometries =
     graphics.map(
-      graphic =>
-        graphic.geometry
+      function(graphic) {
+        return graphic.geometry;
+      }
     );
+
 
   view.goTo(
     {
@@ -492,14 +704,18 @@ function showResultsOnMap(features) {
       duration: 900
     }
   ).catch(
-    error => {
+    function(error) {
+
       console.warn(
         "Map zoom error:",
         error
       );
+
     }
   );
+
 }
+
 
 /* =========================================
    FOCUS SINGLE FEATURE
@@ -508,23 +724,30 @@ function showResultsOnMap(features) {
 function focusFeatureOnMap(
   feature
 ) {
+
   if (
     !window.city4allMap ||
     !window.city4allMap.view
   ) {
+
     return;
+
   }
+
 
   if (
     typeof feature.latitude !== "number" ||
     typeof feature.longitude !== "number"
   ) {
+
     return;
+
   }
 
-  const {
-    view
-  } = window.city4allMap;
+
+  const view =
+    window.city4allMap.view;
+
 
   view.goTo(
     {
@@ -538,66 +761,85 @@ function focusFeatureOnMap(
       duration: 700
     }
   ).catch(
-    error => {
+    function(error) {
+
       console.warn(
         "Map focus error:",
         error
       );
+
     }
   );
+
 }
+
 
 /* =========================================
    ESCAPE HTML
 ========================================= */
 
 function escapeHTML(value) {
+
   return String(value)
+
     .replace(
       /&/g,
       "&amp;"
     )
+
     .replace(
       /</g,
       "&lt;"
     )
+
     .replace(
       />/g,
       "&gt;"
     )
+
     .replace(
       /"/g,
       "&quot;"
     )
+
     .replace(
       /'/g,
       "&#039;"
     );
+
 }
+
 
 /* =========================================
    ESCAPE ATTRIBUTE
 ========================================= */
 
 function escapeAttribute(value) {
+
   return String(value)
+
     .replace(
       /&/g,
       "&amp;"
     )
+
     .replace(
       /"/g,
       "&quot;"
     )
+
     .replace(
       /</g,
       "&lt;"
     )
+
     .replace(
       />/g,
       "&gt;"
     );
+
 }
+
 
 /* =========================================
    ENTER TO SEND
@@ -605,16 +847,22 @@ function escapeAttribute(value) {
 
 inputEl.addEventListener(
   "keydown",
-  event => {
+  function(event) {
+
     if (
       event.key === "Enter" &&
       !event.shiftKey
     ) {
+
       event.preventDefault();
+
       sendMessage();
+
     }
+
   }
 );
+
 
 /* =========================================
    SEND BUTTON
@@ -625,6 +873,7 @@ sendButton.addEventListener(
   sendMessage
 );
 
+
 /* =========================================
    QUICK BUTTONS
 ========================================= */
@@ -634,10 +883,12 @@ document
     ".quick-button"
   )
   .forEach(
-    button => {
+    function(button) {
+
       button.addEventListener(
         "click",
-        () => {
+        function() {
+
           if (isLoading) {
             return;
           }
@@ -654,11 +905,15 @@ document
             question;
 
           autoResizeTextarea();
+
           sendMessage();
+
         }
       );
+
     }
   );
+
 
 /* =========================================
    TEXTAREA RESIZE
@@ -669,7 +924,9 @@ inputEl.addEventListener(
   autoResizeTextarea
 );
 
+
 function autoResizeTextarea() {
+
   inputEl.style.height =
     "45px";
 
@@ -678,7 +935,9 @@ function autoResizeTextarea() {
       inputEl.scrollHeight,
       110
     ) + "px";
+
 }
+
 
 /* =========================================
    VOICE INPUT
@@ -691,7 +950,9 @@ const SpeechRecognition =
   window.SpeechRecognition ||
   window.webkitSpeechRecognition;
 
+
 if (SpeechRecognition) {
+
   recognition =
     new SpeechRecognition();
 
@@ -704,9 +965,12 @@ if (SpeechRecognition) {
   recognition.interimResults =
     false;
 
+
   recognition.onstart =
-    () => {
-      isListening = true;
+    function() {
+
+      isListening =
+        true;
 
       voiceButton.classList.add(
         "active"
@@ -714,10 +978,13 @@ if (SpeechRecognition) {
 
       voiceButton.textContent =
         "⏹️";
+
     };
 
+
   recognition.onresult =
-    event => {
+    function(event) {
+
       const transcript =
         event
           .results[0][0]
@@ -727,19 +994,26 @@ if (SpeechRecognition) {
         transcript;
 
       autoResizeTextarea();
+
     };
 
+
   recognition.onerror =
-    event => {
+    function(event) {
+
       console.error(
         "Speech recognition error:",
         event.error
       );
+
     };
 
+
   recognition.onend =
-    () => {
-      isListening = false;
+    function() {
+
+      isListening =
+        false;
 
       voiceButton.classList.remove(
         "active"
@@ -747,38 +1021,53 @@ if (SpeechRecognition) {
 
       voiceButton.textContent =
         "🎤";
+
     };
+
 
   voiceButton.addEventListener(
     "click",
-    () => {
+    function() {
+
       if (isLoading) {
         return;
       }
 
       if (isListening) {
+
         recognition.stop();
+
         return;
+
       }
 
       try {
+
         recognition.start();
+
       } catch (error) {
+
         console.error(
           "Voice start error:",
           error
         );
+
       }
+
     }
   );
 
+
 } else {
+
   voiceButton.disabled =
     true;
 
   voiceButton.title =
     "Η φωνητική εισαγωγή δεν υποστηρίζεται από αυτόν τον browser.";
+
 }
+
 
 /* =========================================
    INITIAL STATE
