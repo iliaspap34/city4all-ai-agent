@@ -631,9 +631,11 @@
        * City4All Web Map ID στο επόμενο βήμα.
        */
 
-      const webmap = new WebMap({
-        basemap: "streets-navigation-vector"
-      });
+     const webmap = new WebMap({
+  portalItem: {
+    id: "969e9e5433dd4b968cf06793dc7b7aca"
+  }
+});
 
       const view = new MapView({
         container: "map",
