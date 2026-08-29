@@ -1,1 +1,376 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>City4All AI</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f7fb;
+      color: #172033;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid #e3e8ef;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .logo span {
+      color: #1976d2;
+    }
+
+    .status {
+      font-size: 13px;
+      color: #16803c;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      background: #20a464;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    main {
+      width: min(1100px, 94%);
+      margin: 35px auto;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(30px, 5vw, 48px);
+    }
+
+    .hero p {
+      margin: 0 auto;
+      max-width: 700px;
+      color: #667085;
+      font-size: 17px;
+      line-height: 1.6;
+    }
+
+    .chat-card {
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 8px 35px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    .messages {
+      min-height: 420px;
+      max-height: 650px;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .message {
+      display: flex;
+      margin-bottom: 18px;
+    }
+
+    .message.user {
+      justify-content: flex-end;
+    }
+
+    .bubble {
+      max-width: 78%;
+      padding: 13px 16px;
+      border-radius: 16px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .message.ai .bubble {
+      background: #eef5ff;
+      border-bottom-left-radius: 5px;
+    }
+
+    .message.user .bubble {
+      background: #1976d2;
+      color: #ffffff;
+      border-bottom-right-radius: 5px;
+    }
+
+    .typing {
+      color: #667085;
+      font-style: italic;
+    }
+
+    .input-area {
+      border-top: 1px solid #e5e7eb;
+      padding: 16px;
+      display: flex;
+      gap: 10px;
+      background: #ffffff;
+    }
+
+    textarea {
+      flex: 1;
+      min-height: 52px;
+      max-height: 150px;
+      resize: vertical;
+      border: 1px solid #d0d5dd;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: #1976d2;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 12px;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+
+    .send-button {
+      background: #1976d2;
+      color: white;
+      padding: 0 22px;
+    }
+
+    .send-button:hover {
+      background: #125ea7;
+    }
+
+    .send-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .voice-button {
+      width: 52px;
+      background: #eef2f7;
+      font-size: 20px;
+    }
+
+    .voice-button:hover {
+      background: #dfe6ef;
+    }
+
+    .voice-button.active {
+      background: #d93025;
+      color: white;
+    }
+
+    .results {
+      margin-top: 25px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .result-card {
+      background: white;
+      border: 1px solid #e3e8ef;
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .result-card h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+
+    .result-type {
+      color: #667085;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .info-row {
+      margin: 7px 0;
+      line-height: 1.5;
+    }
+
+    .accessibility {
+      font-size: 14px;
+    }
+
+    .route-button {
+      display: inline-block;
+      margin-top: 13px;
+      padding: 10px 14px;
+      background: #1976d2;
+      color: white;
+      text-decoration: none;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .route-button:hover {
+      background: #125ea7;
+    }
+
+    .error {
+      color: #b42318;
+      background: #fef3f2;
+      border: 1px solid #fecdca;
+      padding: 12px;
+      border-radius: 10px;
+    }
+
+    .welcome {
+      color: #667085;
+    }
+
+    @media (max-width: 700px) {
+      header {
+        padding: 15px;
+      }
+
+      main {
+        width: 96%;
+        margin: 20px auto;
+      }
+
+      .messages {
+        min-height: 380px;
+        padding: 16px;
+      }
+
+      .bubble {
+        max-width: 90%;
+      }
+
+      .input-area {
+        padding: 10px;
+      }
+
+      .send-button {
+        padding: 0 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="logo">
+      City4<span>All</span> AI
+    </div>
+
+    <div class="status">
+      <span class="status-dot"></span>
+      AI Online
+    </div>
+  </header>
+
+  <main>
+
+    <section class="hero">
+      <h1>City4All AI</h1>
+
+      <p>
+        Ο έξυπνος βοηθός προσβασιμότητας του City4All.
+        Ρώτησέ με για προσβάσιμα σημεία,
+        χαρακτηριστικά προσβασιμότητας και διαδρομές.
+      </p>
+    </section>
+
+    <section class="chat-card">
+
+      <div
+        id="messages"
+        class="messages"
+      >
+
+        <div class="message ai">
+          <div class="bubble welcome">
+            👋 Γεια σου! Είμαι ο AI Assistant του City4All.
+            <br><br>
+            Μπορώ να σε βοηθήσω να βρεις σημεία
+            και πληροφορίες προσβασιμότητας.
+            <br><br>
+            Για παράδειγμα:
+            <br>
+            «Βρες μου καφετέριες με ράμπα στην Καλλιθέα»
+            <br><br>
+            ή
+            <br>
+            «Ποια σημεία έχουν τουαλέτα ΑμεΑ;»
+          </div>
+        </div>
+
+      </div>
+
+      <div class="input-area">
+
+        <button
+          id="voiceButton"
+          class="voice-button"
+          type="button"
+          title="Φωνητική εισαγωγή"
+        >
+          🎤
+        </button>
+
+        <textarea
+          id="messageInput"
+          placeholder="Γράψε την ερώτησή σου..."
+          aria-label="Μήνυμα"
+        ></textarea>
+
+        <button
+          id="sendButton"
+          class="send-button"
+          type="button"
+        >
+          Αποστολή
+        </button>
+
+      </div>
+
+    </section>
+
+    <section
+      id="results"
+      class="results"
+    ></section>
+
+  </main>
+
+  <script src="app.js"></script>
+
+</body>
+</html>
