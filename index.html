@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="el">
 <head>
@@ -10,7 +9,7 @@
   <link
     rel="stylesheet"
     href="https://js.arcgis.com/4.31/esri/themes/light/main.css"
-  />
+  >
 
   <script src="https://js.arcgis.com/4.31/"></script>
 
@@ -65,7 +64,7 @@
       height: 38px;
       border-radius: 11px;
       background: #1976d2;
-      color: white;
+      color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -268,11 +267,6 @@
       border-bottom-right-radius: 5px;
     }
 
-    .typing {
-      color: #667085;
-      font-style: italic;
-    }
-
     /* =========================
        QUICK ACTIONS
     ========================= */
@@ -304,6 +298,10 @@
       border-color: #1976d2;
       color: #1976d2;
       background: #f7fbff;
+    }
+
+    .quick-button:active {
+      transform: scale(0.97);
     }
 
     /* =========================
@@ -403,12 +401,12 @@
 
     .route-button {
       background: #1976d2;
-      color: white;
+      color: #ffffff;
     }
 
     .map-button {
       border: 1px solid #d7dee8;
-      background: white;
+      background: #ffffff;
       color: #344054;
     }
 
@@ -480,13 +478,13 @@
 
     .voice-button.active {
       background: #d93025;
-      color: white;
+      color: #ffffff;
     }
 
     .send-button {
       padding: 0 15px;
       background: #1976d2;
-      color: white;
+      color: #ffffff;
       flex-shrink: 0;
     }
 
@@ -494,7 +492,9 @@
       background: #125ea7;
     }
 
-    .send-button:disabled {
+    .send-button:disabled,
+    .voice-button:disabled,
+    textarea:disabled {
       opacity: 0.55;
       cursor: not-allowed;
     }
@@ -609,8 +609,6 @@
 
   <main class="main">
 
-    <!-- MAP -->
-
     <section class="map-panel">
 
       <div
@@ -628,8 +626,6 @@
 
     </section>
 
-
-    <!-- ASSISTANT -->
 
     <section class="assistant-panel">
 
@@ -667,7 +663,6 @@
         <div class="message ai">
 
           <div class="bubble">
-
             👋 Γεια σου! Είμαι ο City4All AI Assistant.
 
             <br><br>
@@ -684,7 +679,6 @@
 
             «Βρες μου καφετέριες με ράμπα
             στην Ηλιούπολη»
-
           </div>
 
         </div>
@@ -772,66 +766,59 @@
 <script src="app.js"></script>
 
 
-<!-- =========================
-     ARCGIS MAP
-========================= -->
-
 <script>
+  require(
+    [
+      "esri/WebMap",
+      "esri/views/MapView",
+      "esri/Graphic",
+      "esri/layers/GraphicsLayer"
+    ],
+    function (
+      WebMap,
+      MapView,
+      Graphic,
+      GraphicsLayer
+    ) {
 
-require(
-  [
-    "esri/WebMap",
-    "esri/views/MapView",
-    "esri/Graphic",
-    "esri/layers/GraphicsLayer"
-  ],
-  function (
-    WebMap,
-    MapView,
-    Graphic,
-    GraphicsLayer
-  ) {
+      const webmap = new WebMap({
+        portalItem: {
+          id: "969e9e5433dd4b968cf06793dc7b7aca"
+        }
+      });
 
-    const webmap = new WebMap({
-      portalItem: {
-        id: "969e9e5433dd4b968cf06793dc7b7aca"
-      }
-    });
+      const view = new MapView({
+        container: "map",
+        map: webmap,
+        center: [
+          23.7573,
+          37.9363
+        ],
+        zoom: 13
+      });
 
-    const view = new MapView({
-      container: "map",
-      map: webmap,
-      center: [
-        23.7573,
-        37.9363
-      ],
-      zoom: 13
-    });
+      const resultsLayer =
+        new GraphicsLayer();
 
-    const resultsLayer =
-      new GraphicsLayer();
+      webmap.add(resultsLayer);
 
-    webmap.add(resultsLayer);
+      window.city4allMap = {
+        view: view,
+        resultsLayer: resultsLayer,
+        Graphic: Graphic
+      };
 
-    window.city4allMap = {
-      view,
-      resultsLayer,
-      Graphic
-    };
+      view.when(function () {
 
-    view.when(function () {
+        console.log(
+          "City4All map loaded."
+        );
 
-      console.log(
-        "City4All map loaded."
-      );
+      });
 
-    });
-
-  }
-);
-
+    }
+  );
 </script>
 
 </body>
 </html>
-```
