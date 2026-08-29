@@ -1,5 +1,5 @@
-const API_URL =
-  "https://city4allfinalai.ilias-pap-net.workers.dev";
+```javascript
+const API_URL = "https://city4allfinalai.ilias-pap-net.workers.dev";
 
 const messagesEl = document.getElementById("messages");
 const inputEl = document.getElementById("messageInput");
@@ -10,7 +10,6 @@ const resultsEl = document.getElementById("results");
 let conversation = [];
 let isLoading = false;
 let lastFeatures = [];
-
 
 /* =========================================
    SEND MESSAGE
@@ -67,7 +66,6 @@ async function sendMessage() {
       );
     }
 
-
     /* =========================================
        UPDATE CONVERSATION
     ========================================= */
@@ -86,7 +84,6 @@ async function sendMessage() {
       conversation = conversation.slice(-20);
     }
 
-
     /* =========================================
        DISPLAY AI ANSWER
     ========================================= */
@@ -95,7 +92,6 @@ async function sendMessage() {
       data.answer || "Δεν υπήρξε απάντηση.",
       "ai"
     );
-
 
     /* =========================================
        UPDATE RESULTS
@@ -106,11 +102,9 @@ async function sendMessage() {
       : [];
 
     displayResults(lastFeatures);
-
     showResultsOnMap(lastFeatures);
 
   } catch (error) {
-
     console.error(
       "City4All Chat Error:",
       error
@@ -125,11 +119,9 @@ async function sendMessage() {
     );
 
   } finally {
-
     setLoading(false);
   }
 }
-
 
 /* =========================================
    ADD MESSAGE
@@ -140,7 +132,6 @@ function addMessage(
   role,
   temporary = false
 ) {
-
   const wrapper =
     document.createElement("div");
 
@@ -157,14 +148,12 @@ function addMessage(
   bubble.className = "bubble";
 
   /*
-   * Χρησιμοποιούμε textContent ώστε
-   * το AI να μην μπορεί να εισάγει HTML.
+   * textContent ώστε το AI να μην μπορεί
+   * να εισάγει HTML μέσα στο chat.
    */
-
   bubble.textContent = text;
 
   wrapper.appendChild(bubble);
-
   messagesEl.appendChild(wrapper);
 
   messagesEl.scrollTop =
@@ -173,13 +162,11 @@ function addMessage(
   return wrapper;
 }
 
-
 /* =========================================
    REMOVE MESSAGE
 ========================================= */
 
 function removeMessage(element) {
-
   if (
     element &&
     element.parentNode
@@ -188,13 +175,11 @@ function removeMessage(element) {
   }
 }
 
-
 /* =========================================
    LOADING
 ========================================= */
 
 function setLoading(loading) {
-
   isLoading = loading;
 
   sendButton.disabled = loading;
@@ -207,20 +192,17 @@ function setLoading(loading) {
       : "Αποστολή";
 }
 
-
 /* =========================================
    DISPLAY RESULTS
 ========================================= */
 
 function displayResults(features) {
-
   resultsEl.innerHTML = "";
 
   if (
     !Array.isArray(features) ||
     features.length === 0
   ) {
-
     resultsEl.classList.remove(
       "has-results"
     );
@@ -231,7 +213,6 @@ function displayResults(features) {
   resultsEl.classList.add(
     "has-results"
   );
-
 
   /* =========================================
      HEADER
@@ -255,20 +236,17 @@ function displayResults(features) {
 
   resultsEl.appendChild(header);
 
-
   /* =========================================
      CARDS
   ========================================= */
 
   features.forEach(
     (feature, index) => {
-
       const card =
         document.createElement("div");
 
       card.className =
         "result-card";
-
 
       const title =
         escapeHTML(
@@ -276,13 +254,11 @@ function displayResults(features) {
           "Χωρίς ονομασία"
         );
 
-
       const type =
         escapeHTML(
           feature.type ||
           "Σημείο"
         );
-
 
       const accessibility =
         escapeHTML(
@@ -290,13 +266,11 @@ function displayResults(features) {
           "Δεν υπάρχει καταγεγραμμένη πληροφορία."
         );
 
-
       const comments =
         escapeHTML(
           feature.comments ||
           "Δεν υπάρχει καταγεγραμμένη παρατήρηση."
         );
-
 
       const area =
         escapeHTML(
@@ -304,9 +278,7 @@ function displayResults(features) {
           ""
         );
 
-
       card.innerHTML = `
-
         <h3>
           ${title}
         </h3>
@@ -314,7 +286,6 @@ function displayResults(features) {
         <div class="result-type">
           ${type}
         </div>
-
 
         ${
           area
@@ -326,9 +297,7 @@ function displayResults(features) {
             : ""
         }
 
-
         <div class="info-row">
-
           ♿ <strong>
             Προσβασιμότητα:
           </strong>
@@ -338,15 +307,12 @@ function displayResults(features) {
           <span class="accessibility">
             ${accessibility}
           </span>
-
         </div>
-
 
         ${
           feature.comments
             ? `
               <div class="info-row">
-
                 📝 <strong>
                   Παρατηρήσεις:
                 </strong>
@@ -354,15 +320,12 @@ function displayResults(features) {
                 <br>
 
                 ${comments}
-
               </div>
             `
             : ""
         }
 
-
         <div class="result-actions">
-
 
           ${
             feature.googleMapsUrl
@@ -381,7 +344,6 @@ function displayResults(features) {
               : ""
           }
 
-
           <button
             class="map-button"
             type="button"
@@ -390,46 +352,35 @@ function displayResults(features) {
             📍 Χάρτης
           </button>
 
-
         </div>
-
       `;
-
 
       const mapButton =
         card.querySelector(
           ".map-button"
         );
 
-
       if (mapButton) {
-
         mapButton.addEventListener(
           "click",
           () => {
-
             focusFeatureOnMap(
               feature
             );
-
           }
         );
       }
 
-
       resultsEl.appendChild(card);
-
     }
   );
 }
-
 
 /* =========================================
    SHOW RESULTS ON MAP
 ========================================= */
 
 function showResultsOnMap(features) {
-
   if (
     !window.city4allMap ||
     !window.city4allMap.view ||
@@ -444,9 +395,7 @@ function showResultsOnMap(features) {
     Graphic
   } = window.city4allMap;
 
-
   resultsLayer.removeAll();
-
 
   if (
     !Array.isArray(features) ||
@@ -455,13 +404,10 @@ function showResultsOnMap(features) {
     return;
   }
 
-
   const graphics = [];
-
 
   features.forEach(
     feature => {
-
       if (
         typeof feature.latitude !== "number" ||
         typeof feature.longitude !== "number"
@@ -469,46 +415,29 @@ function showResultsOnMap(features) {
         return;
       }
 
-
       const point = {
-
         type: "point",
-
-        longitude:
-          feature.longitude,
-
-        latitude:
-          feature.latitude
-
+        longitude: feature.longitude,
+        latitude: feature.latitude
       };
 
-
       const symbol = {
-
         type: "simple-marker",
-
         size: 13,
-
         color: "#1976d2",
-
         outline: {
           color: "#ffffff",
           width: 2
         }
-
       };
 
-
       const popupTemplate = {
-
-        title:
-          escapeHTML(
-            feature.name ||
-            "City4All σημείο"
-          ),
+        title: escapeHTML(
+          feature.name ||
+          "City4All σημείο"
+        ),
 
         content: `
-
           <strong>
             Τύπος:
           </strong>
@@ -526,50 +455,33 @@ function showResultsOnMap(features) {
           ${escapeHTML(
             feature.accessibility || ""
           )}
-
         `
-
       };
 
-
       graphics.push(
-
         new Graphic({
-
           geometry: point,
-
-          symbol,
-
+          symbol: symbol,
           attributes: feature,
-
-          popupTemplate
-
+          popupTemplate: popupTemplate
         })
-
       );
-
     }
   );
 
-
-  if (
-    graphics.length === 0
-  ) {
+  if (graphics.length === 0) {
     return;
   }
-
 
   resultsLayer.addMany(
     graphics
   );
-
 
   const geometries =
     graphics.map(
       graphic =>
         graphic.geometry
     );
-
 
   view.goTo(
     {
@@ -581,16 +493,13 @@ function showResultsOnMap(features) {
     }
   ).catch(
     error => {
-
       console.warn(
         "Map zoom error:",
         error
       );
-
     }
   );
 }
-
 
 /* =========================================
    FOCUS SINGLE FEATURE
@@ -599,14 +508,12 @@ function showResultsOnMap(features) {
 function focusFeatureOnMap(
   feature
 ) {
-
   if (
     !window.city4allMap ||
     !window.city4allMap.view
   ) {
     return;
   }
-
 
   if (
     typeof feature.latitude !== "number" ||
@@ -615,11 +522,9 @@ function focusFeatureOnMap(
     return;
   }
 
-
   const {
     view
   } = window.city4allMap;
-
 
   view.goTo(
     {
@@ -634,81 +539,65 @@ function focusFeatureOnMap(
     }
   ).catch(
     error => {
-
       console.warn(
         "Map focus error:",
         error
       );
-
     }
   );
 }
-
 
 /* =========================================
    ESCAPE HTML
 ========================================= */
 
 function escapeHTML(value) {
-
   return String(value)
-
     .replace(
       /&/g,
       "&amp;"
     )
-
     .replace(
       /</g,
       "&lt;"
     )
-
     .replace(
       />/g,
       "&gt;"
     )
-
     .replace(
       /"/g,
       "&quot;"
     )
-
     .replace(
       /'/g,
       "&#039;"
     );
 }
 
-
 /* =========================================
    ESCAPE ATTRIBUTE
 ========================================= */
 
 function escapeAttribute(value) {
-
   return String(value)
-
     .replace(
       /&/g,
       "&amp;"
     )
-
     .replace(
       /"/g,
       "&quot;"
     )
-
     .replace(
       /</g,
       "&lt;"
     )
-
     .replace(
       />/g,
       "&gt;"
     );
 }
-
 
 /* =========================================
    ENTER TO SEND
@@ -717,21 +606,15 @@ function escapeAttribute(value) {
 inputEl.addEventListener(
   "keydown",
   event => {
-
     if (
       event.key === "Enter" &&
       !event.shiftKey
     ) {
-
       event.preventDefault();
-
       sendMessage();
-
     }
-
   }
 );
-
 
 /* =========================================
    SEND BUTTON
@@ -741,7 +624,6 @@ sendButton.addEventListener(
   "click",
   sendMessage
 );
-
 
 /* =========================================
    QUICK BUTTONS
@@ -753,41 +635,30 @@ document
   )
   .forEach(
     button => {
-
       button.addEventListener(
         "click",
         () => {
-
           if (isLoading) {
             return;
           }
-
 
           const question =
             button.dataset.question ||
             "";
 
-
           if (!question) {
             return;
           }
 
-
           inputEl.value =
             question;
 
-
           autoResizeTextarea();
-
-
           sendMessage();
-
         }
       );
-
     }
   );
-
 
 /* =========================================
    TEXTAREA RESIZE
@@ -798,9 +669,7 @@ inputEl.addEventListener(
   autoResizeTextarea
 );
 
-
 function autoResizeTextarea() {
-
   inputEl.style.height =
     "45px";
 
@@ -811,146 +680,105 @@ function autoResizeTextarea() {
     ) + "px";
 }
 
-
 /* =========================================
    VOICE INPUT
 ========================================= */
 
 let recognition = null;
-
 let isListening = false;
 
 const SpeechRecognition =
   window.SpeechRecognition ||
   window.webkitSpeechRecognition;
 
-
 if (SpeechRecognition) {
-
   recognition =
     new SpeechRecognition();
-
 
   recognition.lang =
     "el-GR";
 
-
   recognition.continuous =
     false;
-
 
   recognition.interimResults =
     false;
 
-
   recognition.onstart =
     () => {
-
-      isListening =
-        true;
-
+      isListening = true;
 
       voiceButton.classList.add(
         "active"
       );
 
-
       voiceButton.textContent =
         "⏹️";
-
     };
-
 
   recognition.onresult =
     event => {
-
       const transcript =
         event
           .results[0][0]
           .transcript;
 
-
       inputEl.value =
         transcript;
 
-
       autoResizeTextarea();
-
     };
-
 
   recognition.onerror =
     event => {
-
       console.error(
         "Speech recognition error:",
         event.error
       );
-
     };
-
 
   recognition.onend =
     () => {
-
-      isListening =
-        false;
-
+      isListening = false;
 
       voiceButton.classList.remove(
         "active"
       );
 
-
       voiceButton.textContent =
         "🎤";
-
     };
-
 
   voiceButton.addEventListener(
     "click",
     () => {
-
       if (isLoading) {
         return;
       }
 
-
       if (isListening) {
-
         recognition.stop();
-
         return;
       }
 
-
       try {
-
         recognition.start();
-
       } catch (error) {
-
         console.error(
           "Voice start error:",
           error
         );
-
       }
-
     }
   );
 
 } else {
-
   voiceButton.disabled =
     true;
 
   voiceButton.title =
     "Η φωνητική εισαγωγή δεν υποστηρίζεται από αυτόν τον browser.";
-
 }
-
 
 /* =========================================
    INITIAL STATE
@@ -959,3 +787,4 @@ if (SpeechRecognition) {
 console.log(
   "City4All AI interface loaded."
 );
+```
