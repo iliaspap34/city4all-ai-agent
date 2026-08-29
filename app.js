@@ -1,34 +1,83 @@
-const API_URL =
+const API_BASE =
   "https://city4allfinalai.ilias-pap-net.workers.dev";
 
-const messagesEl =
-  document.getElementById("messages");
-
-const inputEl =
-  document.getElementById("messageInput");
-
-const sendButton =
-  document.getElementById("sendButton");
-
-const voiceButton =
-  document.getElementById("voiceButton");
-
-const resultsEl =
-  document.getElementById("results");
+const CHAT_URL = `${API_BASE}/chat`;
 
 let conversation = [];
-
+let previousFeatures = [];
 let isLoading = false;
 
-let lastFeatures = [];
+const messagesEl = document.getElementById("messages");
+const resultsEl = document.getElementById("results");
+const inputEl = document.getElementById("messageInput");
+const sendButton = document.getElementById("sendButton");
+const voiceButton = document.getElementById("voiceButton");
 
 
-/* =========================================
-   SEND MESSAGE
-========================================= */
+// ============================================================
+// INITIALIZATION
+// ============================================================
+
+document.addEventListener("DOMContentLoaded", () => {
+  setupQuickActions();
+  setupInput();
+  setupVoice();
+
+  console.log("City4All AI frontend loaded.");
+});
+
+
+// ============================================================
+// QUICK ACTIONS
+// ============================================================
+
+function setupQuickActions() {
+  document.querySelectorAll(".quick-button").forEach(button => {
+    button.addEventListener("click", () => {
+      const question = button.dataset.question;
+
+      if (!question || isLoading) {
+        return;
+      }
+
+      inputEl.value = question;
+      sendMessage();
+    });
+  });
+}
+
+
+// ============================================================
+// INPUT
+// ============================================================
+
+function setupInput() {
+  inputEl.addEventListener("keydown", event => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage();
+    }
+  });
+
+  inputEl.addEventListener("input", () => {
+    inputEl.style.height = "45px";
+
+    const newHeight =
+      Math.min(inputEl.scrollHeight, 110);
+
+    inputEl.style.height =
+      `${Math.max(45, newHeight)}px`;
+  });
+
+  sendButton.addEventListener("click", sendMessage);
+}
+
+
+// ============================================================
+// SEND MESSAGE
+// ============================================================
 
 async function sendMessage() {
-
   if (isLoading) {
     return;
   }
@@ -40,168 +89,131 @@ async function sendMessage() {
     return;
   }
 
-  addMessage(
-    message,
-    "user"
-  );
+  addMessage("user", message);
 
   inputEl.value = "";
-
-  autoResizeTextarea();
+  inputEl.style.height = "45px";
 
   setLoading(true);
 
-  const typingMessage =
-    addMessage(
-      "Το City4All AI ψάχνει...",
-      "ai",
-      true
-    );
+  const loadingMessage =
+    addLoadingMessage();
 
   try {
-
     const response =
-      await fetch(
-        API_URL + "/chat",
-        {
-          method: "POST",
+      await fetch(CHAT_URL, {
+        method: "POST",
 
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
+        headers: {
+          "Content-Type": "application/json"
+        },
 
-          body: JSON.stringify({
-            message: message,
+        body: JSON.stringify({
+          message,
+          conversation,
+          previousFeatures
+        })
+      });
 
-            conversation:
-              conversation,
+    const data =
+      await response.json();
 
-            previousFeatures:
-              lastFeatures
-          })
-        }
-      );
-
-    let data;
-
-    try {
-
-      data =
-        await response.json();
-
-    } catch {
-
-      throw new Error(
-        "Ο Worker επέστρεψε μη έγκυρη απάντηση."
-      );
-
-    }
-
-    removeMessage(
-      typingMessage
+    removeLoadingMessage(
+      loadingMessage
     );
 
-    if (
-      !response.ok ||
-      !data.success
-    ) {
-
+    if (!response.ok || !data.success) {
       throw new Error(
-        data.error ||
-        "Παρουσιάστηκε σφάλμα."
+        data?.error ||
+        "Η αναζήτηση απέτυχε."
       );
-
     }
 
-    conversation.push({
-      role: "user",
-      content: message
-    });
-
-    conversation.push({
-      role: "assistant",
-      content:
-        data.answer || ""
-    });
-
-    if (
-      conversation.length > 20
-    ) {
-
-      conversation =
-        conversation.slice(-20);
-
-    }
-
-    addMessage(
+    const answer =
       data.answer ||
-      "Δεν υπήρξε απάντηση.",
-      "ai"
+      "Δεν μπόρεσα να δημιουργήσω απάντηση.";
+
+    addMessage("ai", answer);
+
+    updateConversation(
+      message,
+      answer
     );
 
-    lastFeatures =
-      Array.isArray(
-        data.features
-      )
+    updateResults(
+      data
+    );
+
+    updateMap(
+      data.features || []
+    );
+
+    previousFeatures =
+      Array.isArray(data.features)
         ? data.features
         : [];
-
-    displayResults(
-      lastFeatures
-    );
-
-    showResultsOnMap(
-      lastFeatures
-    );
 
   } catch (error) {
 
     console.error(
-      "City4All Chat Error:",
+      "City4All AI error:",
       error
     );
 
-    removeMessage(
-      typingMessage
+    removeLoadingMessage(
+      loadingMessage
     );
 
     addMessage(
-      "❌ Δεν μπόρεσα να συνδεθώ με το City4All AI. " +
-      "Έλεγξε ότι ο Worker είναι online.",
-      "ai"
+      "ai",
+      "⚠️ Κάτι πήγε στραβά. Δεν μπόρεσα να επικοινωνήσω με το City4All AI."
     );
 
   } finally {
-
     setLoading(false);
-
   }
 }
 
 
-/* =========================================
-   ADD MESSAGE
-========================================= */
+// ============================================================
+// CONVERSATION
+// ============================================================
+
+function updateConversation(
+  userMessage,
+  assistantMessage
+) {
+  conversation.push({
+    role: "user",
+    content: userMessage
+  });
+
+  conversation.push({
+    role: "assistant",
+    content: assistantMessage
+  });
+
+  // Keep frontend conversation small.
+  if (conversation.length > 20) {
+    conversation =
+      conversation.slice(-20);
+  }
+}
+
+
+// ============================================================
+// MESSAGES
+// ============================================================
 
 function addMessage(
-  text,
   role,
-  temporary = false
+  text
 ) {
-
   const wrapper =
     document.createElement("div");
 
   wrapper.className =
-    "message " + role;
-
-  if (temporary) {
-
-    wrapper.dataset.temporary =
-      "true";
-
-  }
+    `message ${role}`;
 
   const bubble =
     document.createElement("div");
@@ -220,80 +232,123 @@ function addMessage(
     wrapper
   );
 
-  messagesEl.scrollTop =
-    messagesEl.scrollHeight;
+  scrollMessages();
 
   return wrapper;
 }
 
 
-/* =========================================
-   REMOVE MESSAGE
-========================================= */
+function addLoadingMessage() {
+  const wrapper =
+    document.createElement("div");
 
-function removeMessage(
+  wrapper.className =
+    "message ai";
+
+  wrapper.dataset.loading =
+    "true";
+
+  const bubble =
+    document.createElement("div");
+
+  bubble.className =
+    "bubble";
+
+  bubble.innerHTML =
+    `
+      <span class="loading-dots">
+        Αναζητώ<span>.</span><span>.</span><span>.</span>
+      </span>
+    `;
+
+  wrapper.appendChild(
+    bubble
+  );
+
+  messagesEl.appendChild(
+    wrapper
+  );
+
+  scrollMessages();
+
+  return wrapper;
+}
+
+
+function removeLoadingMessage(
   element
 ) {
-
-  if (
-    element &&
-    element.parentNode
-  ) {
-
-    element.parentNode.removeChild(
-      element
-    );
-
+  if (element) {
+    element.remove();
   }
 }
 
 
-/* =========================================
-   LOADING
-========================================= */
+function scrollMessages() {
+  requestAnimationFrame(() => {
+    messagesEl.scrollTop =
+      messagesEl.scrollHeight;
+  });
+}
+
+
+// ============================================================
+// LOADING STATE
+// ============================================================
 
 function setLoading(
   loading
 ) {
-
   isLoading =
     loading;
 
   sendButton.disabled =
     loading;
 
-  inputEl.disabled =
+  voiceButton.disabled =
     loading;
 
-  voiceButton.disabled =
+  inputEl.disabled =
     loading;
 
   sendButton.textContent =
     loading
-      ? "Αναζήτηση..."
+      ? "..."
       : "Αποστολή";
 }
 
 
-/* =========================================
-   DISPLAY RESULTS
-========================================= */
+// ============================================================
+// RESULTS
+// ============================================================
 
-function displayResults(
-  features
+function updateResults(
+  data
 ) {
+  const primary =
+    Array.isArray(
+      data.primaryFeatures
+    )
+      ? data.primaryFeatures
+      : [];
 
-  resultsEl.innerHTML =
-    "";
+  const secondary =
+    Array.isArray(
+      data.secondaryFeatures
+    )
+      ? data.secondaryFeatures
+      : [];
 
-  if (
-    !Array.isArray(features) ||
-    features.length === 0
-  ) {
+  const all =
+    [...primary, ...secondary];
 
+  if (!all.length) {
     resultsEl.classList.remove(
       "has-results"
     );
+
+    resultsEl.innerHTML =
+      "";
 
     return;
   }
@@ -303,331 +358,272 @@ function displayResults(
   );
 
   const header =
-    document.createElement("div");
+    `
+      <div class="results-header">
+        <div class="results-title">
+          Αποτελέσματα
+        </div>
 
-  header.className =
-    "results-header";
+        <div class="results-count">
+          ${all.length} σημεία
+        </div>
+      </div>
+    `;
 
-  const title =
-    document.createElement("div");
+  const cards =
+    all
+      .map((feature, index) =>
+        createResultCard(
+          feature,
+          index
+        )
+      )
+      .join("");
 
-  title.className =
-    "results-title";
+  resultsEl.innerHTML =
+    header + cards;
 
-  title.textContent =
-    "Αποτελέσματα City4All";
+  attachResultEvents();
+}
 
-  const count =
-    document.createElement("div");
 
-  count.className =
-    "results-count";
+// ============================================================
+// RESULT CARD
+// ============================================================
 
-  count.textContent =
-    features.length +
-    (
-      features.length === 1
-        ? " σημείο"
-        : " σημεία"
+function createResultCard(
+  feature,
+  index
+) {
+  const name =
+    escapeHTML(
+      feature.name ||
+      "Χωρίς ονομασία"
     );
 
-  header.appendChild(
-    title
-  );
+  const type =
+    escapeHTML(
+      feature.type ||
+      "Σημείο"
+    );
 
-  header.appendChild(
-    count
-  );
+  const accessibility =
+    escapeHTML(
+      feature.accessibility ||
+      "Δεν έχει καταχωρηθεί συγκεκριμένο χαρακτηριστικό."
+    );
 
-  resultsEl.appendChild(
-    header
-  );
+  const comments =
+    escapeHTML(
+      feature.comments ||
+      ""
+    );
 
-  features.forEach(
-    function (
-      feature,
-      index
-    ) {
+  const area =
+    escapeHTML(
+      feature.area ||
+      feature.municipality ||
+      ""
+    );
 
-      const card =
-        document.createElement(
-          "div"
-        );
+  const sourceType =
+    feature.external
+      ? "Internet / OpenStreetMap"
+      : "City4All";
 
-      card.className =
-        "result-card";
+  const image =
+    feature.imageUrl
+      ? `
+        <img
+          class="result-image"
+          src="${escapeAttribute(feature.imageUrl)}"
+          alt="${name}"
+          loading="lazy"
+          onerror="this.style.display='none'"
+        >
+      `
+      : "";
 
-      const title =
-        document.createElement(
-          "h3"
-        );
+  const routeUrl =
+    feature.googleMapsUrl ||
+    createGoogleMapsUrl(
+      feature
+    );
 
-      title.textContent =
-        feature.name ||
-        "Χωρίς ονομασία";
+  const routeButton =
+    routeUrl
+      ? `
+        <a
+          class="route-button"
+          href="${escapeAttribute(routeUrl)}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          🧭 Οδηγίες
+        </a>
+      `
+      : "";
 
-      const type =
-        document.createElement(
-          "div"
-        );
+  return `
+    <article
+      class="result-card"
+      data-index="${index}"
+    >
 
-      type.className =
-        "result-type";
+      ${image}
 
-      type.textContent =
-        feature.type ||
-        "Σημείο";
+      <div class="result-number">
+        ${index + 1}
+      </div>
 
-      card.appendChild(
-        title
-      );
+      <h3>
+        ${name}
+      </h3>
 
-      card.appendChild(
-        type
-      );
+      <div class="result-type">
+        ${type}
+      </div>
 
-      if (feature.area) {
+      <div class="source-badge ${
+        feature.external
+          ? "external"
+          : ""
+      }">
+        ${sourceType}
+      </div>
 
-        const areaRow =
-          document.createElement(
-            "div"
-          );
-
-        areaRow.className =
-          "info-row";
-
-        areaRow.textContent =
-          "📍 " +
-          feature.area;
-
-        card.appendChild(
-          areaRow
-        );
-
+      ${
+        area
+          ? `
+            <div class="info-row">
+              📍 ${area}
+            </div>
+          `
+          : ""
       }
 
-      const accessibilityRow =
-        document.createElement(
-          "div"
-        );
+      <div class="info-row accessibility">
+        ♿ ${accessibility}
+      </div>
 
-      accessibilityRow.className =
-        "info-row";
+      ${
+        comments
+          ? `
+            <div class="info-row">
+              ℹ️ ${comments}
+            </div>
+          `
+          : ""
+      }
 
-      const accessibilityStrong =
-        document.createElement(
-          "strong"
-        );
+      <div class="result-actions">
 
-      accessibilityStrong.textContent =
-        "♿ Προσβασιμότητα:";
+        ${routeButton}
 
-      accessibilityRow.appendChild(
-        accessibilityStrong
-      );
-
-      accessibilityRow.appendChild(
-        document.createElement(
-          "br"
-        )
-      );
-
-      const accessibilitySpan =
-        document.createElement(
-          "span"
-        );
-
-      accessibilitySpan.className =
-        "accessibility";
-
-      accessibilitySpan.textContent =
-        feature.accessibility ||
-        "Δεν υπάρχει καταγεγραμμένη πληροφορία.";
-
-      accessibilityRow.appendChild(
-        accessibilitySpan
-      );
-
-      card.appendChild(
-        accessibilityRow
-      );
-
-      if (feature.comments) {
-
-        const commentsRow =
-          document.createElement(
-            "div"
-          );
-
-        commentsRow.className =
-          "info-row";
-
-        const commentsStrong =
-          document.createElement(
-            "strong"
-          );
-
-        commentsStrong.textContent =
-          "📝 Παρατηρήσεις:";
-
-        commentsRow.appendChild(
-          commentsStrong
-        );
-
-        commentsRow.appendChild(
-          document.createElement(
-            "br"
+        ${
+          Number.isFinite(
+            Number(feature.latitude)
+          ) &&
+          Number.isFinite(
+            Number(feature.longitude)
           )
-        );
+            ? `
+              <button
+                type="button"
+                class="map-button"
+                data-map-index="${index}"
+              >
+                🗺️ Χάρτης
+              </button>
+            `
+            : ""
+        }
 
-        const commentsText =
-          document.createTextNode(
-            feature.comments
-          );
+      </div>
 
-        commentsRow.appendChild(
-          commentsText
-        );
+    </article>
+  `;
+}
 
-        card.appendChild(
-          commentsRow
-        );
 
-      }
+// ============================================================
+// RESULT EVENTS
+// ============================================================
 
-      const actions =
-        document.createElement(
-          "div"
-        );
+function attachResultEvents() {
+  document
+    .querySelectorAll(
+      "[data-map-index]"
+    )
+    .forEach(button => {
 
-      actions.className =
-        "result-actions";
-
-      if (
-        feature.googleMapsUrl
-      ) {
-
-        const routeButton =
-          document.createElement(
-            "a"
-          );
-
-        routeButton.className =
-          "route-button";
-
-        routeButton.href =
-          feature.googleMapsUrl;
-
-        routeButton.target =
-          "_blank";
-
-        routeButton.rel =
-          "noopener noreferrer";
-
-        routeButton.textContent =
-          "🗺️ Οδηγίες";
-
-        actions.appendChild(
-          routeButton
-        );
-
-      }
-
-      const mapButton =
-        document.createElement(
-          "button"
-        );
-
-      mapButton.className =
-        "map-button";
-
-      mapButton.type =
-        "button";
-
-      mapButton.textContent =
-        "📍 Χάρτης";
-
-      mapButton.addEventListener(
+      button.addEventListener(
         "click",
-        function () {
+        () => {
 
-          focusFeatureOnMap(
+          const index =
+            Number(
+              button.dataset.mapIndex
+            );
+
+          const feature =
+            previousFeatures[index];
+
+          if (
             feature
-          );
+          ) {
+            focusMapFeature(
+              feature
+            );
+          }
 
         }
       );
 
-      actions.appendChild(
-        mapButton
-      );
-
-      card.appendChild(
-        actions
-      );
-
-      resultsEl.appendChild(
-        card
-      );
-
-    }
-  );
+    });
 }
 
 
-/* =========================================
-   SHOW RESULTS ON MAP
-========================================= */
+// ============================================================
+// MAP
+// ============================================================
 
-function showResultsOnMap(
+function updateMap(
   features
 ) {
-
-  if (
-    !Array.isArray(features)
-  ) {
-    return;
-  }
-
   if (
     !window.city4allMap ||
+    !window.city4allMap.view ||
     !window.city4allMap.resultsLayer
   ) {
+    console.warn(
+      "City4All map is not ready."
+    );
+
     return;
   }
 
-  const mapData =
-    window.city4allMap;
-
-  const view =
-    mapData.view;
-
-  const resultsLayer =
-    mapData.resultsLayer;
-
-  const Graphic =
-    mapData.Graphic;
-
-  if (
-    !view ||
-    !resultsLayer ||
-    !Graphic
-  ) {
-    return;
-  }
+  const {
+    view,
+    resultsLayer,
+    Graphic
+  } = window.city4allMap;
 
   resultsLayer.removeAll();
 
-  if (
-    features.length === 0
-  ) {
-    return;
-  }
+  const validFeatures =
+    features.filter(
+      feature =>
+        Number.isFinite(
+          Number(feature.latitude)
+        ) &&
+        Number.isFinite(
+          Number(feature.longitude)
+        )
+    );
 
-  const graphics = [];
-
-  features.forEach(
-    function (feature) {
+  validFeatures.forEach(
+    (feature, index) => {
 
       const latitude =
         Number(
@@ -639,167 +635,123 @@ function showResultsOnMap(
           feature.longitude
         );
 
-      if (
-        !Number.isFinite(latitude) ||
-        !Number.isFinite(longitude)
-      ) {
-        return;
-      }
-
-      if (
-        latitude < -90 ||
-        latitude > 90 ||
-        longitude < -180 ||
-        longitude > 180
-      ) {
-        return;
-      }
-
-      const point = {
-        type: "point",
-        longitude: longitude,
-        latitude: latitude
-      };
-
-      const symbol = {
-        type: "simple-marker",
-        size: 13,
-        color: "#1976d2",
-        outline: {
-          color: "#ffffff",
-          width: 2
-        }
-      };
-
-      const popupContent =
-        document.createElement(
-          "div"
-        );
-
-      const typeLine =
-        document.createElement(
-          "div"
-        );
-
-      const typeStrong =
-        document.createElement(
-          "strong"
-        );
-
-      typeStrong.textContent =
-        "Τύπος: ";
-
-      typeLine.appendChild(
-        typeStrong
-      );
-
-      typeLine.appendChild(
-        document.createTextNode(
-          feature.type || ""
-        )
-      );
-
-      const accessibilityLine =
-        document.createElement(
-          "div"
-        );
-
-      accessibilityLine.style.marginTop =
-        "8px";
-
-      const accessibilityStrong =
-        document.createElement(
-          "strong"
-        );
-
-      accessibilityStrong.textContent =
-        "Προσβασιμότητα: ";
-
-      accessibilityLine.appendChild(
-        accessibilityStrong
-      );
-
-      accessibilityLine.appendChild(
-        document.createTextNode(
-          feature.accessibility || ""
-        )
-      );
-
-      popupContent.appendChild(
-        typeLine
-      );
-
-      popupContent.appendChild(
-        accessibilityLine
-      );
-
       const graphic =
         new Graphic({
-          geometry: point,
-          symbol: symbol,
-          attributes: feature,
+
+          geometry: {
+            type: "point",
+            longitude,
+            latitude
+          },
+
+          symbol: {
+            type: "simple-marker",
+            size: 14,
+            color: feature.external
+              ? "#f59e0b"
+              : "#1976d2",
+            outline: {
+              color: "#ffffff",
+              width: 2
+            }
+          },
+
+          attributes: {
+            name:
+              feature.name ||
+              "Σημείο",
+            type:
+              feature.type ||
+              "Σημείο",
+            accessibility:
+              feature.accessibility ||
+              "",
+            index:
+              index + 1
+          },
+
           popupTemplate: {
             title:
-              feature.name ||
-              "City4All σημείο",
-            content:
-              popupContent
+              `{index}. {name}`,
+
+            content: [
+              {
+                type: "text",
+
+                text:
+                  `
+                    <strong>Κατηγορία:</strong>
+                    {type}<br><br>
+
+                    <strong>Προσβασιμότητα:</strong>
+                    {accessibility}
+                  `
+              }
+            ]
           }
+
         });
 
-      graphics.push(
+      resultsLayer.add(
         graphic
       );
-
     }
   );
 
   if (
-    graphics.length === 0
+    validFeatures.length === 1
   ) {
-    return;
-  }
 
-  resultsLayer.addMany(
-    graphics
-  );
+    view.goTo({
+      center: [
+        Number(
+          validFeatures[0].longitude
+        ),
+        Number(
+          validFeatures[0].latitude
+        )
+      ],
+      zoom: 16
+    });
 
-  const geometries =
-    graphics.map(
-      function (graphic) {
-        return graphic.geometry;
-      }
-    );
+  } else if (
+    validFeatures.length > 1
+  ) {
 
-  view.goTo(
-    {
-      target: geometries,
-      padding: 70
-    },
-    {
-      duration: 900
-    }
-  ).catch(
-    function (error) {
-
-      console.warn(
-        "Map zoom error:",
-        error
+    const points =
+      validFeatures.map(
+        feature => ({
+          type: "point",
+          longitude:
+            Number(
+              feature.longitude
+            ),
+          latitude:
+            Number(
+              feature.latitude
+            )
+        })
       );
 
-    }
-  );
+    view.goTo(
+      points,
+      {
+        padding: {
+          top: 80,
+          right: 60,
+          bottom: 80,
+          left: 60
+        }
+      }
+    ).catch(() => {});
+
+  }
 }
 
 
-/* =========================================
-   FOCUS SINGLE FEATURE
-========================================= */
-
-function focusFeatureOnMap(
+function focusMapFeature(
   feature
 ) {
-
   if (
     !window.city4allMap ||
     !window.city4allMap.view
@@ -824,165 +776,78 @@ function focusFeatureOnMap(
     return;
   }
 
-  const view =
-    window.city4allMap.view;
-
-  view.goTo(
-    {
-      center: [
-        longitude,
-        latitude
-      ],
-      zoom: 17
-    },
-    {
-      duration: 700
-    }
-  ).then(
-    function () {
-
-      if (
-        view.popup
-      ) {
-
-        view.popup.open({
-          location: {
-            type: "point",
-            longitude: longitude,
-            latitude: latitude
-          },
-          title:
-            feature.name ||
-            "City4All σημείο"
-        });
-
-      }
-
-    }
-  ).catch(
-    function (error) {
-
-      console.warn(
-        "Map focus error:",
-        error
-      );
-
-    }
-  );
+  window.city4allMap.view.goTo({
+    center: [
+      longitude,
+      latitude
+    ],
+    zoom: 17
+  });
 }
 
 
-/* =========================================
-   ENTER TO SEND
-========================================= */
+function createGoogleMapsUrl(
+  feature
+) {
+  const latitude =
+    Number(
+      feature.latitude
+    );
 
-inputEl.addEventListener(
-  "keydown",
-  function (event) {
+  const longitude =
+    Number(
+      feature.longitude
+    );
 
-    if (
-      event.key === "Enter" &&
-      !event.shiftKey
-    ) {
-
-      event.preventDefault();
-
-      sendMessage();
-
-    }
-
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude)
+  ) {
+    return null;
   }
-);
 
-
-/* =========================================
-   SEND BUTTON
-========================================= */
-
-sendButton.addEventListener(
-  "click",
-  sendMessage
-);
-
-
-/* =========================================
-   QUICK BUTTONS
-========================================= */
-
-document
-  .querySelectorAll(
-    ".quick-button"
-  )
-  .forEach(
-    function (button) {
-
-      button.addEventListener(
-        "click",
-        function () {
-
-          if (isLoading) {
-            return;
-          }
-
-          const question =
-            button.dataset.question ||
-            "";
-
-          if (!question) {
-            return;
-          }
-
-          inputEl.value =
-            question;
-
-          autoResizeTextarea();
-
-          sendMessage();
-
-        }
-      );
-
-    }
+  return (
+    "https://www.google.com/maps/dir/?api=1" +
+    "&destination=" +
+    encodeURIComponent(
+      `${latitude},${longitude}`
+    ) +
+    "&travelmode=walking"
   );
-
-
-/* =========================================
-   TEXTAREA RESIZE
-========================================= */
-
-inputEl.addEventListener(
-  "input",
-  autoResizeTextarea
-);
-
-function autoResizeTextarea() {
-
-  inputEl.style.height =
-    "45px";
-
-  inputEl.style.height =
-    Math.min(
-      inputEl.scrollHeight,
-      110
-    ) + "px";
 }
 
 
-/* =========================================
-   VOICE INPUT
-========================================= */
+// ============================================================
+// VOICE INPUT
+// ============================================================
 
-let recognition = null;
+function setupVoice() {
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
 
-let isListening = false;
+  if (!SpeechRecognition) {
 
-const SpeechRecognition =
-  window.SpeechRecognition ||
-  window.webkitSpeechRecognition;
+    voiceButton.title =
+      "Η φωνητική εισαγωγή δεν υποστηρίζεται σε αυτόν τον browser.";
 
-if (SpeechRecognition) {
+    voiceButton.style.opacity =
+      "0.45";
 
-  recognition =
+    voiceButton.addEventListener(
+      "click",
+      () => {
+        addMessage(
+          "ai",
+          "🎤 Η φωνητική εισαγωγή δεν υποστηρίζεται από τον συγκεκριμένο browser."
+        );
+      }
+    );
+
+    return;
+  }
+
+  const recognition =
     new SpeechRecognition();
 
   recognition.lang =
@@ -994,10 +859,40 @@ if (SpeechRecognition) {
   recognition.interimResults =
     false;
 
-  recognition.onstart =
-    function () {
+  recognition.maxAlternatives =
+    1;
 
-      isListening =
+  let listening =
+    false;
+
+  voiceButton.addEventListener(
+    "click",
+    () => {
+
+      if (isLoading) {
+        return;
+      }
+
+      if (listening) {
+        recognition.stop();
+        return;
+      }
+
+      try {
+        recognition.start();
+      } catch (error) {
+        console.warn(
+          "Speech recognition:",
+          error
+        );
+      }
+    }
+  );
+
+  recognition.onstart =
+    () => {
+
+      listening =
         true;
 
       voiceButton.classList.add(
@@ -1006,36 +901,12 @@ if (SpeechRecognition) {
 
       voiceButton.textContent =
         "⏹️";
-
-    };
-
-  recognition.onresult =
-    function (event) {
-
-      const transcript =
-        event.results[0][0].transcript;
-
-      inputEl.value =
-        transcript;
-
-      autoResizeTextarea();
-
-    };
-
-  recognition.onerror =
-    function (event) {
-
-      console.error(
-        "Speech recognition error:",
-        event.error
-      );
-
     };
 
   recognition.onend =
-    function () {
+    () => {
 
-      isListening =
+      listening =
         false;
 
       voiceButton.classList.remove(
@@ -1044,77 +915,90 @@ if (SpeechRecognition) {
 
       voiceButton.textContent =
         "🎤";
-
     };
 
-  voiceButton.addEventListener(
-    "click",
-    function () {
+  recognition.onresult =
+    event => {
 
-      if (isLoading) {
-        return;
-      }
+      const transcript =
+        event.results?.[0]?.[0]?.transcript ||
+        "";
 
-      if (isListening) {
+      if (
+        transcript.trim()
+      ) {
+        inputEl.value =
+          transcript.trim();
 
-        recognition.stop();
-
-        return;
-      }
-
-      try {
-
-        recognition.start();
-
-      } catch (error) {
-
-        console.error(
-          "Voice start error:",
-          error
+        inputEl.dispatchEvent(
+          new Event("input")
         );
-
       }
+    };
 
-    }
-  );
+  recognition.onerror =
+    event => {
 
-} else {
+      console.warn(
+        "Speech recognition error:",
+        event.error
+      );
 
-  voiceButton.disabled =
-    true;
-
-  voiceButton.title =
-    "Η φωνητική εισαγωγή δεν υποστηρίζεται από αυτόν τον browser.";
-
+    };
 }
 
 
-/* =========================================
-   MAP READY HANDLER
-========================================= */
+// ============================================================
+// SECURITY / HTML HELPERS
+// ============================================================
+
+function escapeHTML(
+  value
+) {
+  return String(
+    value ?? ""
+  )
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+}
+
+
+function escapeAttribute(
+  value
+) {
+  return escapeHTML(
+    value
+  );
+}
+
+
+// ============================================================
+// MAP READY
+// ============================================================
 
 window.addEventListener(
   "city4all-map-ready",
-  function () {
-
-    if (
-      lastFeatures.length > 0
-    ) {
-
-      showResultsOnMap(
-        lastFeatures
-      );
-
-    }
-
+  () => {
+    console.log(
+      "City4All map is ready for AI results."
+    );
   }
-);
-
-
-/* =========================================
-   INITIAL STATE
-========================================= */
-
-console.log(
-  "City4All AI interface loaded."
 );
