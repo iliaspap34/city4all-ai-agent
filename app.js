@@ -13,12 +13,17 @@ let conversation = [];
 let previousFeatures = [];
 
 let isLoading = false;
+
+let recognition = null;
+let voiceMode = false;
+let listening = false;
+let voiceRestartTimer = null;
+let voiceSessionId = 0;
+
 let isSpeaking = false;
 
-let voiceMode = false;
-let recognition = null;
-let listening = false;
-let shouldContinueListening = false;
+let mapReadyPromise =
+  Promise.resolve();
 
 
 /* ============================================================
@@ -47,8 +52,11 @@ document.addEventListener(
   () => {
 
     setupQuickActions();
+
     setupInput();
+
     setupVoice();
+
     setupMobileViewport();
 
     console.log(
@@ -127,11 +135,7 @@ function setupInput() {
 
   inputEl.addEventListener(
     "input",
-    () => {
-
-      autoResizeInput();
-
-    }
+    resizeInput
   );
 
 
@@ -140,10 +144,13 @@ function setupInput() {
     sendMessage
   );
 
+
+  resizeInput();
+
 }
 
 
-function autoResizeInput() {
+function resizeInput() {
 
   inputEl.style.height =
     "43px";
@@ -168,8 +175,13 @@ function autoResizeInput() {
 ============================================================ */
 
 async function sendMessage(
-  fromVoice = false
+  options = {}
 ) {
+
+  const {
+    fromVoice = false
+  } = options;
+
 
   if (isLoading) {
     return;
@@ -187,10 +199,6 @@ async function sendMessage(
 
   stopSpeaking();
 
-
-  /*
-   * USER MESSAGE
-   */
 
   addMessage(
     "user",
@@ -214,18 +222,10 @@ async function sendMessage(
 
   try {
 
-    /*
-     * IMPORTANT:
-     *
-     * Κρατάμε ακριβώς το ίδιο API contract
-     * με τον υπάρχοντα Worker.
-     */
-
     const response =
       await fetch(
         CHAT_URL,
         {
-
           method:
             "POST",
 
@@ -236,35 +236,16 @@ async function sendMessage(
 
           body:
             JSON.stringify({
-
               message,
-
               conversation,
-
               previousFeatures
-
             })
-
         }
       );
 
 
-    let data;
-
-    try {
-
-      data =
-        await response.json();
-
-    }
-
-    catch {
-
-      throw new Error(
-        "Ο Worker επέστρεψε μη έγκυρη απάντηση."
-      );
-
-    }
+    const data =
+      await response.json();
 
 
     removeLoadingMessage(
@@ -285,10 +266,6 @@ async function sendMessage(
     }
 
 
-    /*
-     * ANSWER
-     */
-
     const answer =
       data.answer ||
       "Δεν μπόρεσα να δημιουργήσω απάντηση.";
@@ -301,12 +278,6 @@ async function sendMessage(
       );
 
 
-    /*
-     * CONVERSATION
-     *
-     * Κρατάμε το ίδιο format.
-     */
-
     updateConversation(
       message,
       answer
@@ -314,11 +285,9 @@ async function sendMessage(
 
 
     /*
-     * FEATURES
-     *
-     * Δεν αλλάζουμε το feature format.
+     * Τα 10 περίπου αποτελέσματα
+     * που εμφανίζονται στο chat.
      */
-
     const features =
       Array.isArray(
         data.features
@@ -327,35 +296,51 @@ async function sendMessage(
         : [];
 
 
+    /*
+     * ΟΛΑ τα αποτελέσματα που
+     * πρέπει να εμφανιστούν στον χάρτη.
+     */
+    const mapFeatures =
+      Array.isArray(
+        data.mapFeatures
+      )
+        ? data.mapFeatures
+        : features;
+
+
+    /*
+     * Κρατάμε τα chat results
+     * για follow-up ερωτήσεις.
+     */
     previousFeatures =
       features;
 
 
-    /*
-     * CHAT ACTIONS
-     */
-
     addChatActions(
       messageElement,
-      features
+      features,
+      mapFeatures
     );
 
 
     /*
-     * MAP
+     * Ο Agent ελέγχει πραγματικά
+     * τον ArcGIS χάρτη.
      */
-
     updateMap(
-      features
+      mapFeatures
     );
 
 
     /*
-     * VOICE RESPONSE
+     * Normal text chat:
+     * ΔΕΝ μιλάει.
+     *
+     * Voice Mode:
+     * μιλάει αυτόματα.
      */
-
     if (
-      voiceMode &&
+      voiceMode ||
       fromVoice
     ) {
 
@@ -365,9 +350,7 @@ async function sendMessage(
 
     }
 
-  }
-
-  catch (error) {
+  } catch (error) {
 
     console.error(
       "City4All AI error:",
@@ -388,14 +371,11 @@ async function sendMessage(
 
     if (voiceMode) {
 
-      shouldContinueListening =
-        false;
+      stopVoiceMode();
 
     }
 
-  }
-
-  finally {
+  } finally {
 
     setLoading(false);
 
@@ -414,34 +394,24 @@ function updateConversation(
 ) {
 
   conversation.push({
-
     role:
       "user",
-
     content:
       userMessage
-
   });
 
 
   conversation.push({
-
     role:
       "assistant",
-
     content:
       assistantMessage
-
   });
 
 
-  /*
-   * Κρατάμε τα τελευταία 20 messages,
-   * όπως και πριν.
-   */
-
   if (
-    conversation.length > 20
+    conversation.length >
+    20
   ) {
 
     conversation =
@@ -450,266 +420,6 @@ function updateConversation(
       );
 
   }
-
-}
-
-
-/* ============================================================
-   MARKDOWN / CHATGPT STYLE RENDERING
-============================================================ */
-
-function renderMarkdown(
-  text
-) {
-
-  let html =
-    escapeHTML(
-      text
-    );
-
-
-  /*
-   * Code blocks
-   */
-
-  html =
-    html.replace(
-      /```([\s\S]*?)```/g,
-      "<pre class=\"code-block\"><code>$1</code></pre>"
-    );
-
-
-  /*
-   * Inline code
-   */
-
-  html =
-    html.replace(
-      /`([^`\n]+)`/g,
-      "<code>$1</code>"
-    );
-
-
-  /*
-   * Headings
-   */
-
-  html =
-    html.replace(
-      /^### (.+)$/gm,
-      "<h4>$1</h4>"
-    );
-
-
-  html =
-    html.replace(
-      /^## (.+)$/gm,
-      "<h3>$1</h3>"
-    );
-
-
-  html =
-    html.replace(
-      /^# (.+)$/gm,
-      "<h2>$1</h2>"
-    );
-
-
-  /*
-   * Bold
-   */
-
-  html =
-    html.replace(
-      /\*\*(.+?)\*\*/g,
-      "<strong>$1</strong>"
-    );
-
-
-  /*
-   * Italic
-   */
-
-  html =
-    html.replace(
-      /(^|[^\*])\*([^*\n]+)\*(?!\*)/g,
-      "$1<em>$2</em>"
-    );
-
-
-  /*
-   * Links
-   *
-   * Επειδή το URL έχει ήδη γίνει HTML escaped,
-   * κρατάμε μόνο ασφαλή http/https links.
-   */
-
-  html =
-    html.replace(
-      /https?:\/\/[^\s<]+/g,
-      url => {
-
-        const cleanUrl =
-          url.replace(
-            /[.,!?;:)]+$/,
-            ""
-          );
-
-        const safeUrl =
-          escapeHTML(
-            cleanUrl
-          );
-
-        return `
-          <a
-            href="${safeUrl}"
-            target="_blank"
-            rel="noopener noreferrer"
-          >${safeUrl}</a>
-        `;
-
-      }
-    );
-
-
-  /*
-   * Unordered lists
-   */
-
-  const lines =
-    html.split("\n");
-
-  let output = [];
-  let inList = false;
-
-
-  lines.forEach(
-    line => {
-
-      const match =
-        line.match(
-          /^\s*[-•]\s+(.+)$/
-        );
-
-
-      if (match) {
-
-        if (!inList) {
-
-          output.push(
-            "<ul>"
-          );
-
-          inList = true;
-
-        }
-
-        output.push(
-          `<li>${match[1]}</li>`
-        );
-
-        return;
-
-      }
-
-
-      if (inList) {
-
-        output.push(
-          "</ul>"
-        );
-
-        inList = false;
-
-      }
-
-
-      /*
-       * Numbered list
-       */
-
-      const numbered =
-        line.match(
-          /^\s*\d+\.\s+(.+)$/
-        );
-
-
-      if (numbered) {
-
-        output.push(
-          `<div class="numbered-line">${line}</div>`
-        );
-
-        return;
-
-      }
-
-
-      output.push(
-        line
-      );
-
-    }
-  );
-
-
-  if (inList) {
-
-    output.push(
-      "</ul>"
-    );
-
-  }
-
-
-  html =
-    output.join("\n");
-
-
-  /*
-   * Line breaks
-   */
-
-  html =
-    html.replace(
-      /\n/g,
-      "<br>"
-    );
-
-
-  /*
-   * Καθαρίζουμε <br> γύρω από lists/headings.
-   */
-
-  html =
-    html
-      .replace(
-        /<br>\s*<ul>/g,
-        "<ul>"
-      )
-      .replace(
-        /<\/ul><br>/g,
-        "</ul>"
-      )
-      .replace(
-        /<br><h([234])>/g,
-        "<h$1>"
-      )
-      .replace(
-        /<\/h([234])><br>/g,
-        "</h$1>"
-      )
-      .replace(
-        /<br><pre/g,
-        "<pre"
-      )
-      .replace(
-        /<\/pre><br>/g,
-        "</pre>"
-      );
-
-
-  return html;
 
 }
 
@@ -743,27 +453,8 @@ function addMessage(
     "bubble";
 
 
-  /*
-   * USER:
-   * απλό ασφαλές text.
-   *
-   * AI:
-   * ChatGPT-style markdown rendering.
-   */
-
-  if (role === "ai") {
-
-    bubble.innerHTML =
-      renderMarkdown(text);
-
-  }
-
-  else {
-
-    bubble.textContent =
-      text;
-
-  }
+  bubble.textContent =
+    text;
 
 
   wrapper.appendChild(
@@ -839,18 +530,12 @@ function addLoadingMessage() {
 }
 
 
-/* ============================================================
-   REMOVE LOADING
-============================================================ */
-
 function removeLoadingMessage(
   element
 ) {
 
   if (element) {
-
     element.remove();
-
   }
 
 }
@@ -890,19 +575,17 @@ function setLoading(
     loading;
 
 
+  inputEl.disabled =
+    loading;
+
+
+  /*
+   * Το Voice button παραμένει ενεργό
+   * ώστε να μπορεί ο χρήστης να βγει
+   * από Voice Mode.
+   */
   voiceButton.disabled =
     false;
-
-
-  inputEl.disabled =
-    loading ||
-    voiceMode;
-
-
-  sendButton.textContent =
-    loading
-      ? "..."
-      : "Αποστολή";
 
 }
 
@@ -913,8 +596,19 @@ function setLoading(
 
 function addChatActions(
   messageElement,
-  features
+  features,
+  mapFeatures = features
 ) {
+
+  if (
+    !Array.isArray(features) ||
+    !features.length
+  ) {
+
+    return;
+
+  }
+
 
   const actions =
     document.createElement(
@@ -927,31 +621,8 @@ function addChatActions(
 
 
   /*
-   * ==========================================================
-   * NO FEATURES
-   * ==========================================================
+   * ΕΝΑ αποτέλεσμα
    */
-
-  if (
-    !Array.isArray(features) ||
-    !features.length
-  ) {
-
-    addSpeakAction(
-      messageElement
-    );
-
-    return;
-
-  }
-
-
-  /*
-   * ==========================================================
-   * ONE FEATURE
-   * ==========================================================
-   */
-
   if (
     features.length === 1
   ) {
@@ -995,11 +666,8 @@ function addChatActions(
 
 
   /*
-   * ==========================================================
-   * MULTIPLE FEATURES
-   * ==========================================================
+   * ΠΟΛΛΑ αποτελέσματα
    */
-
   else {
 
     const allButton =
@@ -1017,15 +685,24 @@ function addChatActions(
 
 
     allButton.textContent =
-      `🗺️ Προβολή ${features.length} σημείων`;
+      `🗺️ Προβολή ${mapFeatures.length} σημείων`;
 
 
     allButton.addEventListener(
       "click",
-      () => {
+      async () => {
 
-        focusAllFeatures(
-          features
+        /*
+         * Ξαναπερνάμε ΟΛΑ τα αποτελέσματα
+         * στον χάρτη.
+         */
+        await updateMap(
+          mapFeatures
+        );
+
+
+        await focusAllFeatures(
+          mapFeatures
         );
 
       }
@@ -1037,13 +714,9 @@ function addChatActions(
     );
 
 
-    const first =
-      features[0];
-
-
     const routeButton =
       createRouteButton(
-        first,
+        features[0],
         "🧭 Οδηγίες για το πρώτο"
       );
 
@@ -1060,52 +733,12 @@ function addChatActions(
 
 
   /*
-   * ==========================================================
-   * SPEAK BUTTON
-   * ==========================================================
+   * Σκόπιμα ΔΕΝ υπάρχει πλέον
+   * κουμπί "🔊 Ακρόαση".
+   *
+   * Η ομιλία γίνεται μέσω
+   * Voice Mode.
    */
-
-  if (
-    "speechSynthesis" in window
-  ) {
-
-    const speakButton =
-      document.createElement(
-        "button"
-      );
-
-
-    speakButton.type =
-      "button";
-
-
-    speakButton.className =
-      "chat-action";
-
-
-    speakButton.textContent =
-      "🔊 Ακρόαση";
-
-
-    speakButton.addEventListener(
-      "click",
-      () => {
-
-        speakAnswer(
-          getBubbleText(
-            messageElement
-          )
-        );
-
-      }
-    );
-
-
-    actions.appendChild(
-      speakButton
-    );
-
-  }
 
 
   if (
@@ -1116,80 +749,10 @@ function addChatActions(
       actions
     );
 
+
     scrollMessages();
 
   }
-
-}
-
-
-/* ============================================================
-   SPEAK ACTION
-============================================================ */
-
-function addSpeakAction(
-  messageElement
-) {
-
-  if (
-    !("speechSynthesis" in window)
-  ) {
-
-    return;
-
-  }
-
-
-  const actions =
-    document.createElement(
-      "div"
-    );
-
-
-  actions.className =
-    "message-actions";
-
-
-  const speakButton =
-    document.createElement(
-      "button"
-    );
-
-
-  speakButton.type =
-    "button";
-
-
-  speakButton.className =
-    "chat-action";
-
-
-  speakButton.textContent =
-    "🔊 Ακρόαση";
-
-
-  speakButton.addEventListener(
-    "click",
-    () => {
-
-      speakAnswer(
-        getBubbleText(
-          messageElement
-        )
-      );
-
-    }
-  );
-
-
-  actions.appendChild(
-    speakButton
-  );
-
-
-  messageElement.appendChild(
-    actions
-  );
 
 }
 
@@ -1298,7 +861,6 @@ function createRouteButton(
     event => {
 
       event.preventDefault();
-      event.stopPropagation();
 
 
       window.open(
@@ -1317,243 +879,287 @@ function createRouteButton(
 
 
 /* ============================================================
-   GET BUBBLE TEXT
-============================================================ */
-
-function getBubbleText(
-  messageElement
-) {
-
-  const bubble =
-    messageElement?.querySelector(
-      ".bubble"
-    );
-
-
-  return bubble
-    ? bubble.textContent
-    : "";
-
-}
-
-
-/* ============================================================
    MAP
 ============================================================ */
 
-function updateMap(
+async function updateMap(
   features
 ) {
 
-  if (
-    !window.city4allMap ||
-    !window.city4allMap.view ||
-    !window.city4allMap.resultsLayer
-  ) {
+  try {
 
-    console.warn(
-      "City4All map is not ready."
-    );
+    await mapReadyPromise;
 
 
-    window.addEventListener(
-      "city4all-map-ready",
-      () => {
-
-        updateMap(
-          features
-        );
-
-      },
-      {
-        once: true
-      }
-    );
-
-    return;
-
-  }
+    const map =
+      window.city4allMap;
 
 
-  const {
-    view,
-    resultsLayer,
-    Graphic
-  } =
-    window.city4allMap;
+    if (
+      !map?.view ||
+      !map?.resultsLayer ||
+      !map?.Graphic
+    ) {
+
+      console.warn(
+        "City4All map is not ready."
+      );
+
+      return;
+
+    }
 
 
-  resultsLayer.removeAll();
+    const {
+      view,
+      resultsLayer,
+      Graphic
+    } =
+      map;
 
 
-  const validFeatures =
-    Array.isArray(features)
-      ? features.filter(
-          hasCoordinates
-        )
-      : [];
+    resultsLayer.removeAll();
 
 
-  if (
-    !validFeatures.length
-  ) {
-
-    return;
-
-  }
-
-
-  validFeatures.forEach(
-    (feature, index) => {
-
-      const latitude =
-        Number(
-          feature.latitude
-        );
+    const validFeatures =
+      Array.isArray(
+        features
+      )
+        ? features.filter(
+            hasCoordinates
+          )
+        : [];
 
 
-      const longitude =
-        Number(
-          feature.longitude
-        );
+    /*
+     * Κρατάμε τα τελευταία
+     * map results.
+     */
+    map.lastFeatures =
+      validFeatures;
 
 
-      const graphic =
-        new Graphic({
+    if (
+      !validFeatures.length
+    ) {
 
-          geometry: {
+      return;
 
-            type:
-              "point",
-
-            longitude,
-
-            latitude
-
-          },
+    }
 
 
-          symbol: {
+    validFeatures.forEach(
+      (
+        feature,
+        index
+      ) => {
 
-            type:
-              "simple-marker",
+        const latitude =
+          Number(
+            feature.latitude
+          );
 
-            size:
-              15,
 
-            color:
-              feature.external
-                ? "#f59e0b"
-                : "#1976d2",
+        const longitude =
+          Number(
+            feature.longitude
+          );
 
-            outline: {
+
+        const key =
+          String(
+            feature.objectId ??
+            feature.objectid ??
+            `${latitude}:${longitude}:${index}`
+          );
+
+
+        const area =
+          feature.area ||
+          feature.municipality ||
+          feature.region ||
+          "";
+
+
+        const graphic =
+          new Graphic({
+
+            geometry: {
+
+              type:
+                "point",
+
+              longitude,
+
+              latitude
+
+            },
+
+
+            symbol: {
+
+              type:
+                "simple-marker",
+
+              size:
+                feature.external
+                  ? 13
+                  : 15,
 
               color:
-                "#ffffff",
+                feature.external
+                  ? "#f59e0b"
+                  : "#1976d2",
 
-              width:
-                2
+              outline: {
 
-            }
+                color:
+                  "#ffffff",
 
-          },
-
-
-          attributes: {
-
-            name:
-              feature.name ||
-              "Σημείο",
-
-            type:
-              feature.type ||
-              "Σημείο",
-
-            accessibility:
-              feature.accessibility ||
-              "",
-
-            area:
-              feature.area ||
-              feature.municipality ||
-              "",
-
-            index:
-              index + 1
-
-          },
-
-
-          popupTemplate: {
-
-            title:
-              `{index}. {name}`,
-
-            content: [
-
-              {
-
-                type:
-                  "text",
-
-                text:
-                  `
-                    <strong>Κατηγορία:</strong>
-                    {type}<br><br>
-
-                    <strong>Περιοχή:</strong>
-                    {area}<br><br>
-
-                    <strong>Προσβασιμότητα:</strong>
-                    {accessibility}
-                  `
+                width:
+                  2
 
               }
 
-            ]
-
-          }
-
-        });
+            },
 
 
-      resultsLayer.add(
-        graphic
+            attributes: {
+
+              city4allKey:
+                key,
+
+              name:
+                feature.name ||
+                "Σημείο",
+
+              type:
+                feature.type ||
+                "Σημείο",
+
+              accessibility:
+                feature.accessibility ||
+                "Δεν έχει καταχωρηθεί πληροφορία",
+
+              area,
+
+              municipality:
+                feature.municipality ||
+                "",
+
+              prefecture:
+                feature.prefecture ||
+                "",
+
+              region:
+                feature.region ||
+                "",
+
+              country:
+                feature.country ||
+                "",
+
+              source:
+                feature.external
+                  ? "Internet / OpenStreetMap"
+                  : "City4All",
+
+              index:
+                index + 1
+
+            },
+
+
+            popupTemplate: {
+
+              title:
+                "{index}. {name}",
+
+              content: [
+
+                {
+
+                  type:
+                    "text",
+
+                  text: `
+
+                    <strong>Πηγή:</strong>
+                    {source}
+
+                    <br><br>
+
+                    <strong>Κατηγορία:</strong>
+                    {type}
+
+                    <br><br>
+
+                    <strong>Περιοχή:</strong>
+                    {area}
+
+                    <br><br>
+
+                    <strong>Δήμος:</strong>
+                    {municipality}
+
+                    <br><br>
+
+                    <strong>Περιφέρεια:</strong>
+                    {region}
+
+                    <br><br>
+
+                    <strong>Προσβασιμότητα:</strong>
+                    {accessibility}
+
+                  `
+
+                }
+
+              ]
+
+            }
+
+          });
+
+
+        resultsLayer.add(
+          graphic
+        );
+
+      }
+    );
+
+
+    /*
+     * Αυτόματο zoom.
+     */
+    if (
+      validFeatures.length === 1
+    ) {
+
+      await focusMapFeature(
+        validFeatures[0]
       );
 
     }
-  );
 
+    else {
 
-  requestAnimationFrame(
-    () => {
-
-      requestAnimationFrame(
-        () => {
-
-          if (
-            validFeatures.length === 1
-          ) {
-
-            focusMapFeature(
-              validFeatures[0]
-            );
-
-          }
-
-          else {
-
-            focusAllFeatures(
-              validFeatures
-            );
-
-          }
-
-        }
+      await focusAllFeatures(
+        validFeatures
       );
 
     }
-  );
+
+  } catch (error) {
+
+    console.warn(
+      "Map update failed:",
+      error
+    );
+
+  }
 
 }
 
@@ -1562,13 +1168,14 @@ function updateMap(
    FOCUS SINGLE FEATURE
 ============================================================ */
 
-function focusMapFeature(
+async function focusMapFeature(
   feature
 ) {
 
   if (
-    !window.city4allMap ||
-    !window.city4allMap.view
+    !hasCoordinates(
+      feature
+    )
   ) {
 
     return;
@@ -1576,65 +1183,133 @@ function focusMapFeature(
   }
 
 
-  const latitude =
-    Number(
-      feature.latitude
-    );
+  try {
+
+    await mapReadyPromise;
 
 
-  const longitude =
-    Number(
-      feature.longitude
-    );
+    const map =
+      window.city4allMap;
 
 
-  if (
-    !Number.isFinite(latitude) ||
-    !Number.isFinite(longitude)
-  ) {
-
-    return;
-
-  }
+    const view =
+      map?.view;
 
 
-  const view =
-    window.city4allMap.view;
+    const resultsLayer =
+      map?.resultsLayer;
 
 
-  view.goTo(
-    {
+    if (!view) {
 
-      center: [
-        longitude,
-        latitude
-      ],
-
-      zoom:
-        17
-
-    },
-
-    {
-
-      duration:
-        900,
-
-      easing:
-        "ease-in-out"
+      return;
 
     }
-  )
-  .catch(
-    error => {
 
-      console.warn(
-        "Map goTo error:",
-        error
+
+    const latitude =
+      Number(
+        feature.latitude
       );
 
+
+    const longitude =
+      Number(
+        feature.longitude
+      );
+
+
+    /*
+     * Zoom στο σημείο.
+     */
+    await view.goTo(
+      {
+        center: [
+          longitude,
+          latitude
+        ],
+
+        zoom:
+          17
+      },
+      {
+        duration:
+          900
+      }
+    );
+
+
+    /*
+     * Βρες το αντίστοιχο Graphic
+     * και άνοιξε πραγματικό ArcGIS popup.
+     */
+    const key =
+      String(
+        feature.objectId ??
+        feature.objectid ??
+        `${latitude}:${longitude}`
+      );
+
+
+    const graphics =
+      resultsLayer
+        ?.graphics
+        ?.toArray?.() ||
+      [];
+
+
+    const graphic =
+      graphics.find(
+        g => {
+
+          const gKey =
+            String(
+              g.attributes
+                ?.city4allKey ??
+              ""
+            );
+
+
+          return (
+            gKey === key ||
+            (
+              Number(
+                g.geometry?.latitude
+              ) === latitude &&
+
+              Number(
+                g.geometry?.longitude
+              ) === longitude
+            )
+          );
+
+        }
+      );
+
+
+    if (graphic) {
+
+      await view.openPopup({
+
+        features: [
+          graphic
+        ],
+
+        location:
+          graphic.geometry
+
+      });
+
     }
-  );
+
+  } catch (error) {
+
+    console.warn(
+      "Could not focus to feature:",
+      error
+    );
+
+  }
 
 }
 
@@ -1643,22 +1318,14 @@ function focusMapFeature(
    FOCUS ALL FEATURES
 ============================================================ */
 
-function focusAllFeatures(
+async function focusAllFeatures(
   features
 ) {
 
-  if (
-    !window.city4allMap ||
-    !window.city4allMap.view
-  ) {
-
-    return;
-
-  }
-
-
   const validFeatures =
-    Array.isArray(features)
+    Array.isArray(
+      features
+    )
       ? features.filter(
           hasCoordinates
         )
@@ -1678,75 +1345,84 @@ function focusAllFeatures(
     validFeatures.length === 1
   ) {
 
-    focusMapFeature(
+    return focusMapFeature(
       validFeatures[0]
     );
-
-    return;
 
   }
 
 
-  const points =
-    validFeatures.map(
-      feature => ({
+  try {
 
-        type:
-          "point",
-
-        longitude:
-          Number(
-            feature.longitude
-          ),
-
-        latitude:
-          Number(
-            feature.latitude
-          )
-
-      })
-    );
+    await mapReadyPromise;
 
 
-  window.city4allMap.view
-    .goTo(
+    const view =
+      window.city4allMap?.view;
+
+
+    if (!view) {
+
+      return;
+
+    }
+
+
+    const points =
+      validFeatures.map(
+        feature => ({
+
+          type:
+            "point",
+
+          longitude:
+            Number(
+              feature.longitude
+            ),
+
+          latitude:
+            Number(
+              feature.latitude
+            )
+
+        })
+      );
+
+
+    await view.goTo(
       points,
       {
 
         padding: {
 
           top:
-            80,
+            90,
 
           right:
-            60,
+            70,
 
           bottom:
-            80,
+            90,
 
           left:
-            60
+            70
 
         },
 
         duration:
-          1000,
-
-        easing:
-          "ease-in-out"
-
-      }
-    )
-    .catch(
-      error => {
-
-        console.warn(
-          "Map goTo error:",
-          error
-        );
+          1000
 
       }
     );
+
+  } catch (error) {
+
+    console.warn(
+      "Could not zoom to all features:",
+      error
+    );
+
+  }
 
 }
 
@@ -1759,26 +1435,43 @@ function hasCoordinates(
   feature
 ) {
 
-  if (
-    !feature
-  ) {
+  if (!feature) {
 
     return false;
 
   }
 
 
+  const latitude =
+    Number(
+      feature.latitude
+    );
+
+
+  const longitude =
+    Number(
+      feature.longitude
+    );
+
+
   return (
+
     Number.isFinite(
-      Number(
-        feature.latitude
-      )
+      latitude
     ) &&
+
     Number.isFinite(
-      Number(
-        feature.longitude
-      )
-    )
+      longitude
+    ) &&
+
+    latitude >= -90 &&
+
+    latitude <= 90 &&
+
+    longitude >= -180 &&
+
+    longitude <= 180
+
   );
 
 }
@@ -1828,7 +1521,7 @@ function createGoogleMapsUrl(
 
 
 /* ============================================================
-   VOICE INPUT
+   VOICE MODE
 ============================================================ */
 
 function setupVoice() {
@@ -1838,12 +1531,10 @@ function setupVoice() {
     window.webkitSpeechRecognition;
 
 
-  if (
-    !SpeechRecognition
-  ) {
+  if (!SpeechRecognition) {
 
     voiceButton.title =
-      "Η φωνητική εισαγωγή δεν υποστηρίζεται σε αυτόν τον browser.";
+      "Η φωνητική συνομιλία δεν υποστηρίζεται σε αυτόν τον browser.";
 
 
     voiceButton.style.opacity =
@@ -1856,7 +1547,7 @@ function setupVoice() {
 
         addMessage(
           "ai",
-          "🎤 Η φωνητική εισαγωγή δεν υποστηρίζεται από τον συγκεκριμένο browser."
+          "🎤 Η φωνητική συνομιλία δεν υποστηρίζεται από τον συγκεκριμένο browser."
         );
 
       }
@@ -1888,35 +1579,6 @@ function setupVoice() {
     1;
 
 
-  /*
-   * VOICE BUTTON
-   */
-
-  voiceButton.addEventListener(
-    "click",
-    () => {
-
-      if (
-        voiceMode
-      ) {
-
-        exitVoiceMode();
-
-        return;
-
-      }
-
-
-      startVoiceMode();
-
-    }
-  );
-
-
-  /*
-   * RECOGNITION START
-   */
-
   recognition.onstart =
     () => {
 
@@ -1933,20 +1595,17 @@ function setupVoice() {
         "⏹️";
 
 
-      voiceButton.title =
-        "Κλείσιμο Voice Mode";
-
-
-      console.log(
-        "City4All Voice Mode: listening"
+      voiceButton.setAttribute(
+        "aria-label",
+        "Έξοδος από φωνητική συνομιλία"
       );
+
+
+      inputEl.placeholder =
+        "Μίλησε στον City4All Assistant...";
 
     };
 
-
-  /*
-   * RECOGNITION END
-   */
 
   recognition.onend =
     () => {
@@ -1955,57 +1614,64 @@ function setupVoice() {
         false;
 
 
-      voiceButton.classList.remove(
-        "active"
-      );
+      if (!voiceMode) {
 
+        resetVoiceButton();
 
-      if (
-        voiceMode &&
-        shouldContinueListening &&
-        !isLoading
-      ) {
-
-        setTimeout(
-          () => {
-
-            startListening();
-
-          },
-          250
-        );
+        return;
 
       }
 
-      else if (
-        !voiceMode
-      ) {
 
-        voiceButton.textContent =
-          "🎤";
+      if (!isLoading) {
 
-        voiceButton.title =
-          "Μίλησε στον City4All Assistant";
+        clearTimeout(
+          voiceRestartTimer
+        );
+
+
+        voiceRestartTimer =
+          setTimeout(
+            () => {
+
+              if (
+                voiceMode &&
+                !listening
+              ) {
+
+                startRecognition();
+
+              }
+
+            },
+            250
+          );
 
       }
 
     };
 
 
-  /*
-   * RESULT
-   */
-
   recognition.onresult =
     event => {
 
       const transcript =
-        event.results?.[0]?.[0]?.transcript ||
+        event.results
+          ?.[
+            0
+          ]
+          ?.[
+            0
+          ]
+          ?.transcript
+          ?.trim() ||
         "";
 
 
       if (
-        !transcript.trim()
+        !transcript ||
+        isLoading ||
+        !voiceMode
       ) {
 
         return;
@@ -2014,7 +1680,7 @@ function setupVoice() {
 
 
       inputEl.value =
-        transcript.trim();
+        transcript;
 
 
       inputEl.dispatchEvent(
@@ -2022,46 +1688,13 @@ function setupVoice() {
       );
 
 
-      if (
-        voiceMode
-      ) {
-
-        shouldContinueListening =
-          false;
-
-
-        setTimeout(
-          () => {
-
-            if (
-              voiceMode &&
-              !isLoading
-            ) {
-
-              sendMessage(
-                true
-              );
-
-            }
-
-          },
-          100
-        );
-
-      }
-
-      else {
-
-        inputEl.focus();
-
-      }
+      sendMessage({
+        fromVoice:
+          true
+      });
 
     };
 
-
-  /*
-   * ERROR
-   */
 
   recognition.onerror =
     event => {
@@ -2070,10 +1703,6 @@ function setupVoice() {
         "Speech recognition error:",
         event.error
       );
-
-
-      listening =
-        false;
 
 
       if (
@@ -2087,7 +1716,8 @@ function setupVoice() {
         );
 
 
-        exitVoiceMode();
+        stopVoiceMode();
+
 
         return;
 
@@ -2095,44 +1725,60 @@ function setupVoice() {
 
 
       if (
-        voiceMode &&
-        (
-          event.error === "no-speech" ||
-          event.error === "aborted"
-        )
+        event.error ===
+          "aborted" ||
+
+        event.error ===
+          "no-speech" ||
+
+        event.error ===
+          "network"
       ) {
 
-        setTimeout(
-          () => {
-
-            if (
-              voiceMode &&
-              !isLoading
-            ) {
-
-              startListening();
-
-            }
-
-          },
-          400
-        );
+        return;
 
       }
 
     };
 
+
+  voiceButton.addEventListener(
+    "click",
+    toggleVoiceMode
+  );
+
 }
 
 
-/* ============================================================
-   START VOICE MODE
-============================================================ */
+function toggleVoiceMode() {
+
+  if (!recognition) {
+
+    return;
+
+  }
+
+
+  if (voiceMode) {
+
+    stopVoiceMode();
+
+  }
+
+  else {
+
+    startVoiceMode();
+
+  }
+
+}
+
 
 function startVoiceMode() {
 
   if (
-    !recognition
+    !recognition ||
+    voiceMode
   ) {
 
     return;
@@ -2140,23 +1786,19 @@ function startVoiceMode() {
   }
 
 
-  stopSpeaking();
-
-
   voiceMode =
     true;
 
 
-  shouldContinueListening =
-    true;
+  voiceSessionId +=
+    1;
 
 
-  inputEl.disabled =
-    true;
+  stopSpeaking();
 
 
   voiceButton.classList.add(
-    "voice-mode"
+    "active"
   );
 
 
@@ -2165,22 +1807,25 @@ function startVoiceMode() {
 
 
   voiceButton.title =
-    "Κλείσιμο Voice Mode";
+    "Έξοδος από φωνητική συνομιλία";
 
 
-  showVoiceModeMessage();
+  voiceButton.setAttribute(
+    "aria-label",
+    "Έξοδος από φωνητική συνομιλία"
+  );
 
 
-  startListening();
+  inputEl.placeholder =
+    "Μίλησε στον City4All Assistant...";
+
+
+  startRecognition();
 
 }
 
 
-/* ============================================================
-   START LISTENING
-============================================================ */
-
-function startListening() {
+function startRecognition() {
 
   if (
     !recognition ||
@@ -2198,9 +1843,7 @@ function startListening() {
 
     recognition.start();
 
-  }
-
-  catch (error) {
+  } catch (error) {
 
     console.warn(
       "Could not start speech recognition:",
@@ -2212,21 +1855,19 @@ function startListening() {
 }
 
 
-/* ============================================================
-   EXIT VOICE MODE
-============================================================ */
-
-function exitVoiceMode() {
+function stopVoiceMode() {
 
   voiceMode =
     false;
 
 
-  shouldContinueListening =
-    false;
+  voiceSessionId +=
+    1;
 
 
-  stopSpeaking();
+  clearTimeout(
+    voiceRestartTimer
+  );
 
 
   if (
@@ -2238,12 +1879,10 @@ function exitVoiceMode() {
 
       recognition.stop();
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
       console.warn(
-        "Could not stop recognition:",
+        "Could not stop speech recognition:",
         error
       );
 
@@ -2256,21 +1895,19 @@ function exitVoiceMode() {
     false;
 
 
-  inputEl.disabled =
-    false;
+  resetVoiceButton();
 
 
-  voiceButton.disabled =
-    false;
+  inputEl.placeholder =
+    "Ρώτησε τον City4All Assistant...";
 
+}
+
+
+function resetVoiceButton() {
 
   voiceButton.classList.remove(
     "active"
-  );
-
-
-  voiceButton.classList.remove(
-    "voice-mode"
   );
 
 
@@ -2279,70 +1916,13 @@ function exitVoiceMode() {
 
 
   voiceButton.title =
-    "Μίλησε στον City4All Assistant";
+    "Έναρξη φωνητικής συνομιλίας";
 
 
-  inputEl.focus();
-
-}
-
-
-/* ============================================================
-   VOICE MODE MESSAGE
-============================================================ */
-
-function showVoiceModeMessage() {
-
-  const existing =
-    document.querySelector(
-      ".voice-mode-notice"
-    );
-
-
-  if (
-    existing
-  ) {
-
-    return;
-
-  }
-
-
-  const wrapper =
-    document.createElement(
-      "div"
-    );
-
-
-  wrapper.className =
-    "message ai voice-mode-notice";
-
-
-  const bubble =
-    document.createElement(
-      "div"
-    );
-
-
-  bubble.className =
-    "bubble";
-
-
-  bubble.textContent =
-    "🎙️ Voice Conversation ενεργό. Μίλησέ μου. Πάτησε ⏹️ για έξοδο.";
-
-
-  wrapper.appendChild(
-    bubble
+  voiceButton.setAttribute(
+    "aria-label",
+    "Έναρξη φωνητικής συνομιλίας"
   );
-
-
-  messagesEl.appendChild(
-    wrapper
-  );
-
-
-  scrollMessages();
 
 }
 
@@ -2383,16 +1963,10 @@ function speakAnswer(
         /https?:\/\/\S+/g,
         ""
       )
-      .replace(
-        /[*_#`]/g,
-        ""
-      )
       .trim();
 
 
-  if (
-    !cleanText
-  ) {
+  if (!cleanText) {
 
     return;
 
@@ -2438,28 +2012,32 @@ function speakAnswer(
 
 
       if (
-        voiceMode
+        voiceMode &&
+        !listening &&
+        !isLoading
       ) {
 
-        shouldContinueListening =
-          true;
-
-
-        setTimeout(
-          () => {
-
-            if (
-              voiceMode &&
-              !isLoading
-            ) {
-
-              startListening();
-
-            }
-
-          },
-          250
+        clearTimeout(
+          voiceRestartTimer
         );
+
+
+        voiceRestartTimer =
+          setTimeout(
+            () => {
+
+              if (
+                voiceMode &&
+                !listening
+              ) {
+
+                startRecognition();
+
+              }
+
+            },
+            300
+          );
 
       }
 
@@ -2471,33 +2049,6 @@ function speakAnswer(
 
       isSpeaking =
         false;
-
-
-      if (
-        voiceMode
-      ) {
-
-        shouldContinueListening =
-          true;
-
-
-        setTimeout(
-          () => {
-
-            if (
-              voiceMode &&
-              !isLoading
-            ) {
-
-              startListening();
-
-            }
-
-          },
-          300
-        );
-
-      }
 
     };
 
@@ -2531,67 +2082,52 @@ function stopSpeaking() {
 
 
 /* ============================================================
-   MOBILE VIEWPORT
+   MOBILE VIEWPORT / KEYBOARD FIX
 ============================================================ */
 
 function setupMobileViewport() {
 
-  if (
-    !window.visualViewport
-  ) {
-
-    return;
-
-  }
-
-
-  const updateViewport =
+  const setViewportHeight =
     () => {
 
-      const viewport =
-        window.visualViewport;
+      const height =
+        window.visualViewport?.height ||
+        window.innerHeight;
 
 
       document.documentElement.style.setProperty(
-        "--visual-height",
-        `${viewport.height}px`
-      );
-
-
-      const offsetTop =
-        viewport.offsetTop;
-
-
-      document.documentElement.style.setProperty(
-        "--viewport-offset",
-        `${offsetTop}px`
-      );
-
-
-      requestAnimationFrame(
-        () => {
-
-          scrollMessages();
-
-        }
+        "--app-height",
+        `${height}px`
       );
 
     };
 
 
-  window.visualViewport.addEventListener(
+  setViewportHeight();
+
+
+  window.addEventListener(
     "resize",
-    updateViewport
+    setViewportHeight
   );
 
 
-  window.visualViewport.addEventListener(
-    "scroll",
-    updateViewport
-  );
+  if (
+    window.visualViewport
+  ) {
+
+    window.visualViewport.addEventListener(
+      "resize",
+      setViewportHeight
+    );
 
 
-  updateViewport();
+    window.visualViewport.addEventListener(
+      "scroll",
+      setViewportHeight
+    );
+
+  }
 
 }
 
@@ -2642,6 +2178,20 @@ window.addEventListener(
     console.log(
       "City4All map is ready for AI results."
     );
+
+
+    if (
+      window.city4allMap
+        ?.view
+        ?.when
+    ) {
+
+      mapReadyPromise =
+        window.city4allMap
+          .view
+          .when();
+
+    }
 
   }
 );
