@@ -1,3 +1,6 @@
+Ναι — αυτό είναι το καθαρισμένο `app.js`, έτοιμο για copy-paste. Βάλ’ το ολόκληρο στο `app.js` και αντικατάστησε το παλιό.
+
+````text
 /* ============================================================
 CITY4ALL AI APP
 ============================================================ */
@@ -128,7 +131,6 @@ setupMobileViewport();
 
 tryResolveExistingMap();
 
-initializeMermaid();
 
 console.log(
   "City4All AI frontend loaded."
@@ -137,41 +139,6 @@ console.log(
 
 }
 );
-
-/* ============================================================
-MERMAID
-============================================================ */
-
-function initializeMermaid() {
-
-if (typeof mermaid === "undefined") {
-
-
-console.warn(
-  "Mermaid library not available."
-);
-
-return;
-
-
-}
-
-mermaid.initialize({
-
-
-startOnLoad: false,
-
-securityLevel: "strict",
-
-theme: "default",
-
-fontFamily:
-  "Arial, Helvetica, sans-serif"
-
-
-});
-
-}
 
 /* ============================================================
 QUICK ACTIONS
@@ -404,8 +371,8 @@ removeLoadingMessage(
 
 
 if (
-  !response.ok ||
-  !data.success
+!response.ok ||
+!data.success
 ) {
 
   throw new Error(
@@ -417,8 +384,8 @@ if (
 
 
 console.log(
-  "City4All response:",
-  data
+"City4All response:",
+data
 );
 
 
@@ -427,21 +394,21 @@ console.log(
 ====================================================== */
 
 const answer =
-  data.answer ||
-  "Δεν μπόρεσα να δημιουργήσω απάντηση.";
+data.answer ||
+"Δεν μπόρεσα να δημιουργήσω απάντηση.";
 
 
 const messageElement =
-  addMessage(
-    "ai",
-    answer,
-    data.externalInfo
-  );
+addMessage(
+"ai",
+answer,
+data.externalInfo
+);
 
 
 updateConversation(
-  message,
-  answer
+message,
+answer
 );
 
 
@@ -450,15 +417,15 @@ updateConversation(
 ====================================================== */
 
 const features =
-  Array.isArray(
-    data.features
-  )
-    ? data.features
-    : [];
+Array.isArray(
+data.features
+)
+? data.features
+: [];
 
 
 previousFeatures =
-  features;
+features;
 
 
 /* ======================================================
@@ -466,16 +433,16 @@ previousFeatures =
 ====================================================== */
 
 const mapFeatures =
-  Array.isArray(
-    data.mapFeatures
-  )
-    ? data.mapFeatures
-    : features;
+Array.isArray(
+data.mapFeatures
+)
+? data.mapFeatures
+: features;
 
 
 const mapCommand =
-  data.mapCommand ||
-  null;
+data.mapCommand ||
+null;
 
 
 /* ======================================================
@@ -483,11 +450,11 @@ const mapCommand =
 ====================================================== */
 
 addChatActions(
-  messageElement,
-  features,
-  mapFeatures,
-  mapCommand,
-  data.totalMatches
+messageElement,
+features,
+mapFeatures,
+mapCommand,
+data.totalMatches
 );
 
 
@@ -496,8 +463,8 @@ addChatActions(
 ====================================================== */
 
 await updateMap(
-  mapFeatures,
-  mapCommand
+mapFeatures,
+mapCommand
 );
 
 
@@ -506,13 +473,13 @@ await updateMap(
 ====================================================== */
 
 if (
-  voiceMode &&
-  fromVoice
+voiceMode &&
+fromVoice
 ) {
 
-  speakAnswer(
-    answer
-  );
+speakAnswer(
+answer
+);
 
 }
 
@@ -523,43 +490,43 @@ catch (error) {
 
 
 clearTimeout(
-  timeoutId
+timeoutId
 );
 
 
 console.error(
-  "City4All AI error:",
-  error
+"City4All AI error:",
+error
 );
 
 
 removeLoadingMessage(
-  loadingMessage
+loadingMessage
 );
 
 
 let errorMessage =
-  "⚠️ Κάτι πήγε στραβά. Δεν μπόρεσα να επικοινωνήσω με το City4All AI.";
+"⚠️ Κάτι πήγε στραβά. Δεν μπόρεσα να επικοινωνήσω με το City4All AI.";
 
 
 if (
-  error?.name === "AbortError"
+error?.name === "AbortError"
 ) {
 
-  errorMessage =
-    "⚠️ Η αναζήτηση άργησε υπερβολικά. Δοκίμασε ξανά.";
+errorMessage =
+"⚠️ Η αναζήτηση άργησε υπερβολικά. Δοκίμασε ξανά.";
 
 }
 
 
 addMessage(
-  "ai",
-  errorMessage
+"ai",
+errorMessage
 );
 
 
 if (voiceMode) {
-  stopVoiceMode();
+stopVoiceMode();
 }
 
 
@@ -590,7 +557,7 @@ conversation.push({
 role: "user",
 
 content:
-  userMessage
+userMessage
 
 
 });
@@ -601,7 +568,7 @@ conversation.push({
 role: "assistant",
 
 content:
-  assistantMessage
+assistantMessage
 
 
 });
@@ -612,7 +579,7 @@ conversation.length > 20
 
 
 conversation =
-  conversation.slice(-20);
+conversation.slice(-20);
 
 
 }
@@ -643,23 +610,23 @@ if (role === "ai") {
 
 
 const meta =
-  document.createElement("div");
+document.createElement("div");
 
 
 meta.className =
-  "message-meta";
+"message-meta";
 
 
 meta.innerHTML = `
-  <div class="message-meta-icon">
-    ✦
-  </div>
-  <span>City4All AI</span>
+<div class="message-meta-icon">
+✦
+</div>
+<span>City4All AI</span>
 `;
 
 
 wrapper.appendChild(
-  meta
+meta
 );
 
 
@@ -675,14 +642,14 @@ if (role === "ai") {
 
 
 bubble.innerHTML =
-  renderMarkdown(text);
+renderMarkdown(text);
 
 
 } else {
 
 
 bubble.textContent =
-  text;
+text;
 
 
 }
@@ -698,16 +665,16 @@ externalInfo
 
 
 const externalCard =
-  createExternalInfoCard(
-    externalInfo
-  );
+createExternalInfoCard(
+externalInfo
+);
 
 
 if (externalCard) {
 
-  wrapper.appendChild(
-    externalCard
-  );
+wrapper.appendChild(
+externalCard
+);
 
 }
 
@@ -718,9 +685,6 @@ messagesEl.appendChild(
 wrapper
 );
 
-renderMermaidInElement(
-wrapper
-);
 
 scrollMessages();
 
@@ -729,12 +693,10 @@ return wrapper;
 }
 
 /* ============================================================
-MARKDOWN RENDERER
+   MARKDOWN RENDERER
 ============================================================ */
 
-function renderMarkdown(
-markdown
-) {
+function renderMarkdown(markdown) {
 
 if (!markdown) {
 return "";
@@ -742,99 +704,98 @@ return "";
 
 let text =
 String(markdown)
-.replace(/\r\n/g, "\n")
-.replace(/\r/g, "\n");
-
-/* ==========================================================
-MERMAID BLOCKS
-========================================================== */
-
-const mermaidBlocks = [];
-
-text =
-text.replace(
-/`mermaid\s*\n([\s\S]*?)`/gi,
-(
-match,
-diagram
-) => {
-
-
-    const index =
-      mermaidBlocks.length;
-
-
-    mermaidBlocks.push(
-      diagram.trim()
-    );
-
-
-    return (
-      `@@MERMAID_${index}@@`
-    );
-
-  }
+.replace(
+/
+/\r\n/g,
+"\n"
+)
+.replace(
+/
+/\r/g,
+"\n"
 );
-
-
-/* ==========================================================
-NORMAL CODE BLOCKS
-========================================================== */
 
 const codeBlocks = [];
 
 text =
 text.replace(
-/`([\w-]*)\s*\n([\s\S]*?)`/g,
-(
-match,
-language,
-code
-) => {
+/```([\w-]*)\s*\n([\s\S]*?)```/g,
+(match, language, code) => {
 
+const index =
+codeBlocks.length;
 
-    const index =
-      codeBlocks.length;
+codeBlocks.push({
+language:
+String(
+language ||
+""
+).toLowerCase(),
 
+code:
+code.trim()
+});
 
-    codeBlocks.push({
+return `@@CODEBLOCK_${index}@@`;
 
-      language:
-        String(
-          language || ""
-        ).toLowerCase(),
-
-      code:
-        code.trim()
-
-    });
-
-
-    return (
-      `@@CODEBLOCK_${index}@@`
-    );
-
-  }
+}
 );
 
-
-/* ==========================================================
-ESCAPE HTML
-========================================================== */
+text =
+escapeHTML(
+text
+);
 
 text =
-escapeHTML(text);
-
-/* ==========================================================
-TABLES
-========================================================== */
+renderMarkdownTables(
+text
+);
 
 text =
-renderMarkdownTables(text);
+text.replace(
+/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+(match, label, url) =>
+`<a href="${escapeAttribute(url)}" target="_blank" rel="noopener noreferrer">${label}</a>`
+);
 
-/* ==========================================================
-HEADINGS
-========================================================== */
+text =
+text.replace(
+/(^|[\s>])(https?:\/\/[^\s<]+)/g,
+(match, prefix, url) => {
+
+const cleanUrl =
+url.replace(
+/[),.;!?]+$/,
+""
+);
+
+return (
+`${prefix}` +
+`<a href="${escapeAttribute(cleanUrl)}" target="_blank" rel="noopener noreferrer">` +
+`${escapeHTML(cleanUrl)}` +
+`</a>`
+);
+
+}
+);
+
+text =
+text.replace(
+/\*\*(.+?)\*\*/g,
+"<strong>$1</strong>"
+);
+
+text =
+text.replace(
+/(^|[^*])\*([^*\n]+)\*(?!\*)/g,
+"$1<em>$2</em>"
+);
+
+text =
+text.replace(
+/`([^`\n]+)`/g,
+"<code>$1</code>"
+);
 
 text =
 text.replace(
@@ -872,258 +833,101 @@ text.replace(
 "<h1>$1</h1>"
 );
 
-/* ==========================================================
-MARKDOWN LINKS
-========================================================== */
-
-text =
-text.replace(
-/\(([^\)]+)]\((https?:\/\/[^\s)]+)\)/g,
-(
-match,
-label,
-url
-) => {
-
-
-    return (
-      `<a href="${escapeAttribute(url)}"` +
-      ` target="_blank"` +
-      ` rel="noopener noreferrer">` +
-      `${label}` +
-      `</a>`
-    );
-
-  }
-);
-
-
-/* ==========================================================
-RAW URLS
-========================================================== */
-
-text =
-text.replace(
-/(^|[\s>])(https?://[^\s<]+)/g,
-(
-match,
-prefix,
-url
-) => {
-
-
-    const cleanUrl =
-      url.replace(
-        /[),.;!?]+$/,
-        ""
-      );
-
-
-    return (
-      `${prefix}` +
-      `<a href="${escapeAttribute(cleanUrl)}"` +
-      ` target="_blank"` +
-      ` rel="noopener noreferrer">` +
-      `${escapeHTML(cleanUrl)}` +
-      `</a>`
-    );
-
-  }
-);
-
-
-/* ==========================================================
-BOLD
-========================================================== */
-
-text =
-text.replace(
-/**(.+?)**/g,
-"<strong>$1</strong>"
-);
-
-/* ==========================================================
-ITALIC
-========================================================== */
-
-text =
-text.replace(
-/(^|[^*])*([^*\n]+)*(?!*)/g,
-"$1<em>$2</em>"
-);
-
-/* ==========================================================
-INLINE CODE
-========================================================== */
-
-text =
-text.replace(
-/`([^`\n]+)`/g,
-"<code>$1</code>"
-);
-
-/* ==========================================================
-BLOCKQUOTE
-========================================================== */
-
 text =
 text.replace(
 /^>\s?(.*)$/gm,
 "<blockquote>$1</blockquote>"
 );
 
-/* ==========================================================
-UNORDERED LIST
-========================================================== */
-
 text =
 text.replace(
 /(?:^|\n)((?:[-*]\s+.*(?:\n|$))+)/g,
-(
-match,
+(match, block) => {
+
+const items =
 block
-) => {
+.trim()
+.split("\n")
+.map(
+line =>
+line.replace(
+/^[-*]\s+/,
+""
+)
+)
+.filter(Boolean);
 
-
-    const items =
-      block
-        .trim()
-        .split("\n")
-        .map(
-          line =>
-            line.replace(
-              /^[-*]\s+/,
-              ""
-            )
-        )
-        .filter(Boolean);
-
-
-    return (
-      "\n<ul>" +
-      items
-        .map(
-          item =>
-            `<li>${item}</li>`
-        )
-        .join("") +
-      "</ul>\n"
-    );
-
-  }
+return (
+"\n<ul>" +
+items
+.map(
+item =>
+`<li>${item}</li>`
+)
+.join("") +
+"</ul>\n"
 );
 
-
-/* ==========================================================
-ORDERED LIST
-========================================================== */
+}
+);
 
 text =
 text.replace(
-/(?:^|\n)((?:\d+.\s+.*(?:\n|$))+)/g,
-(
-match,
+/(?:^|\n)((?:\d+\.\s+.*(?:\n|$))+)/g,
+(match, block) => {
+
+const items =
 block
-) => {
+.trim()
+.split("\n")
+.map(
+line =>
+line.replace(
+/^\d+\.\s+/,
+""
+)
+)
+.filter(Boolean);
 
-
-    const items =
-      block
-        .trim()
-        .split("\n")
-        .map(
-          line =>
-            line.replace(
-              /^\d+\.\s+/,
-              ""
-            )
-        )
-        .filter(Boolean);
-
-
-    return (
-      "\n<ol>" +
-      items
-        .map(
-          item =>
-            `<li>${item}</li>`
-        )
-        .join("") +
-      "</ol>\n"
-    );
-
-  }
+return (
+"\n<ol>" +
+items
+.map(
+item =>
+`<li>${item}</li>`
+)
+.join("") +
+"</ol>\n"
 );
 
-
-/* ==========================================================
-PARAGRAPHS
-========================================================== */
+}
+);
 
 text =
-convertPlainTextParagraphs(text);
-
-/* ==========================================================
-CODE BLOCKS
-========================================================== */
-
-codeBlocks.forEach(
-(
-block,
-index
-) => {
-
-
-  const token =
-    `@@CODEBLOCK_${index}@@`;
-
-
-  const replacement = `
-    <div class="code-block">
-      <code>${escapeHTML(
-        block.code
-      )}</code>
-    </div>
-  `;
-
-
-  text =
-    text.replace(
-      token,
-      replacement
-    );
-
-}
-
-
+convertPlainTextParagraphs(
+text
 );
 
-/* ==========================================================
-MERMAID
-========================================================== */
+codeBlocks.forEach(
+(block, index) => {
 
-mermaidBlocks.forEach(
-(
-diagram,
-index
-) => {
+const token =
+`@@CODEBLOCK_${index}@@`;
 
+const replacement =
+`
+<div class="code-block">
+<code>${escapeHTML(block.code)}</code>
+</div>
+`;
 
-  const token =
-    `@@MERMAID_${index}@@`;
-
-
-  text =
-    text.replace(
-      token,
-      createMermaidPlaceholder(
-        diagram
-      )
-    );
+text =
+text.replace(
+token,
+replacement
+);
 
 }
-
-
 );
 
 return text;
@@ -1139,7 +943,9 @@ text
 ) {
 
 const lines =
-text.split("\n");
+text.split(
+"\n"
+);
 
 const output = [];
 
@@ -1149,123 +955,107 @@ while (
 i < lines.length
 ) {
 
-
 const current =
-  lines[i];
-
+lines[i];
 
 const next =
-  lines[i + 1];
-
+lines[i + 1];
 
 if (
-  current &&
-  next &&
-  current.includes("|") &&
-  /^\s*\|?\s*:?-{3,}/.test(next)
+current &&
+next &&
+current.includes("|") &&
+/^\s*\|?\s*:?-{3,}/.test(next)
 ) {
 
-  const headers =
-    splitMarkdownRow(
-      current
-    );
-
-
-  i += 2;
-
-
-  const rows = [];
-
-
-  while (
-    i < lines.length &&
-    lines[i].includes("|") &&
-    lines[i].trim() !== ""
-  ) {
-
-    rows.push(
-      splitMarkdownRow(
-        lines[i]
-      )
-    );
-
-
-    i++;
-
-  }
-
-
-  let html =
-    `<div class="markdown-table-wrap">` +
-    `<table class="markdown-table">` +
-    `<thead><tr>`;
-
-
-  headers.forEach(
-    header => {
-
-      html +=
-        `<th>${header}</th>`;
-
-    }
-  );
-
-
-  html +=
-    "</tr></thead><tbody>";
-
-
-  rows.forEach(
-    row => {
-
-      html += "<tr>";
-
-
-      headers.forEach(
-        (
-          header,
-          columnIndex
-        ) => {
-
-          html +=
-            `<td>${row[columnIndex] || ""}</td>`;
-
-        }
-      );
-
-
-      html +=
-        "</tr>";
-
-    }
-  );
-
-
-  html +=
-    "</tbody></table></div>";
-
-
-  output.push(
-    html
-  );
-
-
-  continue;
-
-}
-
-
-output.push(
-  current
+const headers =
+splitMarkdownRow(
+current
 );
 
+i += 2;
+
+const rows = [];
+
+while (
+i < lines.length &&
+lines[i].includes("|") &&
+lines[i].trim() !== ""
+) {
+
+rows.push(
+splitMarkdownRow(
+lines[i]
+)
+);
 
 i++;
 
+}
+
+let html =
+`<div class="markdown-table-wrap">` +
+`<table class="markdown-table">` +
+`<thead><tr>`;
+
+headers.forEach(
+header => {
+
+html +=
+`<th>${header}</th>`;
+
+}
+);
+
+html +=
+"</tr></thead><tbody>";
+
+rows.forEach(
+row => {
+
+html +=
+"<tr>";
+
+headers.forEach(
+(
+header,
+columnIndex
+) => {
+
+html +=
+`<td>${row[columnIndex] || ""}</td>`;
+
+}
+);
+
+html +=
+"</tr>";
+
+}
+);
+
+html +=
+"</tbody></table></div>";
+
+output.push(
+html
+);
+
+continue;
 
 }
 
-return output.join("\n");
+output.push(
+current
+);
+
+i++;
+
+}
+
+return output.join(
+"\n"
+);
 
 }
 
@@ -1280,10 +1070,8 @@ if (
 cleaned.startsWith("|")
 ) {
 
-
 cleaned =
-  cleaned.slice(1);
-
+cleaned.slice(1);
 
 }
 
@@ -1291,13 +1079,11 @@ if (
 cleaned.endsWith("|")
 ) {
 
-
 cleaned =
-  cleaned.slice(
-    0,
-    -1
-  );
-
+cleaned.slice(
+0,
+-1
+);
 
 }
 
@@ -1319,120 +1105,56 @@ text
 ) {
 
 const blocks =
-text.split(/\n{2,}/);
+text.split(
+/\n{2,}/
+);
 
 return blocks
 .map(
 block => {
 
+const trimmed =
+block.trim();
 
-    const trimmed =
-      block.trim();
-
-
-    if (!trimmed) {
-      return "";
-    }
-
-
-    if (
-      /^<(h\d|ul|ol|blockquote|div|table|pre)/i.test(
-        trimmed
-      )
-    ) {
-
-      return trimmed;
-
-    }
-
-
-    if (
-      trimmed.includes("<br>")
-    ) {
-
-      return trimmed;
-
-    }
-
-
-    return (
-      "<p>" +
-      trimmed.replace(
-        /\n/g,
-        "<br>"
-      ) +
-      "</p>"
-    );
-
-  }
-)
-.join("");
-
-
+if (!trimmed) {
+return "";
 }
-
-/* ============================================================
-MERMAID
-============================================================ */
-
-function createMermaidPlaceholder(
-diagram
-) {
-
-return `     <div class="mermaid-wrap">       <div class="mermaid">
-        ${escapeHTML(diagram)}       </div>     </div>
-  `;
-
-}
-
-async function renderMermaidInElement(
-element
-) {
 
 if (
-typeof mermaid === "undefined"
+/^<(h\d|ul|ol|blockquote|div|table|pre)/i.test(
+trimmed
+)
 ) {
 
-
-return;
-
+return trimmed;
 
 }
 
-const diagrams =
-element.querySelectorAll(
-".mermaid"
+if (
+trimmed.includes(
+"<br>"
+)
+) {
+
+return trimmed;
+
+}
+
+return (
+"<p>" +
+trimmed.replace(
+/
+/\n/g,
+"<br>"
+) +
+"</p>"
 );
 
-if (!diagrams.length) {
-return;
 }
-
-try {
-
-
-await mermaid.run({
-
-  nodes:
-    Array.from(
-      diagrams
-    )
-
-});
-
-
-}
-
-catch (error) {
-
-
-console.warn(
-  "Mermaid rendering failed:",
-  error
+)
+.join(
+""
 );
-
-
-}
 
 }
 
@@ -1446,12 +1168,11 @@ externalInfo
 
 if (
 !externalInfo ||
-typeof externalInfo !== "object"
+typeof externalInfo !==
+"object"
 ) {
 
-
 return null;
-
 
 }
 
@@ -1466,9 +1187,7 @@ if (
 !image
 ) {
 
-
 return null;
-
 
 }
 
@@ -1480,46 +1199,39 @@ document.createElement(
 card.className =
 "external-card";
 
-if (image?.url) {
-
+if (
+image?.url
+) {
 
 const img =
-  document.createElement(
-    "img"
-  );
-
-
-img.className =
-  "external-image";
-
-
-img.src =
-  image.url;
-
-
-img.alt =
-  externalInfo?.feature?.name ||
-  "Wikimedia image";
-
-
-img.loading =
-  "lazy";
-
-
-img.referrerPolicy =
-  "no-referrer";
-
-
-img.onerror =
-  () => {
-    img.remove();
-  };
-
-
-card.appendChild(
-  img
+document.createElement(
+"img"
 );
 
+img.className =
+"external-image";
+
+img.src =
+image.url;
+
+img.alt =
+externalInfo?.feature?.name ||
+"Wikimedia image";
+
+img.loading =
+"lazy";
+
+img.referrerPolicy =
+"no-referrer";
+
+img.onerror =
+() => {
+img.remove();
+};
+
+card.appendChild(
+img
+);
 
 }
 
@@ -1546,87 +1258,75 @@ body.appendChild(
 label
 );
 
-if (wiki?.title) {
-
+if (
+wiki?.title
+) {
 
 const title =
-  document.createElement(
-    "div"
-  );
-
+document.createElement(
+"div"
+);
 
 title.className =
-  "external-title";
-
+"external-title";
 
 title.textContent =
-  wiki.title;
-
+wiki.title;
 
 body.appendChild(
-  title
+title
 );
-
 
 }
 
-if (wiki?.description) {
-
+if (
+wiki?.description
+) {
 
 const description =
-  document.createElement(
-    "div"
-  );
-
-
-description.className =
-  "external-description";
-
-
-description.textContent =
-  wiki.description;
-
-
-body.appendChild(
-  description
+document.createElement(
+"div"
 );
 
+description.className =
+"external-description";
+
+description.textContent =
+wiki.description;
+
+body.appendChild(
+description
+);
 
 }
 
-if (wiki?.page) {
-
+if (
+wiki?.page
+) {
 
 const link =
-  document.createElement(
-    "a"
-  );
-
-
-link.className =
-  "external-link";
-
-
-link.href =
-  wiki.page;
-
-
-link.target =
-  "_blank";
-
-
-link.rel =
-  "noopener noreferrer";
-
-
-link.textContent =
-  "🔗 Δες περισσότερα στη Wikipedia";
-
-
-body.appendChild(
-  link
+document.createElement(
+"a"
 );
 
+link.className =
+"external-link";
+
+link.href =
+wiki.page;
+
+link.target =
+"_blank";
+
+link.rel =
+"noopener noreferrer";
+
+link.textContent =
+"🔗 Δες περισσότερα στη Wikipedia";
+
+body.appendChild(
+link
+);
 
 }
 
@@ -1667,9 +1367,12 @@ document.createElement(
 meta.className =
 "message-meta";
 
-meta.innerHTML = `     <div class="message-meta-icon">
-      ✦     </div>     <span>City4All AI</span>
-  `;
+meta.innerHTML = `
+<div class="message-meta-icon">
+✦
+</div>
+<span>City4All AI</span>
+`;
 
 wrapper.appendChild(
 meta
@@ -1683,20 +1386,18 @@ document.createElement(
 bubble.className =
 "bubble";
 
-bubble.innerHTML = ` <div class="loading-bubble">
+bubble.innerHTML = `
+<div class="loading-bubble">
 
-
-  <div class="loading-icon">
-    ✦
-  </div>
-
-  <div class="loading-dots">
-    Αναζητώ<span>.</span><span>.</span><span>.</span>
-  </div>
-
+<div class="loading-icon">
+✦
 </div>
 
+<div class="loading-dots">
+Αναζητώ<span>.</span><span>.</span><span>.</span>
+</div>
 
+</div>
 `;
 
 wrapper.appendChild(
@@ -1717,8 +1418,12 @@ function removeLoadingMessage(
 element
 ) {
 
-if (element) {
+if (
+element
+) {
+
 element.remove();
+
 }
 
 }
@@ -1732,17 +1437,16 @@ function scrollMessages() {
 requestAnimationFrame(
 () => {
 
+if (
+messagesEl
+) {
 
-  if (messagesEl) {
-
-    messagesEl.scrollTop =
-      messagesEl.scrollHeight;
-
-  }
+messagesEl.scrollTop =
+messagesEl.scrollHeight;
 
 }
 
-
+}
 );
 
 }
@@ -1758,37 +1462,36 @@ loading
 isLoading =
 loading;
 
-if (sendButton) {
-
+if (
+sendButton
+) {
 
 sendButton.disabled =
-  loading;
-
+loading;
 
 sendButton.textContent =
-  loading
-    ? "..."
-    : "Αποστολή";
-
+loading
+? "..."
+: "Αποστολή";
 
 }
 
-if (inputEl) {
-
+if (
+inputEl
+) {
 
 inputEl.disabled =
-  loading ||
-  voiceMode;
-
+loading ||
+voiceMode;
 
 }
 
-if (voiceButton) {
-
+if (
+voiceButton
+) {
 
 voiceButton.disabled =
-  false;
-
+false;
 
 }
 
@@ -1812,9 +1515,7 @@ if (
 !messageElement
 ) {
 
-
 return;
-
 
 }
 
@@ -1831,45 +1532,44 @@ ONE RESULT
 ========================================================== */
 
 if (
-features.length === 1
+features.length ===
+1
 ) {
 
-
 const feature =
-  features[0];
-
+features[0];
 
 const mapButton =
-  createMapActionButton(
-    feature,
-    "🗺️ Προβολή στον χάρτη",
-    true
-  );
+createMapActionButton(
+feature,
+"🗺️ Προβολή στον χάρτη",
+true
+);
 
+if (
+mapButton
+) {
 
-if (mapButton) {
-
-  actions.appendChild(
-    mapButton
-  );
+actions.appendChild(
+mapButton
+);
 
 }
-
 
 const routeButton =
-  createRouteButton(
-    feature
-  );
+createRouteButton(
+feature
+);
 
+if (
+routeButton
+) {
 
-if (routeButton) {
-
-  actions.appendChild(
-    routeButton
-  );
+actions.appendChild(
+routeButton
+);
 
 }
-
 
 }
 
@@ -1879,123 +1579,114 @@ MANY RESULTS
 
 else {
 
-
 const allButton =
-  document.createElement(
-    "button"
-  );
-
+document.createElement(
+"button"
+);
 
 allButton.type =
-  "button";
-
+"button";
 
 allButton.className =
-  "chat-action primary";
-
+"chat-action primary";
 
 const mapCount =
-  Array.isArray(mapFeatures)
-    ? mapFeatures.length
-    : features.length;
-
+Array.isArray(mapFeatures)
+? mapFeatures.length
+: features.length;
 
 const totalLabel =
-  Number.isFinite(
-    Number(totalMatches)
-  ) &&
-  Number(totalMatches) >
-    mapCount
-    ? ` από ${totalMatches}`
-    : "";
-
+Number.isFinite(
+Number(totalMatches)
+) &&
+Number(totalMatches) >
+mapCount
+? ` από ${totalMatches}`
+: "";
 
 allButton.textContent =
-  `🗺️ Προβολή ${mapCount} σημείων${totalLabel}`;
-
+`🗺️ Προβολή ${mapCount} σημείων${totalLabel}`;
 
 allButton.addEventListener(
-  "click",
-  async () => {
+"click",
+async () => {
 
-    allButton.disabled =
-      true;
+allButton.disabled =
+true;
 
+const originalText =
+allButton.textContent;
 
-    const originalText =
-      allButton.textContent;
+allButton.textContent =
+"🗺️ Φόρτωση...";
 
+try {
 
-    allButton.textContent =
-      "🗺️ Φόρτωση...";
-
-
-    try {
-
-      await updateMap(
-        mapFeatures,
-        {
-          mode: "all",
-          autoZoom: true,
-          autoOpenPopup: false,
-          targetCount: mapCount
-        }
-      );
-
-    }
-
-    finally {
-
-      allButton.disabled =
-        false;
-
-
-      allButton.textContent =
-        originalText;
-
-    }
-
-  }
+await updateMap(
+mapFeatures,
+{
+mode:
+"all",
+autoZoom:
+true,
+autoOpenPopup:
+false,
+targetCount:
+mapCount
+}
 );
 
+}
+
+finally {
+
+allButton.disabled =
+false;
+
+allButton.textContent =
+originalText;
+
+}
+
+}
+);
 
 actions.appendChild(
-  allButton
+allButton
 );
 
-
 const firstMapButton =
-  createMapActionButton(
-    features[0],
-    "📍 Πρώτο σημείο",
-    false
-  );
+createMapActionButton(
+features[0],
+"📍 Πρώτο σημείο",
+false
+);
 
+if (
+firstMapButton
+) {
 
-if (firstMapButton) {
-
-  actions.appendChild(
-    firstMapButton
-  );
+actions.appendChild(
+firstMapButton
+);
 
 }
-
 
 const routeButton =
-  createRouteButton(
-    features[0],
-    "🧭 Οδηγίες για το πρώτο"
-  );
+createRouteButton(
+features[0],
+"🧭 Οδηγίες για το πρώτο"
+);
 
+if (
+routeButton
+) {
 
-if (routeButton) {
-
-  actions.appendChild(
-    routeButton
-  );
+actions.appendChild(
+routeButton
+);
 
 }
-
 
 }
 
@@ -2003,14 +1694,11 @@ if (
 actions.children.length
 ) {
 
-
 messageElement.appendChild(
-  actions
+actions
 );
 
-
 scrollMessages();
-
 
 }
 
@@ -2027,12 +1715,12 @@ primary = false
 ) {
 
 if (
-!hasCoordinates(feature)
+!hasCoordinates(
+feature
+)
 ) {
 
-
 return null;
-
 
 }
 
@@ -2056,37 +1744,33 @@ button.addEventListener(
 "click",
 async () => {
 
+button.disabled =
+true;
 
-  button.disabled =
-    true;
+try {
 
+await ensureFeatureOnMap(
+feature
+);
 
-  try {
-
-    await ensureFeatureOnMap(
-      feature
-    );
-
-
-    await focusMapFeature(
-      feature,
-      {
-        openPopup: true
-      }
-    );
-
-  }
-
-  finally {
-
-    button.disabled =
-      false;
-
-  }
+await focusMapFeature(
+feature,
+{
+openPopup:
+true
+}
+);
 
 }
 
+finally {
 
+button.disabled =
+false;
+
+}
+
+}
 );
 
 return button;
@@ -2104,10 +1788,16 @@ label = "🧭 Οδηγίες"
 
 const url =
 feature?.googleMapsUrl ||
-createGoogleMapsUrl(feature);
+createGoogleMapsUrl(
+feature
+);
 
-if (!url) {
+if (
+!url
+) {
+
 return null;
+
 }
 
 const button =
@@ -2128,19 +1818,15 @@ button.addEventListener(
 "click",
 event => {
 
+event.preventDefault();
 
-  event.preventDefault();
-
-
-  window.open(
-    url,
-    "_blank",
-    "noopener,noreferrer"
-  );
+window.open(
+url,
+"_blank",
+"noopener,noreferrer"
+);
 
 }
-
-
 );
 
 return button;
@@ -2159,49 +1845,46 @@ if (
 window.city4allMap?.view
 ) {
 
-
 try {
 
-  if (
-    window.city4allMap.view.when
-  ) {
+if (
+window.city4allMap.view.when
+) {
 
-    await window.city4allMap
-      .view
-      .when();
-
-  }
-
-
-  return true;
+await window.city4allMap
+.view
+.when();
 
 }
 
-catch (error) {
-
-  console.warn(
-    "Existing map is not ready:",
-    error
-  );
+return true;
 
 }
 
+catch (
+error
+) {
+
+console.warn(
+"Existing map is not ready:",
+error
+);
+
+}
 
 }
 
 await Promise.race([
 
-
 mapReadyPromise,
 
 new Promise(
-  resolve =>
-    setTimeout(
-      resolve,
-      timeoutMs
-    )
+resolve =>
+setTimeout(
+resolve,
+timeoutMs
 )
-
+)
 
 ]);
 
@@ -2222,25 +1905,23 @@ window.city4allMap;
 
 return {
 
-
 exists:
-  Boolean(map),
+Boolean(map),
 
 view:
-  Boolean(map?.view),
+Boolean(map?.view),
 
 resultsLayer:
-  Boolean(map?.resultsLayer),
+Boolean(map?.resultsLayer),
 
 Graphic:
-  Boolean(map?.Graphic),
+Boolean(map?.Graphic),
 
 graphicsCount:
-  map?.resultsLayer
-    ?.graphics
-    ?.length ??
-  0
-
+map?.resultsLayer
+?.graphics
+?.length ??
+0
 
 };
 
@@ -2258,24 +1939,22 @@ if (
 !hasCoordinates(feature)
 ) {
 
-
 return false;
-
 
 }
 
 const ready =
 await waitForMapReady();
 
-if (!ready) {
-
+if (
+!ready
+) {
 
 console.warn(
-  "Map not ready."
+"Map not ready."
 );
 
 return false;
-
 
 }
 
@@ -2287,14 +1966,12 @@ if (
 !map?.Graphic
 ) {
 
-
 console.warn(
-  "Incomplete map object:",
-  getMapDiagnostics()
+"Incomplete map object:",
+getMapDiagnostics()
 );
 
 return false;
-
 
 }
 
@@ -2303,65 +1980,63 @@ findGraphicForFeature(
 feature
 );
 
-if (existing) {
+if (
+existing
+) {
+
 return true;
+
 }
 
 try {
 
-
 const graphic =
-  createGraphicForFeature(
-    feature,
-    0,
-    getFeatureKey(
-      feature,
-      0
-    ),
-    map.Graphic
-  );
-
+createGraphicForFeature(
+feature,
+0,
+getFeatureKey(
+feature,
+0
+),
+map.Graphic
+);
 
 map.resultsLayer.add(
-  graphic
+graphic
 );
-
 
 await new Promise(
-  resolve =>
-    requestAnimationFrame(
-      resolve
-    )
+resolve =>
+requestAnimationFrame(
+resolve
+)
 );
 
-
 map.lastGraphics =
-  map.resultsLayer
-    ?.graphics
-    ?.toArray?.() ||
-  [];
-
+map.resultsLayer
+?.graphics
+?.toArray?.() ||
+[];
 
 map.lastFeatures =
-  [feature];
-
+[
+feature
+];
 
 return true;
 
-
 }
 
-catch (error) {
-
+catch (
+error
+) {
 
 console.warn(
-  "Could not ensure feature:",
-  error
+"Could not ensure feature:",
+error
 );
 
-
 return false;
-
 
 }
 
@@ -2378,163 +2053,160 @@ mapCommand = null
 
 try {
 
-
 const ready =
-  await waitForMapReady(
-    8000
-  );
-
-
-if (!ready) {
-  return false;
-}
-
-
-const map =
-  window.city4allMap;
-
+await waitForMapReady(
+8000
+);
 
 if (
-  !map?.view ||
-  !map?.resultsLayer ||
-  !map?.Graphic
+!ready
 ) {
 
-  return false;
+return false;
 
 }
 
+const map =
+window.city4allMap;
+
+if (
+!map?.view ||
+!map?.resultsLayer ||
+!map?.Graphic
+) {
+
+return false;
+
+}
 
 const {
-  view,
-  resultsLayer,
-  Graphic
-} = map;
-
+view,
+resultsLayer,
+Graphic
+} =
+map;
 
 try {
-  view.closePopup();
+
+view.closePopup();
+
 }
+
 catch {}
 
 
 resultsLayer.removeAll();
 
-
 const validFeatures =
-  Array.isArray(features)
-    ? features.filter(
-        hasCoordinates
-      )
-    : [];
-
+Array.isArray(
+features
+)
+? features.filter(
+hasCoordinates
+)
+: [];
 
 map.lastFeatures =
-  validFeatures;
-
-
-map.lastGraphics =
-  [];
-
-
-if (!validFeatures.length) {
-  return false;
-}
-
-
-const graphics =
-  validFeatures.map(
-    (
-      feature,
-      index
-    ) => {
-
-      return createGraphicForFeature(
-        feature,
-        index,
-        getFeatureKey(
-          feature,
-          index
-        ),
-        Graphic
-      );
-
-    }
-  );
-
-
-resultsLayer.addMany(
-  graphics
-);
-
+validFeatures;
 
 map.lastGraphics =
-  graphics;
-
-
-await new Promise(
-  resolve =>
-    requestAnimationFrame(
-      resolve
-    )
-);
-
+[];
 
 if (
-  validFeatures.length === 1
+!validFeatures.length
 ) {
-
-  return await focusMapFeature(
-    validFeatures[0],
-    {
-      openPopup: true
-    }
-  );
-
-}
-
-
-if (
-  mapCommand?.autoZoom !== false
-) {
-
-  await focusAllFeatures(
-    validFeatures
-  );
-
-}
-
-
-if (
-  mapCommand?.autoOpenPopup === true
-) {
-
-  await focusMapFeature(
-    validFeatures[0],
-    {
-      openPopup: true
-    }
-  );
-
-}
-
-
-return true;
-
-
-}
-
-catch (error) {
-
-
-console.warn(
-  "Map update failed:",
-  error
-);
-
 
 return false;
 
+}
+
+const graphics =
+validFeatures.map(
+(
+feature,
+index
+) => {
+
+return createGraphicForFeature(
+feature,
+index,
+getFeatureKey(
+feature,
+index
+),
+Graphic
+);
+
+}
+);
+
+resultsLayer.addMany(
+graphics
+);
+
+map.lastGraphics =
+graphics;
+
+await new Promise(
+resolve =>
+requestAnimationFrame(
+resolve
+)
+);
+
+if (
+validFeatures.length ===
+1
+) {
+
+return await focusMapFeature(
+validFeatures[0],
+{
+openPopup: true
+}
+);
+
+}
+
+if (
+mapCommand?.autoZoom !==
+false
+) {
+
+await focusAllFeatures(
+validFeatures
+);
+
+}
+
+if (
+mapCommand?.autoOpenPopup ===
+true
+) {
+
+await focusMapFeature(
+validFeatures[0],
+{
+openPopup: true
+}
+);
+
+}
+
+return true;
+
+}
+
+catch (
+error
+) {
+
+console.warn(
+"Map update failed:",
+error
+);
+
+return false;
 
 }
 
@@ -2552,10 +2224,14 @@ Graphic
 ) {
 
 const latitude =
-Number(feature.latitude);
+Number(
+feature.latitude
+);
 
 const longitude =
-Number(feature.longitude);
+Number(
+feature.longitude
+);
 
 const area =
 feature.area ||
@@ -2596,180 +2272,182 @@ feature.comments
 
 const websiteHtml =
 website
-? `           <br><br>           <strong>Website:</strong>
-          ${website}
-        `
+? `
+<br><br>
+<strong>Website:</strong>
+${website}
+`
 : "";
 
 const phoneHtml =
 phone
-? `           <br><br>           <strong>Τηλέφωνο:</strong>
-          ${phone}
-        `
+? `
+<br><br>
+<strong>Τηλέφωνο:</strong>
+${phone}
+`
 : "";
 
 const commentsHtml =
 comments
-? `           <br><br>           <strong>Σχόλια:</strong>
-          ${comments}
-        `
+? `
+<br><br>
+<strong>Σχόλια:</strong>
+${comments}
+`
 : "";
 
 const graphic =
 new Graphic({
 
+geometry: {
 
-  geometry: {
+type:
+"point",
 
-    type: "point",
+longitude,
 
-    longitude,
+latitude
 
-    latitude
+},
 
-  },
+symbol: {
 
+type:
+"simple-marker",
 
-  symbol: {
+size:
+feature.external
+? 12
+: 15,
 
-    type:
-      "simple-marker",
+color:
+feature.external
+? "#f59e0b"
+: "#1976d2",
 
-    size:
-      feature.external
-        ? 12
-        : 15,
+outline: {
 
-    color:
-      feature.external
-        ? "#f59e0b"
-        : "#1976d2",
+color:
+"#ffffff",
 
-    outline: {
+width:
+2
 
-      color:
-        "#ffffff",
+}
 
-      width:
-        2
+},
 
-    }
+attributes: {
 
-  },
+city4allKey:
+key,
 
+name:
+feature.name ||
+"Σημείο",
 
-  attributes: {
+type:
+feature.type ||
+"Σημείο",
 
-    city4allKey:
-      key,
+accessibility,
 
-    name:
-      feature.name ||
-      "Σημείο",
+area,
 
-    type:
-      feature.type ||
-      "Σημείο",
+municipality:
+feature.municipality ||
+"",
 
-    accessibility,
+prefecture:
+feature.prefecture ||
+"",
 
-    area,
+region:
+feature.region ||
+"",
 
-    municipality:
-      feature.municipality ||
-      "",
+country:
+feature.country ||
+"",
 
-    prefecture:
-      feature.prefecture ||
-      "",
+source,
 
-    region:
-      feature.region ||
-      "",
+website:
+feature.website ||
+"",
 
-    country:
-      feature.country ||
-      "",
+phone:
+feature.phone ||
+"",
 
-    source,
+index:
+index + 1
 
-    website:
-      feature.website ||
-      "",
+},
 
-    phone:
-      feature.phone ||
-      "",
+popupTemplate: {
 
-    index:
-      index + 1
+title:
+"{index}. {name}",
 
-  },
+content: [
 
+{
 
-  popupTemplate: {
+type:
+"text",
 
-    title:
-      "{index}. {name}",
+text: `
 
-    content: [
+<strong>Πηγή:</strong>
+{source}
 
-      {
+<br><br>
 
-        type:
-          "text",
+<strong>Κατηγορία:</strong>
+{type}
 
-        text: `
+<br><br>
 
-          <strong>Πηγή:</strong>
-          {source}
+<strong>Περιοχή:</strong>
+{area}
 
-          <br><br>
+<br><br>
 
-          <strong>Κατηγορία:</strong>
-          {type}
+<strong>Δήμος:</strong>
+{municipality}
 
-          <br><br>
+<br><br>
 
-          <strong>Περιοχή:</strong>
-          {area}
+<strong>Περιφέρεια:</strong>
+{region}
 
-          <br><br>
+<br><br>
 
-          <strong>Δήμος:</strong>
-          {municipality}
+<strong>Χώρα:</strong>
+{country}
 
-          <br><br>
+<br><br>
 
-          <strong>Περιφέρεια:</strong>
-          {region}
+<strong>Προσβασιμότητα:</strong>
+{accessibility}
 
-          <br><br>
+${commentsHtml}
 
-          <strong>Χώρα:</strong>
-          {country}
+${websiteHtml}
 
-          <br><br>
+${phoneHtml}
 
-          <strong>Προσβασιμότητα:</strong>
-          {accessibility}
+`
 
-          ${commentsHtml}
+}
 
-          ${websiteHtml}
+]
 
-          ${phoneHtml}
-
-        `
-
-      }
-
-    ]
-
-  }
+}
 
 });
-
 
 graphic.__city4allFeature =
 feature;
@@ -2788,44 +2466,44 @@ fallbackIndex = 0
 ) {
 
 if (
-feature?.objectId !== undefined &&
-feature?.objectId !== null &&
+feature?.objectId !==
+undefined &&
+feature?.objectId !==
+null &&
 String(
 feature.objectId
 ).trim() !== ""
 ) {
 
-
 return String(
-  feature.objectId
+feature.objectId
 );
-
 
 }
 
 if (
-feature?.objectid !== undefined &&
-feature?.objectid !== null &&
+feature?.objectid !==
+undefined &&
+feature?.objectid !==
+null &&
 String(
 feature.objectid
 ).trim() !== ""
 ) {
 
-
 return String(
-  feature.objectid
+feature.objectid
 );
-
 
 }
 
 return (
 `${Number(
-      feature?.latitude
-    )}:` +
+feature?.latitude
+)}:` +
 `${Number(
-      feature?.longitude
-    )}:` +
+feature?.longitude
+)}:` +
 `${fallbackIndex}`
 );
 
@@ -2873,72 +2551,80 @@ objectId !== null &&
 objectId !== undefined
 ) {
 
-
 const wanted =
-  String(
-    objectId
-  );
-
+String(
+objectId
+);
 
 const byId =
-  graphics.find(
-    graphic =>
-      String(
-        graphic.attributes
-          ?.city4allKey ??
-          ""
-      ) === wanted
-  );
+graphics.find(
+graphic =>
+String(
+graphic.attributes
+?.city4allKey ??
+""
+) ===
+wanted
+);
 
+if (
+byId
+) {
 
-if (byId) {
-  return byId;
+return byId;
+
 }
-
 
 }
 
 const latitude =
-Number(feature?.latitude);
+Number(
+feature?.latitude
+);
 
 const longitude =
-Number(feature?.longitude);
+Number(
+feature?.longitude
+);
 
 return (
 graphics.find(
 graphic => {
 
+const gLat =
+Number(
+graphic.geometry
+?.latitude
+);
 
-    const gLat =
-      Number(
-        graphic.geometry
-          ?.latitude
-      );
+const gLon =
+Number(
+graphic.geometry
+?.longitude
+);
 
+return (
+Number.isFinite(
+gLat
+) &&
+Number.isFinite(
+gLon
+) &&
+Math.abs(
+gLat -
+latitude
+) <
+0.000001 &&
+Math.abs(
+gLon -
+longitude
+) <
+0.000001
+);
 
-    const gLon =
-      Number(
-        graphic.geometry
-          ?.longitude
-      );
-
-
-    return (
-      Number.isFinite(gLat) &&
-      Number.isFinite(gLon) &&
-      Math.abs(
-        gLat - latitude
-      ) < 0.000001 &&
-      Math.abs(
-        gLon - longitude
-      ) < 0.000001
-    );
-
-  }
+}
 ) ||
 null
-
-
 );
 
 }
@@ -2953,141 +2639,141 @@ options = {}
 ) {
 
 if (
-!hasCoordinates(feature)
+!hasCoordinates(
+feature
+)
 ) {
 
-
 return false;
-
 
 }
 
 const {
-openPopup = true
-} = options;
+openPopup =
+true
+} =
+options;
 
 try {
 
-
 const ready =
-  await waitForMapReady(
-    8000
-  );
-
-
-if (!ready) {
-  return false;
-}
-
-
-const view =
-  window.city4allMap?.view;
-
-
-if (!view) {
-  return false;
-}
-
-
-const latitude =
-  Number(
-    feature.latitude
-  );
-
-
-const longitude =
-  Number(
-    feature.longitude
-  );
-
-
-let graphic =
-  findGraphicForFeature(
-    feature
-  );
-
-
-if (!graphic) {
-
-  await ensureFeatureOnMap(
-    feature
-  );
-
-
-  graphic =
-    findGraphicForFeature(
-      feature
-    );
-
-}
-
-
-await view.goTo(
-
-  {
-
-    center: [
-      longitude,
-      latitude
-    ],
-
-    zoom: 17
-
-  },
-
-  {
-
-    duration: 850
-
-  }
-
+await waitForMapReady(
+8000
 );
-
 
 if (
-  openPopup &&
-  graphic
+!ready
 ) {
-
-  await new Promise(
-    resolve =>
-      setTimeout(
-        resolve,
-        100
-      )
-  );
-
-
-  await view.openPopup({
-
-    features: [
-      graphic
-    ],
-
-    location:
-      graphic.geometry
-
-  });
-
-}
-
-
-return true;
-
-
-}
-
-catch (error) {
-
-
-console.warn(
-  "Could not focus feature:",
-  error
-);
-
 
 return false;
 
+}
+
+const view =
+window.city4allMap
+?.view;
+
+if (
+!view
+) {
+
+return false;
+
+}
+
+const latitude =
+Number(
+feature.latitude
+);
+
+const longitude =
+Number(
+feature.longitude
+);
+
+let graphic =
+findGraphicForFeature(
+feature
+);
+
+if (
+!graphic
+) {
+
+await ensureFeatureOnMap(
+feature
+);
+
+graphic =
+findGraphicForFeature(
+feature
+);
+
+}
+
+await view.goTo(
+
+{
+
+center: [
+longitude,
+latitude
+],
+
+zoom:
+17
+
+},
+
+{
+
+duration:
+850
+
+}
+
+);
+
+if (
+openPopup &&
+graphic
+) {
+
+await new Promise(
+resolve =>
+setTimeout(
+resolve,
+100
+)
+);
+
+await view.openPopup({
+
+features: [
+graphic
+],
+
+location:
+graphic.geometry
+
+});
+
+}
+
+return true;
+
+}
+
+catch (
+error
+) {
+
+console.warn(
+"Could not focus feature:",
+error
+);
+
+return false;
 
 }
 
@@ -3102,134 +2788,146 @@ features
 ) {
 
 const validFeatures =
-Array.isArray(features)
+Array.isArray(
+features
+)
 ? features.filter(
 hasCoordinates
 )
 : [];
 
-if (!validFeatures.length) {
+if (
+!validFeatures.length
+) {
+
 return false;
+
 }
 
 if (
-validFeatures.length === 1
+validFeatures.length ===
+1
 ) {
 
-
 return focusMapFeature(
-  validFeatures[0],
-  {
-    openPopup: true
-  }
+validFeatures[0],
+{
+openPopup:
+true
+}
 );
-
 
 }
 
 try {
-
 
 const ready =
-  await waitForMapReady(
-    8000
-  );
-
-
-if (!ready) {
-  return false;
-}
-
-
-const view =
-  window.city4allMap?.view;
-
-
-if (!view) {
-  return false;
-}
-
-
-const points =
-  validFeatures.map(
-    feature => ({
-
-      type:
-        "point",
-
-      longitude:
-        Number(
-          feature.longitude
-        ),
-
-      latitude:
-        Number(
-          feature.latitude
-        )
-
-    })
-  );
-
-
-try {
-
-  await view.goTo(
-
-    points,
-
-    {
-
-      padding: {
-
-        top: 80,
-
-        right: 80,
-
-        bottom: 80,
-
-        left: 80
-
-      },
-
-      duration: 900
-
-    }
-
-  );
-
-
-  return true;
-
-}
-
-catch (goToError) {
-
-  console.warn(
-    "goTo(points) failed:",
-    goToError
-  );
-
-}
-
-
-return fallbackFitMap(
-  validFeatures
+await waitForMapReady(
+8000
 );
 
-
-}
-
-catch (error) {
-
-
-console.warn(
-  "Could not zoom to all features:",
-  error
-);
-
+if (
+!ready
+) {
 
 return false;
 
+}
+
+const view =
+window.city4allMap
+?.view;
+
+if (
+!view
+) {
+
+return false;
+
+}
+
+const points =
+validFeatures.map(
+feature => ({
+
+type:
+"point",
+
+longitude:
+Number(
+feature.longitude
+),
+
+latitude:
+Number(
+feature.latitude
+)
+
+})
+);
+
+try {
+
+await view.goTo(
+
+points,
+
+{
+
+padding: {
+
+top:
+80,
+
+right:
+80,
+
+bottom:
+80,
+
+left:
+80
+
+},
+
+duration:
+900
+
+}
+
+);
+
+return true;
+
+}
+
+catch (
+goToError
+) {
+
+console.warn(
+"goTo(points) failed:",
+goToError
+);
+
+}
+
+return fallbackFitMap(
+validFeatures
+);
+
+}
+
+catch (
+error
+) {
+
+console.warn(
+"Could not zoom to all features:",
+error
+);
+
+return false;
 
 }
 
@@ -3244,16 +2942,15 @@ features
 ) {
 
 const view =
-window.city4allMap?.view;
+window.city4allMap
+?.view;
 
 if (
 !view ||
 !features.length
 ) {
 
-
 return false;
-
 
 }
 
@@ -3297,103 +2994,116 @@ const centerLon =
 (
 minLon +
 maxLon
-) / 2;
+) /
+2;
 
 const centerLat =
 (
 minLat +
 maxLat
-) / 2;
+) /
+2;
 
 const span =
 Math.max(
 
+maxLon -
+minLon,
 
-  maxLon - minLon,
-
-  maxLat - minLat
+maxLat -
+minLat
 
 );
 
+let zoom =
+12;
 
-let zoom = 12;
+if (
+span <
+0.01
+) {
 
-if (span < 0.01) {
-
-
-zoom = 16;
-
-
-}
-
-else if (span < 0.03) {
-
-
-zoom = 14;
-
+zoom =
+16;
 
 }
 
-else if (span < 0.08) {
+else if (
+span <
+0.03
+) {
 
-
-zoom = 12;
-
-
-}
-
-else if (span < 0.2) {
-
-
-zoom = 10;
-
+zoom =
+14;
 
 }
 
-else if (span < 0.5) {
+else if (
+span <
+0.08
+) {
 
-
-zoom = 8;
-
+zoom =
+12;
 
 }
 
-else if (span < 1) {
+else if (
+span <
+0.2
+) {
 
+zoom =
+10;
 
-zoom = 7;
+}
 
+else if (
+span <
+0.5
+) {
+
+zoom =
+8;
+
+}
+
+else if (
+span <
+1
+) {
+
+zoom =
+7;
 
 }
 
 else {
 
-
-zoom = 5;
-
+zoom =
+5;
 
 }
 
 await view.goTo(
 
-
 {
 
-  center: [
-    centerLon,
-    centerLat
-  ],
+center: [
+centerLon,
+centerLat
+],
 
-  zoom
+zoom
 
 },
 
 {
 
-  duration: 900
+duration:
+900
 
 }
-
 
 );
 
@@ -3409,8 +3119,12 @@ function hasCoordinates(
 feature
 ) {
 
-if (!feature) {
+if (
+!feature
+) {
+
 return false;
+
 }
 
 const latitude =
@@ -3425,19 +3139,25 @@ feature.longitude
 
 return (
 
+Number.isFinite(
+latitude
+) &&
 
-Number.isFinite(latitude) &&
+Number.isFinite(
+longitude
+) &&
 
-Number.isFinite(longitude) &&
+latitude >=
+-90 &&
 
-latitude >= -90 &&
+latitude <=
+90 &&
 
-latitude <= 90 &&
+longitude >=
+-180 &&
 
-longitude >= -180 &&
-
-longitude <= 180
-
+longitude <=
+180
 
 );
 
@@ -3452,12 +3172,12 @@ feature
 ) {
 
 if (
-!hasCoordinates(feature)
+!hasCoordinates(
+feature
+)
 ) {
 
-
 return null;
-
 
 }
 
@@ -3488,40 +3208,41 @@ VOICE
 
 function setupVoice() {
 
-if (!voiceButton) {
+if (
+!voiceButton
+) {
+
 return;
+
 }
 
 const SpeechRecognition =
 window.SpeechRecognition ||
 window.webkitSpeechRecognition;
 
-if (!SpeechRecognition) {
-
+if (
+!SpeechRecognition
+) {
 
 voiceButton.title =
-  "Η φωνητική συνομιλία δεν υποστηρίζεται σε αυτόν τον browser.";
-
+"Η φωνητική συνομιλία δεν υποστηρίζεται σε αυτόν τον browser.";
 
 voiceButton.style.opacity =
-  "0.45";
-
+"0.45";
 
 voiceButton.addEventListener(
-  "click",
-  () => {
+"click",
+() => {
 
-    addMessage(
-      "ai",
-      "🎤 Η φωνητική συνομιλία δεν υποστηρίζεται από τον συγκεκριμένο browser."
-    );
-
-  }
+addMessage(
+"ai",
+"🎤 Η φωνητική συνομιλία δεν υποστηρίζεται από τον συγκεκριμένο browser."
 );
 
+}
+);
 
 return;
-
 
 }
 
@@ -3543,153 +3264,142 @@ recognition.maxAlternatives =
 recognition.onstart =
 () => {
 
+listening =
+true;
 
-  listening = true;
+voiceButton.classList.add(
+"active"
+);
 
+voiceButton.textContent =
+"⏹️";
 
-  voiceButton.classList.add(
-    "active"
-  );
+voiceButton.title =
+"Έξοδος από φωνητική συνομιλία";
 
+voiceButton.setAttribute(
+"aria-label",
+"Έξοδος από φωνητική συνομιλία"
+);
 
-  voiceButton.textContent =
-    "⏹️";
+if (
+inputEl
+) {
 
+inputEl.placeholder =
+"Μίλησε στον City4All Assistant...";
 
-  voiceButton.title =
-    "Έξοδος από φωνητική συνομιλία";
-
-
-  voiceButton.setAttribute(
-    "aria-label",
-    "Έξοδος από φωνητική συνομιλία"
-  );
-
-
-  if (inputEl) {
-
-    inputEl.placeholder =
-      "Μίλησε στον City4All Assistant...";
-
-  }
+}
 
 };
-
 
 recognition.onend =
 () => {
 
+listening =
+false;
 
-  listening = false;
+if (
+!voiceMode
+) {
 
+resetVoiceButton();
 
-  if (!voiceMode) {
+return;
 
-    resetVoiceButton();
+}
 
-    return;
+if (
+!isLoading
+) {
 
-  }
+clearTimeout(
+voiceRestartTimer
+);
 
+voiceRestartTimer =
+setTimeout(
+() => {
 
-  if (!isLoading) {
+if (
+voiceMode &&
+!listening &&
+!isLoading
+) {
 
-    clearTimeout(
-      voiceRestartTimer
-    );
+startRecognition();
 
+}
 
-    voiceRestartTimer =
-      setTimeout(
-        () => {
+},
+250
+);
 
-          if (
-            voiceMode &&
-            !listening &&
-            !isLoading
-          ) {
-
-            startRecognition();
-
-          }
-
-        },
-        250
-      );
-
-  }
+}
 
 };
-
 
 recognition.onresult =
 event => {
 
+const transcript =
+event.results
+?.[0]
+?.[0]
+?.transcript
+?.trim() ||
+"";
 
-  const transcript =
-    event.results
-      ?.[0]
-      ?.[0]
-      ?.transcript
-      ?.trim() ||
-    "";
+if (
+!transcript ||
+isLoading ||
+!voiceMode ||
+!inputEl
+) {
 
+return;
 
-  if (
-    !transcript ||
-    isLoading ||
-    !voiceMode ||
-    !inputEl
-  ) {
+}
 
-    return;
+inputEl.value =
+transcript;
 
-  }
+inputEl.dispatchEvent(
+new Event(
+"input"
+)
+);
 
-
-  inputEl.value =
-    transcript;
-
-
-  inputEl.dispatchEvent(
-    new Event("input")
-  );
-
-
-  sendMessage({
-    fromVoice: true
-  });
+sendMessage({
+fromVoice:
+true
+});
 
 };
-
 
 recognition.onerror =
 event => {
 
+console.warn(
+"Speech recognition error:",
+event.error
+);
 
-  console.warn(
-    "Speech recognition error:",
-    event.error
-  );
+if (
+event.error ===
+"not-allowed"
+) {
 
+addMessage(
+"ai",
+"🎤 Χρειάζεται να επιτρέψεις πρόσβαση στο μικρόφωνο από τον browser."
+);
 
-  if (
-    event.error ===
-    "not-allowed"
-  ) {
+stopVoiceMode();
 
-    addMessage(
-      "ai",
-      "🎤 Χρειάζεται να επιτρέψεις πρόσβαση στο μικρόφωνο από τον browser."
-    );
-
-
-    stopVoiceMode();
-
-  }
+}
 
 };
-
 
 voiceButton.addEventListener(
 "click",
@@ -3704,21 +3414,24 @@ VOICE MODE
 
 function toggleVoiceMode() {
 
-if (!recognition) {
+if (
+!recognition
+) {
+
 return;
+
 }
 
-if (voiceMode) {
-
+if (
+voiceMode
+) {
 
 stopVoiceMode();
 
-
-} else {
-
+}
+else {
 
 startVoiceMode();
-
 
 }
 
@@ -3731,13 +3444,12 @@ if (
 voiceMode
 ) {
 
-
 return;
-
 
 }
 
-voiceMode = true;
+voiceMode =
+true;
 
 stopSpeaking();
 
@@ -3756,16 +3468,15 @@ voiceButton.setAttribute(
 "Έξοδος από φωνητική συνομιλία"
 );
 
-if (inputEl) {
-
+if (
+inputEl
+) {
 
 inputEl.placeholder =
-  "Μίλησε στον City4All Assistant...";
-
+"Μίλησε στον City4All Assistant...";
 
 inputEl.disabled =
-  true;
-
+true;
 
 }
 
@@ -3782,28 +3493,24 @@ listening ||
 isLoading
 ) {
 
-
 return;
-
 
 }
 
 try {
 
-
 recognition.start();
-
 
 }
 
-catch (error) {
-
+catch (
+error
+) {
 
 console.warn(
-  "Could not start speech recognition:",
-  error
+"Could not start speech recognition:",
+error
 );
-
 
 }
 
@@ -3811,7 +3518,8 @@ console.warn(
 
 function stopVoiceMode() {
 
-voiceMode = false;
+voiceMode =
+false;
 
 clearTimeout(
 voiceRestartTimer
@@ -3824,30 +3532,28 @@ recognition &&
 listening
 ) {
 
-
 try {
 
-  recognition.stop();
+recognition.stop();
 
 }
 
 catch {}
 
-
 }
 
-listening = false;
+listening =
+false;
 
-if (inputEl) {
-
+if (
+inputEl
+) {
 
 inputEl.disabled =
-  false;
-
+false;
 
 inputEl.placeholder =
-  "Ρώτησε τον City4All Assistant...";
-
+"Ρώτησε τον City4All Assistant...";
 
 }
 
@@ -3857,8 +3563,12 @@ resetVoiceButton();
 
 function resetVoiceButton() {
 
-if (!voiceButton) {
+if (
+!voiceButton
+) {
+
 return;
+
 }
 
 voiceButton.classList.remove(
@@ -3887,12 +3597,14 @@ text
 ) {
 
 if (
-!("speechSynthesis" in window)
+!(
+"speechSynthesis"
+in
+window
+)
 ) {
 
-
 return;
-
 
 }
 
@@ -3901,38 +3613,40 @@ if (
 !text.trim()
 ) {
 
-
 return;
-
 
 }
 
 stopSpeaking();
 
 const cleanText =
-String(text)
+String(
+text
+)
 
+.replace(
+/https?:\/\/\S+/g,
+""
+)
 
-  .replace(
-    /https?:\/\/\S+/g,
-    ""
-  )
+.replace(
+/[*_#`]/g,
+""
+)
 
-  .replace(
-    /[*_#`]/g,
-    ""
-  )
+.replace(
+/<[^>]*>/g,
+""
+)
 
-  .replace(
-    /<[^>]*>/g,
-    ""
-  )
+.trim();
 
-  .trim();
+if (
+!cleanText
+) {
 
-
-if (!cleanText) {
 return;
+
 }
 
 const utterance =
@@ -3955,61 +3669,56 @@ utterance.volume =
 utterance.onstart =
 () => {
 
-
-  isSpeaking = true;
+isSpeaking =
+true;
 
 };
-
 
 utterance.onend =
 () => {
 
+isSpeaking =
+false;
 
-  isSpeaking = false;
+if (
+voiceMode &&
+!listening &&
+!isLoading
+) {
 
+clearTimeout(
+voiceRestartTimer
+);
 
-  if (
-    voiceMode &&
-    !listening &&
-    !isLoading
-  ) {
+voiceRestartTimer =
+setTimeout(
+() => {
 
-    clearTimeout(
-      voiceRestartTimer
-    );
+if (
+voiceMode &&
+!listening &&
+!isLoading
+) {
 
+startRecognition();
 
-    voiceRestartTimer =
-      setTimeout(
-        () => {
+}
 
-          if (
-            voiceMode &&
-            !listening &&
-            !isLoading
-          ) {
+},
+300
+);
 
-            startRecognition();
-
-          }
-
-        },
-        300
-      );
-
-  }
+}
 
 };
-
 
 utterance.onerror =
 () => {
 
-
-  isSpeaking = false;
+isSpeaking =
+false;
 
 };
-
 
 window.speechSynthesis.speak(
 utterance
@@ -4024,16 +3733,17 @@ STOP SPEAKING
 function stopSpeaking() {
 
 if (
-"speechSynthesis" in window
+"speechSynthesis"
+in
+window
 ) {
-
 
 window.speechSynthesis.cancel();
 
-
 }
 
-isSpeaking = false;
+isSpeaking =
+false;
 
 }
 
@@ -4046,38 +3756,34 @@ function setupMobileViewport() {
 const setViewportHeight =
 () => {
 
+const height =
+window.visualViewport?.height ||
+window.innerHeight;
 
-  const height =
-    window.visualViewport?.height ||
-    window.innerHeight;
+document.documentElement
+.style
+.setProperty(
+"--app-height",
+`${height}px`
+);
 
+requestAnimationFrame(
+() => {
 
-  document.documentElement
-    .style
-    .setProperty(
-      "--app-height",
-      `${height}px`
-    );
+try {
 
+window.city4allMap
+?.view
+?.resize();
 
-  requestAnimationFrame(
-    () => {
+}
 
-      try {
+catch {}
 
-        window.city4allMap
-          ?.view
-          ?.resize();
-
-      }
-
-      catch {}
-
-    }
-  );
+}
+);
 
 };
-
 
 setViewportHeight();
 
@@ -4090,18 +3796,15 @@ if (
 window.visualViewport
 ) {
 
-
 window.visualViewport.addEventListener(
-  "resize",
-  setViewportHeight
+"resize",
+setViewportHeight
 );
 
-
 window.visualViewport.addEventListener(
-  "scroll",
-  setViewportHeight
+"scroll",
+setViewportHeight
 );
-
 
 }
 
@@ -4116,35 +3819,34 @@ value
 ) {
 
 return String(
-value ?? ""
-)
-
-
-.replaceAll(
-  "&",
-  "&amp;"
+value ??
+""
 )
 
 .replaceAll(
-  "<",
-  "&lt;"
+"&",
+"&amp;"
 )
 
 .replaceAll(
-  ">",
-  "&gt;"
+"<",
+"&lt;"
 )
 
 .replaceAll(
-  '"',
-  "&quot;"
+">",
+"&gt;"
 )
 
 .replaceAll(
-  "'",
-  "&#039;"
+'"',
+"&quot;"
+)
+
+.replaceAll(
+"'",
+"&#039;"
 );
-
 
 }
 
@@ -4157,35 +3859,34 @@ value
 ) {
 
 return String(
-value ?? ""
-)
-
-
-.replaceAll(
-  "&",
-  "&amp;"
+value ??
+""
 )
 
 .replaceAll(
-  "<",
-  "&lt;"
+"&",
+"&amp;"
 )
 
 .replaceAll(
-  ">",
-  "&gt;"
+"<",
+"&lt;"
 )
 
 .replaceAll(
-  '"',
-  "&quot;"
+">",
+"&gt;"
 )
 
 .replaceAll(
-  "'",
-  "&#039;"
+'"',
+"&quot;"
+)
+
+.replaceAll(
+"'",
+"&#039;"
 );
-
 
 }
 
@@ -4207,48 +3908,48 @@ window.addEventListener(
 "city4all-map-ready",
 async () => {
 
-
 console.log(
-  "City4All map-ready event received."
+"City4All map-ready event received."
 );
-
 
 try {
 
-  const map =
-    window.city4allMap;
+const map =
+window.city4allMap;
 
+if (
+!map
+) {
 
-  if (!map) {
-    return;
-  }
-
-
-  if (
-    map?.view?.when
-  ) {
-
-    await map.view.when();
-
-  }
-
-
-  resolveMapReady();
+return;
 
 }
 
-catch (error) {
+if (
+map?.view?.when
+) {
 
-  console.warn(
-    "City4All map ready error:",
-    error
-  );
-
-
-  resolveMapReady();
+await map.view.when();
 
 }
 
+resolveMapReady();
+
+}
+
+catch (
+error
+) {
+
+console.warn(
+"City4All map ready error:",
+error
+);
+
+resolveMapReady();
+
+}
 
 }
 );
+````
