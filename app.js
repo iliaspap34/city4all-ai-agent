@@ -6,7 +6,7 @@ const API_BASE =
 "https://city4allfinalai.ilias-pap-net.workers.dev";
 
 const CHAT_URL =
-`${API_BASE}/chat`;
+${API_BASE}/chat;
 
 /* ============================================================
 STATE
@@ -39,16 +39,11 @@ let mapReadyResolved = false;
 const mapReadyPromise =
 new Promise(resolve => {
 
-```
 resolveMapReady =
   () => {
 
-    if (
-      mapReadyResolved
-    ) {
-
+    if (mapReadyResolved) {
       return;
-
     }
 
     mapReadyResolved =
@@ -57,53 +52,38 @@ resolveMapReady =
     resolve();
 
   };
-```
 
 });
 
 function tryResolveExistingMap() {
 
-if (
-window.city4allMap?.view
-) {
-
-```
-try {
-
-  if (
-    window.city4allMap.view.when
-  ) {
-
-    window.city4allMap
-      .view
-      .when()
-      .then(
-        () => {
-          resolveMapReady();
-        }
-      )
-      .catch(
-        () => {
-          resolveMapReady();
-        }
-      );
-
-  }
-
-  else {
-
-    resolveMapReady();
-
-  }
-
+if (!window.city4allMap?.view) {
+return;
 }
 
-catch {
+try {
+
+if (window.city4allMap.view.when) {
+
+  window.city4allMap
+    .view
+    .when()
+    .then(() => {
+      resolveMapReady();
+    })
+    .catch(() => {
+      resolveMapReady();
+    });
+
+} else {
 
   resolveMapReady();
 
 }
-```
+
+} catch {
+
+resolveMapReady();
 
 }
 
@@ -143,7 +123,6 @@ document.addEventListener(
 "DOMContentLoaded",
 () => {
 
-```
 setupQuickActions();
 
 setupInput();
@@ -159,7 +138,6 @@ initializeMermaid();
 console.log(
   "City4All AI frontend loaded."
 );
-```
 
 }
 );
@@ -175,19 +153,16 @@ typeof mermaid ===
 "undefined"
 ) {
 
-```
 console.warn(
   "Mermaid library not available."
 );
 
 return;
-```
 
 }
 
 mermaid.initialize({
 
-```
 startOnLoad:
   false,
 
@@ -199,7 +174,6 @@ theme:
 
 fontFamily:
   "Arial, Helvetica, sans-serif"
-```
 
 });
 
@@ -218,14 +192,12 @@ document
 .forEach(
 button => {
 
-```
     button.addEventListener(
       "click",
       () => {
 
         const question =
           button.dataset.question;
-
 
         if (
           !question ||
@@ -236,15 +208,12 @@ button => {
 
         }
 
-
         inputEl.value =
           question;
-
 
         inputEl.dispatchEvent(
           new Event("input")
         );
-
 
         sendMessage();
 
@@ -253,7 +222,6 @@ button => {
 
   }
 );
-```
 
 }
 
@@ -263,21 +231,14 @@ INPUT
 
 function setupInput() {
 
-if (
-!inputEl
-) {
-
-```
+if (!inputEl) {
 return;
-```
-
 }
 
 inputEl.addEventListener(
 "keydown",
 event => {
 
-```
   if (
     event.key === "Enter" &&
     !event.shiftKey
@@ -290,7 +251,6 @@ event => {
   }
 
 }
-```
 
 );
 
@@ -310,14 +270,8 @@ resizeInput();
 
 function resizeInput() {
 
-if (
-!inputEl
-) {
-
-```
+if (!inputEl) {
 return;
-```
-
 }
 
 inputEl.style.height =
@@ -330,10 +284,7 @@ inputEl.scrollHeight,
 );
 
 inputEl.style.height =
-`${Math.max(
-      43,
-      newHeight
-    )}px`;
+${Math.max( 43, newHeight )}px;
 
 }
 
@@ -346,34 +297,19 @@ options = {}
 ) {
 
 const {
-fromVoice =
-false
-} =
-options;
+fromVoice = false
+} = options;
 
-if (
-isLoading
-) {
-
-```
+if (isLoading) {
 return;
-```
-
 }
 
 const message =
-inputEl?.value
-?.trim() ||
+inputEl?.value?.trim() ||
 "";
 
-if (
-!message
-) {
-
-```
+if (!message) {
 return;
-```
-
 }
 
 stopSpeaking();
@@ -402,18 +338,13 @@ new AbortController();
 const timeoutId =
 setTimeout(
 () => {
-
-```
-    controller.abort();
-
-  },
-  20000
+controller.abort();
+},
+20000
 );
-```
 
 try {
 
-```
 const response =
   await fetch(
     CHAT_URL,
@@ -460,9 +391,7 @@ try {
   data =
     await response.json();
 
-}
-
-catch {
+} catch {
 
   throw new Error(
     "Ο Worker επέστρεψε μη έγκυρη απάντηση."
@@ -526,9 +455,7 @@ const features =
   Array.isArray(
     data.features
   )
-
     ? data.features
-
     : [];
 
 
@@ -544,9 +471,7 @@ const mapFeatures =
   Array.isArray(
     data.mapFeatures
   )
-
     ? data.mapFeatures
-
     : features;
 
 
@@ -592,15 +517,11 @@ if (
   );
 
 }
-```
 
 }
 
-catch (
-error
-) {
+catch (error) {
 
-```
 clearTimeout(
   timeoutId
 );
@@ -638,24 +559,17 @@ addMessage(
 );
 
 
-if (
-  voiceMode
-) {
-
+if (voiceMode) {
   stopVoiceMode();
-
 }
-```
 
 }
 
 finally {
 
-```
 setLoading(
   false
 );
-```
 
 }
 
@@ -672,25 +586,21 @@ assistantMessage
 
 conversation.push({
 
-```
 role:
   "user",
 
 content:
   userMessage
-```
 
 });
 
 conversation.push({
 
-```
 role:
   "assistant",
 
 content:
   assistantMessage
-```
 
 });
 
@@ -699,12 +609,10 @@ conversation.length >
 20
 ) {
 
-```
 conversation =
   conversation.slice(
     -20
   );
-```
 
 }
 
@@ -720,19 +628,22 @@ text,
 externalInfo = null
 ) {
 
+if (!messagesEl) {
+return null;
+}
+
 const wrapper =
 document.createElement(
 "div"
 );
 
 wrapper.className =
-`message ${role}`;
+message ${role};
 
 if (
 role === "ai"
 ) {
 
-```
 const meta =
   document.createElement(
     "div"
@@ -747,14 +658,13 @@ meta.innerHTML = `
   <div class="message-meta-icon">
     ✦
   </div>
-  City4All AI
+  <span>City4All AI</span>
 `;
 
 
 wrapper.appendChild(
   meta
 );
-```
 
 }
 
@@ -770,21 +680,15 @@ if (
 role === "ai"
 ) {
 
-```
 bubble.innerHTML =
   renderMarkdown(
     text
   );
-```
 
-}
+} else {
 
-else {
-
-```
 bubble.textContent =
   text;
-```
 
 }
 
@@ -797,23 +701,19 @@ role === "ai" &&
 externalInfo
 ) {
 
-```
 const externalCard =
   createExternalInfoCard(
     externalInfo
   );
 
 
-if (
-  externalCard
-) {
+if (externalCard) {
 
   wrapper.appendChild(
     externalCard
   );
 
 }
-```
 
 }
 
@@ -839,14 +739,8 @@ function renderMarkdown(
 markdown
 ) {
 
-if (
-!markdown
-) {
-
-```
+if (!markdown) {
 return "";
-```
-
 }
 
 let text =
@@ -863,7 +757,7 @@ markdown
 );
 
 /* ==========================================================
-MERMAID FIRST
+MERMAID BLOCKS
 ========================================================== */
 
 const mermaidBlocks =
@@ -871,13 +765,12 @@ const mermaidBlocks =
 
 text =
 text.replace(
-/`mermaid\s*\n([\s\S]*?)`/gi,
+/mermaid\s*\n([\s\S]*?)/gi,
 (
 match,
 diagram
 ) => {
 
-```
     const index =
       mermaidBlocks.length;
 
@@ -893,7 +786,6 @@ diagram
 
   }
 );
-```
 
 /* ==========================================================
 NORMAL CODE BLOCKS
@@ -904,14 +796,13 @@ const codeBlocks =
 
 text =
 text.replace(
-/`([\w-]*)\s*\n([\s\S]*?)`/g,
+/([\w-]*)\s*\n([\s\S]*?)/g,
 (
 match,
 language,
 code
 ) => {
 
-```
     const index =
       codeBlocks.length;
 
@@ -936,7 +827,6 @@ code
 
   }
 );
-```
 
 /* ==========================================================
 ESCAPE HTML
@@ -997,19 +887,18 @@ text.replace(
 );
 
 /* ==========================================================
-LINKS
+MARKDOWN LINKS
 ========================================================== */
 
 text =
 text.replace(
-/\(([^\)]+)]\((https?:\/\/[^\s)]+)\)/g,
+/([^]+)]\((https?:\/\/[^\s)]+)\)/g,
 (
 match,
 label,
 url
 ) => {
 
-```
     return (
       `<a href="${escapeAttribute(url)}"` +
       ` target="_blank"` +
@@ -1020,7 +909,6 @@ url
 
   }
 );
-```
 
 /* ==========================================================
 RAW URLS
@@ -1035,7 +923,6 @@ prefix,
 url
 ) => {
 
-```
     const cleanUrl =
       url.replace(
         /[),.;!?]+$/,
@@ -1054,7 +941,6 @@ url
 
   }
 );
-```
 
 /* ==========================================================
 BOLD
@@ -1072,7 +958,7 @@ ITALIC
 
 text =
 text.replace(
-/(^|[^*])*([^*\n]+)*(?!*)/g,
+/(^|[^])*([^\n]+)*(?!*)/g,
 "$1<em>$2</em>"
 );
 
@@ -1082,7 +968,7 @@ INLINE CODE
 
 text =
 text.replace(
-/`([^`\n]+)`/g,
+/([^\n]+)`/g,
 "<code>$1</code>"
 );
 
@@ -1092,7 +978,7 @@ BLOCKQUOTE
 
 text =
 text.replace(
-/^> (.*)$/gm,
+/^>\s?(.*)$/gm,
 "<blockquote>$1</blockquote>"
 );
 
@@ -1102,13 +988,12 @@ UNORDERED LIST
 
 text =
 text.replace(
-/(?:^|\n)((?:[-*] .*(?:\n|$))+)/g,
+/(?:^|\n)((?:[-]\s+.(?:\n|$))+)/g,
 (
 match,
 block
 ) => {
 
-```
     const items =
       block
         .trim()
@@ -1136,7 +1021,6 @@ block
 
   }
 );
-```
 
 /* ==========================================================
 ORDERED LIST
@@ -1150,7 +1034,6 @@ match,
 block
 ) => {
 
-```
     const items =
       block
         .trim()
@@ -1178,7 +1061,6 @@ block
 
   }
 );
-```
 
 /* ==========================================================
 PARAGRAPHS
@@ -1199,7 +1081,6 @@ block,
 index
 ) => {
 
-```
   const token =
     `@@CODEBLOCK_${index}@@`;
 
@@ -1221,7 +1102,6 @@ index
     );
 
 }
-```
 
 );
 
@@ -1235,7 +1115,6 @@ diagram,
 index
 ) => {
 
-```
   const token =
     `@@MERMAID_${index}@@`;
 
@@ -1249,7 +1128,6 @@ index
     );
 
 }
-```
 
 );
 
@@ -1281,7 +1159,6 @@ i <
 lines.length
 ) {
 
-```
 const current =
   lines[i];
 
@@ -1398,7 +1275,6 @@ output.push(
 
 
 i++;
-```
 
 }
 
@@ -1419,12 +1295,10 @@ if (
 cleaned.startsWith("|")
 ) {
 
-```
 cleaned =
   cleaned.slice(
     1
   );
-```
 
 }
 
@@ -1432,13 +1306,11 @@ if (
 cleaned.endsWith("|")
 ) {
 
-```
 cleaned =
   cleaned.slice(
     0,
     -1
   );
-```
 
 }
 
@@ -1468,17 +1340,12 @@ return blocks
 .map(
 block => {
 
-```
     const trimmed =
       block.trim();
 
 
-    if (
-      !trimmed
-    ) {
-
+    if (!trimmed) {
       return "";
-
     }
 
 
@@ -1518,7 +1385,6 @@ block => {
 .join(
   ""
 );
-```
 
 }
 
@@ -1530,9 +1396,7 @@ function createMermaidPlaceholder(
 diagram
 ) {
 
-return `     <div class="mermaid-wrap">       <div class="mermaid">
-${escapeHTML(diagram)}       </div>     </div>
-  `;
+return <div class="mermaid-wrap"> <div class="mermaid"> ${escapeHTML(diagram)} </div> </div> ;
 
 }
 
@@ -1545,9 +1409,7 @@ typeof mermaid ===
 "undefined"
 ) {
 
-```
 return;
-```
 
 }
 
@@ -1560,15 +1422,12 @@ if (
 !diagrams.length
 ) {
 
-```
 return;
-```
 
 }
 
 try {
 
-```
 await mermaid.run({
 
   nodes:
@@ -1577,20 +1436,15 @@ await mermaid.run({
     )
 
 });
-```
 
 }
 
-catch (
-error
-) {
+catch (error) {
 
-```
 console.warn(
   "Mermaid rendering failed:",
   error
 );
-```
 
 }
 
@@ -1610,9 +1464,7 @@ typeof externalInfo !==
 "object"
 ) {
 
-```
 return null;
-```
 
 }
 
@@ -1627,9 +1479,7 @@ if (
 !image
 ) {
 
-```
 return null;
-```
 
 }
 
@@ -1645,7 +1495,6 @@ if (
 image?.url
 ) {
 
-```
 const img =
   document.createElement(
     "img"
@@ -1671,10 +1520,13 @@ img.loading =
   "lazy";
 
 
+img.referrerPolicy =
+  "no-referrer";
+
+
 card.appendChild(
   img
 );
-```
 
 }
 
@@ -1705,7 +1557,6 @@ if (
 wiki?.title
 ) {
 
-```
 const title =
   document.createElement(
     "div"
@@ -1723,7 +1574,6 @@ title.textContent =
 body.appendChild(
   title
 );
-```
 
 }
 
@@ -1731,7 +1581,6 @@ if (
 wiki?.description
 ) {
 
-```
 const description =
   document.createElement(
     "div"
@@ -1749,7 +1598,6 @@ description.textContent =
 body.appendChild(
   description
 );
-```
 
 }
 
@@ -1757,7 +1605,6 @@ if (
 wiki?.page
 ) {
 
-```
 const link =
   document.createElement(
     "a"
@@ -1787,7 +1634,6 @@ link.textContent =
 body.appendChild(
   link
 );
-```
 
 }
 
@@ -1824,10 +1670,7 @@ document.createElement(
 meta.className =
 "message-meta";
 
-meta.innerHTML = `     <div class="message-meta-icon">
-      ✦     </div>
-    City4All AI
-  `;
+meta.innerHTML = <div class="message-meta-icon"> ✦ </div> <span>City4All AI</span> ;
 
 wrapper.appendChild(
 meta
@@ -1841,9 +1684,9 @@ document.createElement(
 bubble.className =
 "bubble";
 
-bubble.innerHTML = ` <div class="loading-bubble">
+bubble.innerHTML = `
+<div class="loading-bubble">
 
-```
   <div class="loading-icon">
     ✦
   </div>
@@ -1853,7 +1696,6 @@ bubble.innerHTML = ` <div class="loading-bubble">
   </div>
 
 </div>
-```
 
 `;
 
@@ -1875,14 +1717,8 @@ function removeLoadingMessage(
 element
 ) {
 
-if (
-element
-) {
-
-```
+if (element) {
 element.remove();
-```
-
 }
 
 }
@@ -1896,12 +1732,14 @@ function scrollMessages() {
 requestAnimationFrame(
 () => {
 
-```
-  messagesEl.scrollTop =
-    messagesEl.scrollHeight;
+  if (messagesEl) {
+
+    messagesEl.scrollTop =
+      messagesEl.scrollHeight;
+
+  }
 
 }
-```
 
 );
 
@@ -1918,45 +1756,30 @@ loading
 isLoading =
 loading;
 
-if (
-sendButton
-) {
+if (sendButton) {
 
-```
 sendButton.disabled =
   loading;
 
-
 sendButton.textContent =
   loading
-
     ? "..."
-
     : "Αποστολή";
-```
 
 }
 
-if (
-inputEl
-) {
+if (inputEl) {
 
-```
 inputEl.disabled =
   loading ||
   voiceMode;
-```
 
 }
 
-if (
-voiceButton
-) {
+if (voiceButton) {
 
-```
 voiceButton.disabled =
   false;
-```
 
 }
 
@@ -1975,15 +1798,11 @@ totalMatches = null
 ) {
 
 if (
-!Array.isArray(
-features
-) ||
+!Array.isArray(features) ||
 !features.length
 ) {
 
-```
 return;
-```
 
 }
 
@@ -2000,10 +1819,10 @@ ONE RESULT
 ========================================================== */
 
 if (
-features.length === 1
+features.length ===
+1
 ) {
 
-```
 const feature =
   features[0];
 
@@ -2016,9 +1835,7 @@ const mapButton =
   );
 
 
-if (
-  mapButton
-) {
+if (mapButton) {
 
   actions.appendChild(
     mapButton
@@ -2033,16 +1850,13 @@ const routeButton =
   );
 
 
-if (
-  routeButton
-) {
+if (routeButton) {
 
   actions.appendChild(
     routeButton
   );
 
 }
-```
 
 }
 
@@ -2052,7 +1866,6 @@ MANY RESULTS
 
 else {
 
-```
 const allButton =
   document.createElement(
     "button"
@@ -2071,25 +1884,17 @@ const mapCount =
   Array.isArray(
     mapFeatures
   )
-
     ? mapFeatures.length
-
     : features.length;
 
 
 const totalLabel =
   Number.isFinite(
-    Number(
-      totalMatches
-    )
+    Number(totalMatches)
   ) &&
-  Number(
-    totalMatches
-  ) >
-  mapCount
-
+  Number(totalMatches) >
+    mapCount
     ? ` από ${totalMatches}`
-
     : "";
 
 
@@ -2139,6 +1944,7 @@ allButton.addEventListener(
 
     }
 
+
     finally {
 
       allButton.disabled =
@@ -2167,9 +1973,7 @@ const firstMapButton =
   );
 
 
-if (
-  firstMapButton
-) {
+if (firstMapButton) {
 
   actions.appendChild(
     firstMapButton
@@ -2185,16 +1989,13 @@ const routeButton =
   );
 
 
-if (
-  routeButton
-) {
+if (routeButton) {
 
   actions.appendChild(
     routeButton
   );
 
 }
-```
 
 }
 
@@ -2202,14 +2003,12 @@ if (
 actions.children.length
 ) {
 
-```
 messageElement.appendChild(
   actions
 );
 
 
 scrollMessages();
-```
 
 }
 
@@ -2231,9 +2030,7 @@ feature
 )
 ) {
 
-```
 return null;
-```
 
 }
 
@@ -2247,12 +2044,8 @@ button.type =
 
 button.className =
 primary
-
-```
-  ? "chat-action primary"
-
-  : "chat-action";
-```
+? "chat-action primary"
+: "chat-action";
 
 button.textContent =
 label;
@@ -2261,7 +2054,6 @@ button.addEventListener(
 "click",
 async () => {
 
-```
   button.disabled =
     true;
 
@@ -2283,6 +2075,7 @@ async () => {
 
   }
 
+
   finally {
 
     button.disabled =
@@ -2291,7 +2084,6 @@ async () => {
   }
 
 }
-```
 
 );
 
@@ -2315,14 +2107,8 @@ createGoogleMapsUrl(
 feature
 );
 
-if (
-!url
-) {
-
-```
+if (!url) {
 return null;
-```
-
 }
 
 const button =
@@ -2343,7 +2129,6 @@ button.addEventListener(
 "click",
 event => {
 
-```
   event.preventDefault();
 
 
@@ -2354,7 +2139,6 @@ event => {
   );
 
 }
-```
 
 );
 
@@ -2374,7 +2158,6 @@ if (
 window.city4allMap?.view
 ) {
 
-```
 try {
 
   if (
@@ -2392,9 +2175,8 @@ try {
 
 }
 
-catch (
-  error
-) {
+
+catch (error) {
 
   console.warn(
     "Existing map is not ready:",
@@ -2402,13 +2184,11 @@ catch (
   );
 
 }
-```
 
 }
 
 await Promise.race([
 
-```
 mapReadyPromise,
 
 new Promise(
@@ -2418,7 +2198,6 @@ new Promise(
       timeoutMs
     )
 )
-```
 
 ]);
 
@@ -2439,7 +2218,6 @@ window.city4allMap;
 
 return {
 
-```
 exists:
   Boolean(
     map
@@ -2465,7 +2243,6 @@ graphicsCount:
     ?.graphics
     ?.length ??
   0
-```
 
 };
 
@@ -2485,22 +2262,20 @@ feature
 )
 ) {
 
-```
 return false;
-```
 
 }
 
 const ready =
 await waitForMapReady();
 
-if (
-!ready
-) {
+if (!ready) {
 
-```
+console.warn(
+  "Map not ready."
+);
+
 return false;
-```
 
 }
 
@@ -2512,15 +2287,12 @@ if (
 !map?.Graphic
 ) {
 
-```
 console.warn(
   "Incomplete map object:",
   getMapDiagnostics()
 );
 
-
 return false;
-```
 
 }
 
@@ -2529,19 +2301,12 @@ findGraphicForFeature(
 feature
 );
 
-if (
-existing
-) {
-
-```
+if (existing) {
 return true;
-```
-
 }
 
 try {
 
-```
 const graphic =
   createGraphicForFeature(
 
@@ -2586,23 +2351,17 @@ map.lastFeatures =
 
 
 return true;
-```
 
 }
 
-catch (
-error
-) {
+catch (error) {
 
-```
 console.warn(
   "Could not ensure feature:",
   error
 );
 
-
 return false;
-```
 
 }
 
@@ -2619,19 +2378,14 @@ mapCommand = null
 
 try {
 
-```
 const ready =
   await waitForMapReady(
     8000
   );
 
 
-if (
-  !ready
-) {
-
+if (!ready) {
   return false;
-
 }
 
 
@@ -2674,11 +2428,9 @@ const validFeatures =
   Array.isArray(
     features
   )
-
     ? features.filter(
         hasCoordinates
       )
-
     : [];
 
 
@@ -2793,23 +2545,17 @@ if (
 
 
 return true;
-```
 
 }
 
-catch (
-error
-) {
+catch (error) {
 
-```
 console.warn(
   "Map update failed:",
   error
 );
 
-
 return false;
-```
 
 }
 
@@ -2845,12 +2591,8 @@ feature.country ||
 
 const source =
 feature.external
-
-```
-  ? "Internet / OpenStreetMap"
-
-  : "City4All";
-```
+? "Internet / OpenStreetMap"
+: "City4All";
 
 const accessibility =
 feature.accessibility ||
@@ -2879,29 +2621,22 @@ feature.comments
 
 const websiteHtml =
 website
-? `         <br><br>         <strong>Website:</strong>
-        ${website}
-      `
+? <br><br> <strong>Website:</strong> ${website}
 : "";
 
 const phoneHtml =
 phone
-? `         <br><br>         <strong>Τηλέφωνο:</strong>
-        ${phone}
-      `
+? <br><br> <strong>Τηλέφωνο:</strong> ${phone}
 : "";
 
 const commentsHtml =
 comments
-? `         <br><br>         <strong>Σχόλια:</strong>
-        ${comments}
-      `
+? <br><br> <strong>Σχόλια:</strong> ${comments}
 : "";
 
 const graphic =
 new Graphic({
 
-```
   geometry: {
 
     type:
@@ -2921,16 +2656,12 @@ new Graphic({
 
     size:
       feature.external
-
         ? 12
-
         : 15,
 
     color:
       feature.external
-
         ? "#f59e0b"
-
         : "#1976d2",
 
     outline: {
@@ -3057,7 +2788,6 @@ new Graphic({
   }
 
 });
-```
 
 graphic.__city4allFeature =
 feature;
@@ -3085,11 +2815,9 @@ feature.objectId
 ).trim() !== ""
 ) {
 
-```
 return String(
   feature.objectId
 );
-```
 
 }
 
@@ -3103,22 +2831,16 @@ feature.objectid
 ).trim() !== ""
 ) {
 
-```
 return String(
   feature.objectid
 );
-```
 
 }
 
 return (
-`${Number(
-      feature?.latitude
-    )}:` +
-`${Number(
-      feature?.longitude
-    )}:` +
-`${fallbackIndex}`
+${Number( feature?.latitude )}: +
+${Number( feature?.longitude )}: +
+${fallbackIndex}
 );
 
 }
@@ -3144,9 +2866,7 @@ if (
 !graphics.length
 ) {
 
-```
 return null;
-```
 
 }
 
@@ -3157,14 +2877,8 @@ graphic.__city4allFeature ===
 feature
 );
 
-if (
-byReference
-) {
-
-```
+if (byReference) {
 return byReference;
-```
-
 }
 
 const objectId =
@@ -3177,7 +2891,6 @@ objectId !== null &&
 objectId !== undefined
 ) {
 
-```
 const wanted =
   String(
     objectId
@@ -3196,14 +2909,9 @@ const byId =
   );
 
 
-if (
-  byId
-) {
-
+if (byId) {
   return byId;
-
 }
-```
 
 }
 
@@ -3221,7 +2929,6 @@ return (
 graphics.find(
 graphic => {
 
-```
     const gLat =
       Number(
         graphic.geometry
@@ -3263,7 +2970,6 @@ graphic => {
   }
 ) ||
 null
-```
 
 );
 
@@ -3284,46 +2990,35 @@ feature
 )
 ) {
 
-```
 return false;
-```
 
 }
 
 const {
-openPopup =
-true
+openPopup = true
 } =
 options;
 
 try {
 
-```
 const ready =
   await waitForMapReady(
     8000
   );
 
 
-if (
-  !ready
-) {
-
+if (!ready) {
   return false;
-
 }
 
 
 const view =
-  window.city4allMap?.view;
+  window.city4allMap
+    ?.view;
 
 
-if (
-  !view
-) {
-
+if (!view) {
   return false;
-
 }
 
 
@@ -3345,9 +3040,7 @@ let graphic =
   );
 
 
-if (
-  !graphic
-) {
+if (!graphic) {
 
   await ensureFeatureOnMap(
     feature
@@ -3415,15 +3108,11 @@ if (
 
 
 return true;
-```
 
 }
 
-catch (
-error
-) {
+catch (error) {
 
-```
 console.warn(
   "Could not focus feature:",
   error
@@ -3431,7 +3120,6 @@ console.warn(
 
 
 return false;
-```
 
 }
 
@@ -3449,22 +3137,16 @@ const validFeatures =
 Array.isArray(
 features
 )
-
-```
-  ? features.filter(
-      hasCoordinates
-    )
-
-  : [];
-```
+? features.filter(
+hasCoordinates
+)
+: [];
 
 if (
 !validFeatures.length
 ) {
 
-```
 return false;
-```
 
 }
 
@@ -3473,7 +3155,6 @@ validFeatures.length ===
 1
 ) {
 
-```
 return focusMapFeature(
 
   validFeatures[0],
@@ -3484,38 +3165,29 @@ return focusMapFeature(
   }
 
 );
-```
 
 }
 
 try {
 
-```
 const ready =
   await waitForMapReady(
     8000
   );
 
 
-if (
-  !ready
-) {
-
+if (!ready) {
   return false;
-
 }
 
 
 const view =
-  window.city4allMap?.view;
+  window.city4allMap
+    ?.view;
 
 
-if (
-  !view
-) {
-
+if (!view) {
   return false;
-
 }
 
 
@@ -3576,9 +3248,8 @@ try {
 
 }
 
-catch (
-  goToError
-) {
+
+catch (goToError) {
 
   console.warn(
     "goTo(points) failed:",
@@ -3591,15 +3262,11 @@ catch (
 return fallbackFitMap(
   validFeatures
 );
-```
 
 }
 
-catch (
-error
-) {
+catch (error) {
 
-```
 console.warn(
   "Could not zoom to all features:",
   error
@@ -3607,7 +3274,6 @@ console.warn(
 
 
 return false;
-```
 
 }
 
@@ -3622,16 +3288,15 @@ features
 ) {
 
 const view =
-window.city4allMap?.view;
+window.city4allMap
+?.view;
 
 if (
 !view ||
 !features.length
 ) {
 
-```
 return false;
-```
 
 }
 
@@ -3686,7 +3351,6 @@ maxLat
 const span =
 Math.max(
 
-```
   maxLon -
   minLon,
 
@@ -3694,82 +3358,79 @@ Math.max(
   minLat
 
 );
-```
 
 let zoom =
 12;
 
 if (
-span < 0.01
+span <
+0.01
 ) {
 
-```
-zoom = 16;
-```
+zoom =
+  16;
 
 }
 
 else if (
-span < 0.03
+span <
+0.03
 ) {
 
-```
-zoom = 14;
-```
+zoom =
+  14;
 
 }
 
 else if (
-span < 0.08
+span <
+0.08
 ) {
 
-```
-zoom = 12;
-```
+zoom =
+  12;
 
 }
 
 else if (
-span < 0.2
+span <
+0.2
 ) {
 
-```
-zoom = 10;
-```
+zoom =
+  10;
 
 }
 
 else if (
-span < 0.5
+span <
+0.5
 ) {
 
-```
-zoom = 8;
-```
+zoom =
+  8;
 
 }
 
 else if (
-span < 1
+span <
+1
 ) {
 
-```
-zoom = 7;
-```
+zoom =
+  7;
 
 }
 
 else {
 
-```
-zoom = 5;
-```
+zoom =
+  5;
 
 }
 
 await view.goTo(
 
-```
 {
 
   center: [
@@ -3787,7 +3448,6 @@ await view.goTo(
     900
 
 }
-```
 
 );
 
@@ -3803,14 +3463,8 @@ function hasCoordinates(
 feature
 ) {
 
-if (
-!feature
-) {
-
-```
+if (!feature) {
 return false;
-```
-
 }
 
 const latitude =
@@ -3825,7 +3479,6 @@ feature.longitude
 
 return (
 
-```
 Number.isFinite(
   latitude
 ) &&
@@ -3841,7 +3494,6 @@ latitude <= 90 &&
 longitude >= -180 &&
 
 longitude <= 180
-```
 
 );
 
@@ -3861,9 +3513,7 @@ feature
 )
 ) {
 
-```
 return null;
-```
 
 }
 
@@ -3878,19 +3528,12 @@ feature.longitude
 );
 
 return (
-
-```
 "https://www.google.com/maps/dir/?api=1" +
-
 "&destination=" +
-
 encodeURIComponent(
-  `${latitude},${longitude}`
+${latitude},${longitude}
 ) +
-
 "&travelmode=walking"
-```
-
 );
 
 }
@@ -3901,25 +3544,16 @@ VOICE
 
 function setupVoice() {
 
-if (
-!voiceButton
-) {
-
-```
+if (!voiceButton) {
 return;
-```
-
 }
 
 const SpeechRecognition =
 window.SpeechRecognition ||
 window.webkitSpeechRecognition;
 
-if (
-!SpeechRecognition
-) {
+if (!SpeechRecognition) {
 
-```
 voiceButton.title =
   "Η φωνητική συνομιλία δεν υποστηρίζεται σε αυτόν τον browser.";
 
@@ -3942,7 +3576,6 @@ voiceButton.addEventListener(
 
 
 return;
-```
 
 }
 
@@ -3964,7 +3597,6 @@ recognition.maxAlternatives =
 recognition.onstart =
 () => {
 
-```
   listening =
     true;
 
@@ -3988,23 +3620,23 @@ recognition.onstart =
   );
 
 
-  inputEl.placeholder =
-    "Μίλησε στον City4All Assistant...";
+  if (inputEl) {
+
+    inputEl.placeholder =
+      "Μίλησε στον City4All Assistant...";
+
+  }
 
 };
-```
 
 recognition.onend =
 () => {
 
-```
   listening =
     false;
 
 
-  if (
-    !voiceMode
-  ) {
+  if (!voiceMode) {
 
     resetVoiceButton();
 
@@ -4013,9 +3645,7 @@ recognition.onend =
   }
 
 
-  if (
-    !isLoading
-  ) {
+  if (!isLoading) {
 
     clearTimeout(
       voiceRestartTimer
@@ -4043,12 +3673,10 @@ recognition.onend =
   }
 
 };
-```
 
 recognition.onresult =
 event => {
 
-```
   const transcript =
     event.results
       ?.[0]
@@ -4079,19 +3707,15 @@ event => {
 
 
   sendMessage({
-
     fromVoice:
       true
-
   });
 
 };
-```
 
 recognition.onerror =
 event => {
 
-```
   console.warn(
     "Speech recognition error:",
     event.error
@@ -4114,7 +3738,6 @@ event => {
   }
 
 };
-```
 
 voiceButton.addEventListener(
 "click",
@@ -4125,31 +3748,17 @@ toggleVoiceMode
 
 function toggleVoiceMode() {
 
-if (
-!recognition
-) {
-
-```
+if (!recognition) {
 return;
-```
-
 }
 
-if (
-voiceMode
-) {
+if (voiceMode) {
 
-```
 stopVoiceMode();
-```
 
-}
+} else {
 
-else {
-
-```
 startVoiceMode();
-```
 
 }
 
@@ -4162,9 +3771,7 @@ if (
 voiceMode
 ) {
 
-```
 return;
-```
 
 }
 
@@ -4188,11 +3795,16 @@ voiceButton.setAttribute(
 "Έξοδος από φωνητική συνομιλία"
 );
 
+if (inputEl) {
+
 inputEl.placeholder =
-"Μίλησε στον City4All Assistant...";
+  "Μίλησε στον City4All Assistant...";
+
 
 inputEl.disabled =
-true;
+  true;
+
+}
 
 startRecognition();
 
@@ -4207,30 +3819,22 @@ listening ||
 isLoading
 ) {
 
-```
 return;
-```
 
 }
 
 try {
 
-```
 recognition.start();
-```
 
 }
 
-catch (
-error
-) {
+catch (error) {
 
-```
 console.warn(
   "Could not start speech recognition:",
   error
 );
-```
 
 }
 
@@ -4252,7 +3856,6 @@ recognition &&
 listening
 ) {
 
-```
 try {
 
   recognition.stop();
@@ -4260,33 +3863,31 @@ try {
 }
 
 catch {}
-```
 
 }
 
 listening =
 false;
 
-inputEl.disabled =
-false;
+if (inputEl) {
 
-resetVoiceButton();
+inputEl.disabled =
+  false;
+
 
 inputEl.placeholder =
-"Ρώτησε τον City4All Assistant...";
+  "Ρώτησε τον City4All Assistant...";
+
+}
+
+resetVoiceButton();
 
 }
 
 function resetVoiceButton() {
 
-if (
-!voiceButton
-) {
-
-```
+if (!voiceButton) {
 return;
-```
-
 }
 
 voiceButton.classList.remove(
@@ -4315,12 +3916,13 @@ text
 ) {
 
 if (
-!("speechSynthesis" in window)
+!(
+"speechSynthesis" in
+window
+)
 ) {
 
-```
 return;
-```
 
 }
 
@@ -4329,18 +3931,15 @@ if (
 !text.trim()
 ) {
 
-```
 return;
-```
 
 }
 
 stopSpeaking();
 
 const cleanText =
-text
+String(text)
 
-```
   .replace(
     /https?:\/\/\S+/g,
     ""
@@ -4351,17 +3950,15 @@ text
     ""
   )
 
+  .replace(
+    /<[^>]*>/g,
+    ""
+  )
+
   .trim();
-```
 
-if (
-!cleanText
-) {
-
-```
+if (!cleanText) {
 return;
-```
-
 }
 
 const utterance =
@@ -4384,17 +3981,14 @@ utterance.volume =
 utterance.onstart =
 () => {
 
-```
   isSpeaking =
     true;
 
 };
-```
 
 utterance.onend =
 () => {
 
-```
   isSpeaking =
     false;
 
@@ -4431,17 +4025,14 @@ utterance.onend =
   }
 
 };
-```
 
 utterance.onerror =
 () => {
 
-```
   isSpeaking =
     false;
 
 };
-```
 
 window.speechSynthesis.speak(
 utterance
@@ -4456,12 +4047,11 @@ STOP SPEAKING
 function stopSpeaking() {
 
 if (
-"speechSynthesis" in window
+"speechSynthesis" in
+window
 ) {
 
-```
 window.speechSynthesis.cancel();
-```
 
 }
 
@@ -4479,7 +4069,6 @@ function setupMobileViewport() {
 const setViewportHeight =
 () => {
 
-```
   const height =
     window.visualViewport?.height ||
     window.innerHeight;
@@ -4510,7 +4099,6 @@ const setViewportHeight =
   );
 
 };
-```
 
 setViewportHeight();
 
@@ -4523,7 +4111,6 @@ if (
 window.visualViewport
 ) {
 
-```
 window.visualViewport.addEventListener(
   "resize",
   setViewportHeight
@@ -4534,7 +4121,6 @@ window.visualViewport.addEventListener(
   "scroll",
   setViewportHeight
 );
-```
 
 }
 
@@ -4551,33 +4137,26 @@ value
 return String(
 value ?? ""
 )
-
-```
 .replaceAll(
-  "&",
-  "&amp;"
+"&",
+"&"
 )
-
 .replaceAll(
-  "<",
-  "&lt;"
+"<",
+"<"
 )
-
 .replaceAll(
-  ">",
-  "&gt;"
+">",
+">"
 )
-
 .replaceAll(
-  '"',
-  "&quot;"
+'"',
+"""
 )
-
 .replaceAll(
-  "'",
-  "&#039;"
+"'",
+"'"
 );
-```
 
 }
 
@@ -4592,33 +4171,26 @@ value
 return String(
 value ?? ""
 )
-
-```
 .replaceAll(
-  "&",
-  "&amp;"
+"&",
+"&"
 )
-
 .replaceAll(
-  "<",
-  "&lt;"
+"<",
+"<"
 )
-
 .replaceAll(
-  ">",
-  "&gt;"
+">",
+">"
 )
-
 .replaceAll(
-  '"',
-  "&quot;"
+'"',
+"""
 )
-
 .replaceAll(
-  "'",
-  "&#039;"
+"'",
+"'"
 );
-```
 
 }
 
@@ -4640,7 +4212,6 @@ window.addEventListener(
 "city4all-map-ready",
 async () => {
 
-```
 console.log(
   "City4All map-ready event received."
 );
@@ -4652,12 +4223,8 @@ try {
     window.city4allMap;
 
 
-  if (
-    !map
-  ) {
-
+  if (!map) {
     return;
-
   }
 
 
@@ -4674,9 +4241,8 @@ try {
 
 }
 
-catch (
-  error
-) {
+
+catch (error) {
 
   console.warn(
     "City4All map ready error:",
@@ -4687,7 +4253,6 @@ catch (
   resolveMapReady();
 
 }
-```
 
 }
 );
