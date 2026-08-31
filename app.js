@@ -1,3 +1,4 @@
+
 const API_BASE =
   "https://city4allfinalai.ilias-pap-net.workers.dev";
 
@@ -18,12 +19,22 @@ let recognition = null;
 let voiceMode = false;
 let listening = false;
 let voiceRestartTimer = null;
-let voiceSessionId = 0;
 
 let isSpeaking = false;
 
-let mapReadyPromise =
-  Promise.resolve();
+
+/*
+ * IMPORTANT
+ *
+ * Το promise ΔΕΝ είναι πλέον ήδη resolved.
+ * Περιμένει πραγματικά το ArcGIS map.
+ */
+let resolveMapReady;
+
+const mapReadyPromise =
+  new Promise(resolve => {
+    resolveMapReady = resolve;
+  });
 
 
 /* ============================================================
@@ -202,10 +213,6 @@ async function sendMessage(
   stopSpeaking();
 
 
-  /*
-   * USER MESSAGE
-   */
-
   addMessage(
     "user",
     message
@@ -226,21 +233,19 @@ async function sendMessage(
     addLoadingMessage();
 
 
-  /*
-   * Προστασία από request
-   * που μένει ανοιχτό για πάντα.
-   */
   const controller =
     new AbortController();
 
+
+  /*
+   * 75 sec timeout.
+   */
   const timeoutId =
     setTimeout(
       () => {
-
         controller.abort();
-
       },
-      90000
+      75000
     );
 
 
@@ -284,6 +289,7 @@ async function sendMessage(
 
     let data;
 
+
     try {
 
       data =
@@ -318,9 +324,9 @@ async function sendMessage(
     }
 
 
-    /*
-     * ANSWER
-     */
+    /* =====================================================
+       ANSWER
+    ===================================================== */
 
     const answer =
       data.answer ||
@@ -334,21 +340,16 @@ async function sendMessage(
       );
 
 
-    /*
-     * CONVERSATION
-     */
-
     updateConversation(
       message,
       answer
     );
 
 
-    /*
-     * CHAT FEATURES
-     *
-     * Αυτά κρατάμε για follow-up.
-     */
+    /* =====================================================
+       CHAT RESULTS
+    ===================================================== */
+
     const features =
       Array.isArray(
         data.features
@@ -358,16 +359,17 @@ async function sendMessage(
 
 
     /*
-     * MAP FEATURES
-     *
-     * Ο Worker μπορεί να στείλει
-     * πολύ περισσότερα σημεία για
-     * τον χάρτη από όσα εμφανίζονται
-     * στο chat.
-     *
-     * Αν δεν υπάρχουν mapFeatures,
-     * χρησιμοποιούμε τα features.
+     * Τα chat results χρησιμοποιούνται
+     * για follow-up ερωτήσεις.
      */
+    previousFeatures =
+      features;
+
+
+    /* =====================================================
+       MAP RESULTS
+    ===================================================== */
+
     const mapFeatures =
       Array.isArray(
         data.mapFeatures
@@ -377,16 +379,17 @@ async function sendMessage(
 
 
     /*
-     * Κρατάμε τα chat-visible results
-     * για follow-up ερωτήσεις.
+     * Το Worker μπορεί επίσης να στείλει
+     * explicit mapCommand.
      */
-    previousFeatures =
-      features;
+    const mapCommand =
+      data.mapCommand ||
+      null;
 
 
-    /*
-     * ACTIONS
-     */
+    /* =====================================================
+       ACTIONS
+    ===================================================== */
 
     addChatActions(
       messageElement,
@@ -395,20 +398,19 @@ async function sendMessage(
     );
 
 
-    /*
-     * MAP
-     */
+    /* =====================================================
+       MAP
+    ===================================================== */
 
     await updateMap(
-      mapFeatures
+      mapFeatures,
+      mapCommand
     );
 
 
-    /*
-     * VOICE MODE
-     *
-     * Μόνο τότε μιλάει αυτόματα.
-     */
+    /* =====================================================
+       VOICE
+    ===================================================== */
 
     if (
       voiceMode &&
@@ -489,18 +491,24 @@ function updateConversation(
 ) {
 
   conversation.push({
+
     role:
       "user",
+
     content:
       userMessage
+
   });
 
 
   conversation.push({
+
     role:
       "assistant",
+
     content:
       assistantMessage
+
   });
 
 
@@ -549,7 +557,7 @@ function addMessage(
 
 
   /*
-   * Κρατάμε ασφαλές text rendering.
+   * Ασφαλές rendering.
    */
   bubble.textContent =
     text;
@@ -632,7 +640,9 @@ function removeLoadingMessage(
   element
 ) {
 
-  if (element) {
+  if (
+    element
+  ) {
 
     element.remove();
 
@@ -675,19 +685,14 @@ function setLoading(
     loading;
 
 
-  /*
-   * Στο Voice Mode δεν θέλουμε
-   * ο χρήστης να γράφει όσο
-   * επεξεργάζεται το request.
-   */
   inputEl.disabled =
     loading ||
     voiceMode;
 
 
   /*
-   * Το voice button παραμένει
-   * πάντα διαθέσιμο για έξοδο.
+   * Πάντα διαθέσιμο για έξοδο
+   * από Voice Mode.
    */
   voiceButton.disabled =
     false;
@@ -731,11 +736,9 @@ function addChatActions(
     "message-actions";
 
 
-  /*
-   * ==========================================================
-   * ONE FEATURE
-   * ==========================================================
-   */
+  /* ==========================================================
+     ONE
+  ========================================================== */
 
   if (
     features.length === 1
@@ -753,7 +756,9 @@ function addChatActions(
       );
 
 
-    if (mapButton) {
+    if (
+      mapButton
+    ) {
 
       actions.appendChild(
         mapButton
@@ -768,7 +773,9 @@ function addChatActions(
       );
 
 
-    if (routeButton) {
+    if (
+      routeButton
+    ) {
 
       actions.appendChild(
         routeButton
@@ -779,11 +786,9 @@ function addChatActions(
   }
 
 
-  /*
-   * ==========================================================
-   * MULTIPLE FEATURES
-   * ==========================================================
-   */
+  /* ==========================================================
+     MANY
+  ========================================================== */
 
   else {
 
@@ -801,27 +806,20 @@ function addChatActions(
       "chat-action primary";
 
 
-    const mapCount =
+    const count =
       Array.isArray(mapFeatures)
         ? mapFeatures.length
         : features.length;
 
 
     allButton.textContent =
-      `🗺️ Προβολή ${mapCount} σημείων`;
+      `🗺️ Προβολή ${count} σημείων`;
 
 
     allButton.addEventListener(
       "click",
       async () => {
 
-        /*
-         * Δεν ξαναδημιουργούμε
-         * τα graphics.
-         *
-         * Απλώς εστιάζουμε στα
-         * ήδη εμφανισμένα σημεία.
-         */
         await focusAllFeatures(
           mapFeatures
         );
@@ -835,10 +833,6 @@ function addChatActions(
     );
 
 
-    /*
-     * ROUTE ΓΙΑ ΤΟ ΠΡΩΤΟ RESULT
-     */
-
     const firstFeature =
       features[0];
 
@@ -850,7 +844,9 @@ function addChatActions(
       );
 
 
-    if (routeButton) {
+    if (
+      routeButton
+    ) {
 
       actions.appendChild(
         routeButton
@@ -862,11 +858,11 @@ function addChatActions(
 
 
   /*
-   * Σκόπιμα δεν υπάρχει
-   * πλέον "🔊 Ακρόαση".
+   * ΔΕΝ δημιουργούμε πλέον
+   * "🔊 Ακρόαση".
    *
-   * Η φωνή γίνεται μόνο
-   * μέσω Voice Mode.
+   * Η φωνή γίνεται μόνο από
+   * Voice Conversation.
    */
 
 
@@ -887,7 +883,7 @@ function addChatActions(
 
 
 /* ============================================================
-   MAP ACTION BUTTON
+   MAP ACTION
 ============================================================ */
 
 function createMapActionButton(
@@ -945,7 +941,7 @@ function createMapActionButton(
 
 
 /* ============================================================
-   GOOGLE MAPS ROUTE BUTTON
+   GOOGLE MAPS ROUTE
 ============================================================ */
 
 function createRouteButton(
@@ -960,7 +956,9 @@ function createRouteButton(
     );
 
 
-  if (!url) {
+  if (
+    !url
+  ) {
 
     return null;
 
@@ -1008,15 +1006,19 @@ function createRouteButton(
 
 
 /* ============================================================
-   MAP
+   UPDATE MAP
 ============================================================ */
 
 async function updateMap(
-  features
+  features,
+  mapCommand = null
 ) {
 
   try {
 
+    /*
+     * Πραγματική αναμονή για ArcGIS.
+     */
     await mapReadyPromise;
 
 
@@ -1043,19 +1045,19 @@ async function updateMap(
       view,
       resultsLayer,
       Graphic
-    } =
-      map;
+    } = map;
 
 
     /*
-     * Κλείνουμε τυχόν παλιό popup
-     * πριν σχεδιάσουμε νέα αποτελέσματα.
+     * Κλείσε προηγούμενο popup.
      */
     try {
 
       view.closePopup();
 
-    } catch {
+    }
+
+    catch {
       /* ignore */
     }
 
@@ -1071,10 +1073,6 @@ async function updateMap(
         : [];
 
 
-    /*
-     * Αποθηκεύουμε τα τελευταία
-     * πραγματικά map features.
-     */
     map.lastFeatures =
       validFeatures;
 
@@ -1088,11 +1086,13 @@ async function updateMap(
     }
 
 
-    /*
-     * ========================================================
-     * CREATE GRAPHICS
-     * ========================================================
-     */
+    /* ========================================================
+       CREATE GRAPHICS
+    ======================================================== */
+
+    const graphics =
+      [];
+
 
     validFeatures.forEach(
       (
@@ -1112,13 +1112,6 @@ async function updateMap(
           );
 
 
-        /*
-         * Stable key.
-         *
-         * Προτιμούμε objectId.
-         * Αν δεν υπάρχει, χρησιμοποιούμε
-         * coordinates + index.
-         */
         const key =
           getFeatureKey(
             feature,
@@ -1145,48 +1138,40 @@ async function updateMap(
           "Δεν έχει καταχωρηθεί πληροφορία";
 
 
-        /*
-         * WEBSITE
-         */
-        let websiteText =
-          "";
-
-
-        if (
+        const website =
           feature.website
-        ) {
-
-          websiteText = `
-            <br><br>
-            <strong>Website:</strong>
-            ${escapePopupText(
-              feature.website
-            )}
-          `;
-
-        }
+            ? escapePopupText(
+                feature.website
+              )
+            : "";
 
 
-        /*
-         * PHONE
-         */
-        let phoneText =
-          "";
-
-
-        if (
+        const phone =
           feature.phone
-        ) {
+            ? escapePopupText(
+                feature.phone
+              )
+            : "";
 
-          phoneText = `
-            <br><br>
-            <strong>Τηλέφωνο:</strong>
-            ${escapePopupText(
-              feature.phone
-            )}
-          `;
 
-        }
+        const websiteHtml =
+          website
+            ? `
+              <br><br>
+              <strong>Website:</strong>
+              ${website}
+            `
+            : "";
+
+
+        const phoneHtml =
+          phone
+            ? `
+              <br><br>
+              <strong>Τηλέφωνο:</strong>
+              ${phone}
+            `
+            : "";
 
 
         const graphic =
@@ -1320,12 +1305,17 @@ async function updateMap(
 
                     <br><br>
 
+                    <strong>Χώρα:</strong>
+                    {country}
+
+                    <br><br>
+
                     <strong>Προσβασιμότητα:</strong>
                     {accessibility}
 
-                    ${websiteText}
+                    ${websiteHtml}
 
-                    ${phoneText}
+                    ${phoneHtml}
 
                   `
 
@@ -1339,15 +1329,14 @@ async function updateMap(
 
 
         /*
-         * Κρατάμε ολόκληρο το feature
-         * πάνω στο Graphic για ακόμη
-         * ασφαλέστερο matching.
+         * Κρατάμε το feature επάνω
+         * στο Graphic για απόλυτο matching.
          */
         graphic.__city4allFeature =
           feature;
 
 
-        resultsLayer.add(
+        graphics.push(
           graphic
         );
 
@@ -1356,13 +1345,24 @@ async function updateMap(
 
 
     /*
-     * ========================================================
-     * AUTO FOCUS
-     * ========================================================
-     *
-     * 1 σημείο -> zoom + popup
-     * πολλά -> extent
+     * Προσθέτουμε τα graphics
+     * μαζικά.
      */
+    resultsLayer.addMany(
+      graphics
+    );
+
+
+    /*
+     * Αποθηκεύουμε references.
+     */
+    map.lastGraphics =
+      graphics;
+
+
+    /* ========================================================
+       MAP COMMAND
+    ======================================================== */
 
     if (
       validFeatures.length === 1
@@ -1372,9 +1372,18 @@ async function updateMap(
         validFeatures[0]
       );
 
+      return;
+
     }
 
-    else {
+
+    /*
+     * Πολλά σημεία:
+     * γρήγορο zoom σε όλα.
+     */
+    if (
+      mapCommand?.autoZoom !== false
+    ) {
 
       await focusAllFeatures(
         validFeatures
@@ -1447,7 +1456,156 @@ function getFeatureKey(
 
 
 /* ============================================================
-   FOCUS SINGLE FEATURE
+   FIND GRAPHIC
+============================================================ */
+
+function findGraphicForFeature(
+  feature
+) {
+
+  const map =
+    window.city4allMap;
+
+
+  const graphics =
+    map?.resultsLayer
+      ?.graphics
+      ?.toArray?.() ||
+    [];
+
+
+  if (
+    !graphics.length
+  ) {
+
+    return null;
+
+  }
+
+
+  /*
+   * 1. Exact feature reference.
+   */
+  const byReference =
+    graphics.find(
+      graphic =>
+        graphic.__city4allFeature ===
+        feature
+    );
+
+
+  if (
+    byReference
+  ) {
+
+    return byReference;
+
+  }
+
+
+  /*
+   * 2. objectId.
+   */
+  const objectId =
+    feature?.objectId ??
+    feature?.objectid ??
+    null;
+
+
+  if (
+    objectId !== null &&
+    objectId !== undefined
+  ) {
+
+    const wanted =
+      String(
+        objectId
+      );
+
+
+    const byId =
+      graphics.find(
+        graphic =>
+          String(
+            graphic.attributes
+              ?.city4allKey ??
+              ""
+          ) === wanted
+      );
+
+
+    if (
+      byId
+    ) {
+
+      return byId;
+
+    }
+
+  }
+
+
+  /*
+   * 3. Coordinates.
+   */
+  const latitude =
+    Number(
+      feature?.latitude
+    );
+
+
+  const longitude =
+    Number(
+      feature?.longitude
+    );
+
+
+  return (
+    graphics.find(
+      graphic => {
+
+        const gLat =
+          Number(
+            graphic.geometry?.latitude
+          );
+
+
+        const gLon =
+          Number(
+            graphic.geometry?.longitude
+          );
+
+
+        return (
+
+          Number.isFinite(gLat) &&
+
+          Number.isFinite(gLon) &&
+
+          Math.abs(
+            gLat -
+            latitude
+          ) < 0.000001 &&
+
+          Math.abs(
+            gLon -
+            longitude
+          ) < 0.000001
+
+        );
+
+      }
+    ) ||
+
+    null
+
+  );
+
+}
+
+
+/* ============================================================
+   FOCUS SINGLE
 ============================================================ */
 
 async function focusMapFeature(
@@ -1478,13 +1636,8 @@ async function focusMapFeature(
       map?.view;
 
 
-    const resultsLayer =
-      map?.resultsLayer;
-
-
     if (
-      !view ||
-      !resultsLayer
+      !view
     ) {
 
       return;
@@ -1505,7 +1658,7 @@ async function focusMapFeature(
 
 
     /*
-     * Zoom στο σημείο.
+     * Zoom.
      */
     await view.goTo(
 
@@ -1521,127 +1674,47 @@ async function focusMapFeature(
       },
 
       {
+
         duration:
-          900
+          800
+
       }
 
     );
 
 
     /*
-     * Βρες το αντίστοιχο Graphic.
+     * Βρες Graphic.
      */
-    const key =
-      getFeatureKey(
+    const graphic =
+      findGraphicForFeature(
         feature
       );
 
 
-    const graphics =
-      resultsLayer
-        ?.graphics
-        ?.toArray?.() ||
-      [];
+    if (
+      !graphic
+    ) {
 
+      return;
 
-    let graphic =
-      graphics.find(
-        g => {
-
-          const gKey =
-            String(
-              g.attributes
-                ?.city4allKey ??
-              ""
-            );
-
-
-          return (
-            gKey === key
-          );
-
-        }
-      );
+    }
 
 
     /*
-     * Fallback:
-     * coordinates
+     * Άνοιξε πραγματικό
+     * ArcGIS popup.
      */
-    if (!graphic) {
+    await view.openPopup({
 
-      graphic =
-        graphics.find(
-          g => {
+      features: [
+        graphic
+      ],
 
-            const gLat =
-              Number(
-                g.geometry?.latitude
-              );
+      location:
+        graphic.geometry
 
-
-            const gLon =
-              Number(
-                g.geometry?.longitude
-              );
-
-
-            return (
-
-              Number.isFinite(
-                gLat
-              ) &&
-
-              Number.isFinite(
-                gLon
-              ) &&
-
-              Math.abs(
-                gLat -
-                latitude
-              ) < 0.000001 &&
-
-              Math.abs(
-                gLon -
-                longitude
-              ) < 0.000001
-
-            );
-
-          }
-        );
-
-    }
-
-
-    if (graphic) {
-
-      /*
-       * Μικρό delay ώστε το map
-       * να έχει ολοκληρώσει το goTo
-       * πριν ανοίξει το popup.
-       */
-      await new Promise(
-        resolve =>
-          setTimeout(
-            resolve,
-            100
-          )
-      );
-
-
-      await view.openPopup({
-
-        features: [
-          graphic
-        ],
-
-        location:
-          graphic.geometry
-
-      });
-
-    }
+    });
 
   }
 
@@ -1658,7 +1731,7 @@ async function focusMapFeature(
 
 
 /* ============================================================
-   FOCUS ALL FEATURES
+   FOCUS ALL
 ============================================================ */
 
 async function focusAllFeatures(
@@ -1686,9 +1759,11 @@ async function focusAllFeatures(
     validFeatures.length === 1
   ) {
 
-    return focusMapFeature(
+    await focusMapFeature(
       validFeatures[0]
     );
+
+    return;
 
   }
 
@@ -1702,13 +1777,23 @@ async function focusAllFeatures(
       window.city4allMap?.view;
 
 
-    if (!view) {
+    if (
+      !view
+    ) {
 
       return;
 
     }
 
 
+    /*
+     * Δεν δημιουργούμε
+     * επιπλέον graphics.
+     *
+     * Απλώς χρησιμοποιούμε
+     * τα coordinates για
+     * το extent.
+     */
     const points =
       validFeatures.map(
         feature => ({
@@ -1730,6 +1815,10 @@ async function focusAllFeatures(
       );
 
 
+    /*
+     * ArcGIS κάνει fit όλα
+     * τα points στο viewport.
+     */
     await view.goTo(
 
       points,
@@ -1739,13 +1828,13 @@ async function focusAllFeatures(
         padding: {
 
           top:
-            90,
+            70,
 
           right:
             70,
 
           bottom:
-            90,
+            70,
 
           left:
             70
@@ -1753,7 +1842,7 @@ async function focusAllFeatures(
         },
 
         duration:
-          1000
+          900
 
       }
 
@@ -1781,7 +1870,9 @@ function hasCoordinates(
   feature
 ) {
 
-  if (!feature) {
+  if (
+    !feature
+  ) {
 
     return false;
 
@@ -1824,7 +1915,7 @@ function hasCoordinates(
 
 
 /* ============================================================
-   GOOGLE MAPS URL
+   GOOGLE MAPS
 ============================================================ */
 
 function createGoogleMapsUrl(
@@ -1857,10 +1948,13 @@ function createGoogleMapsUrl(
   return (
 
     "https://www.google.com/maps/dir/?api=1" +
+
     "&destination=" +
+
     encodeURIComponent(
       `${latitude},${longitude}`
     ) +
+
     "&travelmode=walking"
 
   );
@@ -1879,7 +1973,9 @@ function setupVoice() {
     window.webkitSpeechRecognition;
 
 
-  if (!SpeechRecognition) {
+  if (
+    !SpeechRecognition
+  ) {
 
     voiceButton.title =
       "Η φωνητική συνομιλία δεν υποστηρίζεται σε αυτόν τον browser.";
@@ -1943,6 +2039,10 @@ function setupVoice() {
         "⏹️";
 
 
+      voiceButton.title =
+        "Έξοδος από φωνητική συνομιλία";
+
+
       voiceButton.setAttribute(
         "aria-label",
         "Έξοδος από φωνητική συνομιλία"
@@ -1962,7 +2062,9 @@ function setupVoice() {
         false;
 
 
-      if (!voiceMode) {
+      if (
+        !voiceMode
+      ) {
 
         resetVoiceButton();
 
@@ -1971,7 +2073,9 @@ function setupVoice() {
       }
 
 
-      if (!isLoading) {
+      if (
+        !isLoading
+      ) {
 
         clearTimeout(
           voiceRestartTimer
@@ -2029,9 +2133,7 @@ function setupVoice() {
 
 
       inputEl.dispatchEvent(
-        new Event(
-          "input"
-        )
+        new Event("input")
       );
 
 
@@ -2065,21 +2167,15 @@ function setupVoice() {
 
         stopVoiceMode();
 
-
         return;
 
       }
 
 
       if (
-        event.error ===
-          "aborted" ||
-
-        event.error ===
-          "no-speech" ||
-
-        event.error ===
-          "network"
+        event.error === "aborted" ||
+        event.error === "no-speech" ||
+        event.error === "network"
       ) {
 
         return;
@@ -2098,19 +2194,23 @@ function setupVoice() {
 
 
 /* ============================================================
-   TOGGLE VOICE MODE
+   TOGGLE VOICE
 ============================================================ */
 
 function toggleVoiceMode() {
 
-  if (!recognition) {
+  if (
+    !recognition
+  ) {
 
     return;
 
   }
 
 
-  if (voiceMode) {
+  if (
+    voiceMode
+  ) {
 
     stopVoiceMode();
 
@@ -2126,7 +2226,7 @@ function toggleVoiceMode() {
 
 
 /* ============================================================
-   START VOICE MODE
+   START VOICE
 ============================================================ */
 
 function startVoiceMode() {
@@ -2143,10 +2243,6 @@ function startVoiceMode() {
 
   voiceMode =
     true;
-
-
-  voiceSessionId +=
-    1;
 
 
   stopSpeaking();
@@ -2221,17 +2317,13 @@ function startRecognition() {
 
 
 /* ============================================================
-   STOP VOICE MODE
+   STOP VOICE
 ============================================================ */
 
 function stopVoiceMode() {
 
   voiceMode =
     false;
-
-
-  voiceSessionId +=
-    1;
 
 
   clearTimeout(
@@ -2339,25 +2431,25 @@ function speakAnswer(
   stopSpeaking();
 
 
-  /*
-   * Καθαρίζουμε URLs και
-   * βασικούς markdown χαρακτήρες
-   * για πιο φυσική εκφώνηση.
-   */
   const cleanText =
     text
+
       .replace(
         /https?:\/\/\S+/g,
         ""
       )
+
       .replace(
         /[*_#`]/g,
         ""
       )
+
       .trim();
 
 
-  if (!cleanText) {
+  if (
+    !cleanText
+  ) {
 
     return;
 
@@ -2442,38 +2534,6 @@ function speakAnswer(
       isSpeaking =
         false;
 
-
-      if (
-        voiceMode &&
-        !listening &&
-        !isLoading
-      ) {
-
-        clearTimeout(
-          voiceRestartTimer
-        );
-
-
-        voiceRestartTimer =
-          setTimeout(
-            () => {
-
-              if (
-                voiceMode &&
-                !listening &&
-                !isLoading
-              ) {
-
-                startRecognition();
-
-              }
-
-            },
-            300
-          );
-
-      }
-
     };
 
 
@@ -2506,7 +2566,7 @@ function stopSpeaking() {
 
 
 /* ============================================================
-   MOBILE VIEWPORT / KEYBOARD FIX
+   MOBILE VIEWPORT
 ============================================================ */
 
 function setupMobileViewport() {
@@ -2522,6 +2582,30 @@ function setupMobileViewport() {
       document.documentElement.style.setProperty(
         "--app-height",
         `${height}px`
+      );
+
+
+      /*
+       * Βοηθάει το ArcGIS να
+       * ξαναϋπολογίζει το container
+       * σε αλλαγή viewport.
+       */
+      requestAnimationFrame(
+        () => {
+
+          try {
+
+            window.city4allMap
+              ?.view
+              ?.resize();
+
+          }
+
+          catch {
+            /* ignore */
+          }
+
+        }
       );
 
     };
@@ -2567,22 +2651,27 @@ function escapePopupText(
   return String(
     value ?? ""
   )
+
     .replaceAll(
       "&",
       "&amp;"
     )
+
     .replaceAll(
       "<",
       "&lt;"
     )
+
     .replaceAll(
       ">",
       "&gt;"
     )
+
     .replaceAll(
       '"',
       "&quot;"
     )
+
     .replaceAll(
       "'",
       "&#039;"
@@ -2602,22 +2691,27 @@ function escapeHTML(
   return String(
     value ?? ""
   )
+
     .replaceAll(
       "&",
       "&amp;"
     )
+
     .replaceAll(
       "<",
       "&lt;"
     )
+
     .replaceAll(
       ">",
       "&gt;"
     )
+
     .replaceAll(
       '"',
       "&quot;"
     )
+
     .replaceAll(
       "'",
       "&#039;"
@@ -2632,25 +2726,56 @@ function escapeHTML(
 
 window.addEventListener(
   "city4all-map-ready",
-  () => {
+  async () => {
 
     console.log(
       "City4All map is ready for AI results."
     );
 
 
-    if (
-      window.city4allMap
-        ?.view
-        ?.when
-    ) {
+    try {
 
-      mapReadyPromise =
-        window.city4allMap
-          .view
-          .when();
+      const map =
+        window.city4allMap;
+
+
+      if (
+        map?.view?.when
+      ) {
+
+        await map.view.when();
+
+      }
+
+
+      /*
+       * Τώρα πλέον το promise
+       * λύνει μόνο όταν το map
+       * είναι πραγματικά έτοιμο.
+       */
+      resolveMapReady();
 
     }
 
+    catch (error) {
+
+      console.warn(
+        "City4All map ready error:",
+        error
+      );
+
+
+      /*
+       * Δεν αφήνουμε requests
+       * να κρέμονται για πάντα.
+       */
+      resolveMapReady();
+
+    }
+
+  },
+  {
+    once: true
   }
 );
+
