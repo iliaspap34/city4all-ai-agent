@@ -39,7 +39,7 @@ let mapReadyResolved = false;
 const mapReadyPromise =
 new Promise(resolve => {
 
-```
+
 resolveMapReady =
   () => {
 
@@ -57,7 +57,7 @@ resolveMapReady =
     resolve();
 
   };
-```
+
 
 });
 
@@ -67,7 +67,7 @@ if (
 window.city4allMap?.view
 ) {
 
-```
+
 try {
 
   if (
@@ -103,7 +103,7 @@ catch {
   resolveMapReady();
 
 }
-```
+
 
 }
 
@@ -143,7 +143,7 @@ document.addEventListener(
 "DOMContentLoaded",
 () => {
 
-```
+
 setupQuickActions();
 
 setupInput();
@@ -159,7 +159,7 @@ initializeMermaid();
 console.log(
   "City4All AI frontend loaded."
 );
-```
+
 
 }
 );
@@ -175,19 +175,19 @@ typeof mermaid ===
 "undefined"
 ) {
 
-```
+
 console.warn(
   "Mermaid library not available."
 );
 
 return;
-```
+
 
 }
 
 mermaid.initialize({
 
-```
+
 startOnLoad:
   false,
 
@@ -199,7 +199,7 @@ theme:
 
 fontFamily:
   "Arial, Helvetica, sans-serif"
-```
+
 
 });
 
@@ -218,7 +218,7 @@ document
 .forEach(
 button => {
 
-```
+
     button.addEventListener(
       "click",
       () => {
@@ -253,7 +253,7 @@ button => {
 
   }
 );
-```
+
 
 }
 
@@ -267,9 +267,9 @@ if (
 !inputEl
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -277,7 +277,7 @@ inputEl.addEventListener(
 "keydown",
 event => {
 
-```
+
   if (
     event.key === "Enter" &&
     !event.shiftKey
@@ -290,7 +290,7 @@ event => {
   }
 
 }
-```
+
 
 );
 
@@ -314,9 +314,9 @@ if (
 !inputEl
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -355,9 +355,9 @@ if (
 isLoading
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -370,9 +370,9 @@ if (
 !message
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -403,17 +403,17 @@ const timeoutId =
 setTimeout(
 () => {
 
-```
+
     controller.abort();
 
   },
   20000
 );
-```
+
 
 try {
 
-```
+
 const response =
   await fetch(
     CHAT_URL,
@@ -592,7 +592,7 @@ if (
   );
 
 }
-```
+
 
 }
 
@@ -600,7 +600,7 @@ catch (
 error
 ) {
 
-```
+
 clearTimeout(
   timeoutId
 );
@@ -645,17 +645,17 @@ if (
   stopVoiceMode();
 
 }
-```
+
 
 }
 
 finally {
 
-```
+
 setLoading(
   false
 );
-```
+
 
 }
 
@@ -672,25 +672,25 @@ assistantMessage
 
 conversation.push({
 
-```
+
 role:
   "user",
 
 content:
   userMessage
-```
+
 
 });
 
 conversation.push({
 
-```
+
 role:
   "assistant",
 
 content:
   assistantMessage
-```
+
 
 });
 
@@ -699,12 +699,12 @@ conversation.length >
 20
 ) {
 
-```
+
 conversation =
   conversation.slice(
     -20
   );
-```
+
 
 }
 
@@ -732,7 +732,7 @@ if (
 role === "ai"
 ) {
 
-```
+
 const meta =
   document.createElement(
     "div"
@@ -754,7 +754,7 @@ meta.innerHTML = `
 wrapper.appendChild(
   meta
 );
-```
+
 
 }
 
@@ -770,21 +770,21 @@ if (
 role === "ai"
 ) {
 
-```
+
 bubble.innerHTML =
   renderMarkdown(
     text
   );
-```
+
 
 }
 
 else {
 
-```
+
 bubble.textContent =
   text;
-```
+
 
 }
 
@@ -797,7 +797,7 @@ role === "ai" &&
 externalInfo
 ) {
 
-```
+
 const externalCard =
   createExternalInfoCard(
     externalInfo
@@ -813,7 +813,7 @@ if (
   );
 
 }
-```
+
 
 }
 
@@ -843,9 +843,9 @@ if (
 !markdown
 ) {
 
-```
+
 return "";
-```
+
 
 }
 
@@ -877,7 +877,7 @@ match,
 diagram
 ) => {
 
-```
+
     const index =
       mermaidBlocks.length;
 
@@ -893,7 +893,7 @@ diagram
 
   }
 );
-```
+
 
 /* ==========================================================
 NORMAL CODE BLOCKS
@@ -911,7 +911,7 @@ language,
 code
 ) => {
 
-```
+
     const index =
       codeBlocks.length;
 
@@ -936,7 +936,7 @@ code
 
   }
 );
-```
+
 
 /* ==========================================================
 ESCAPE HTML
@@ -1009,7 +1009,7 @@ label,
 url
 ) => {
 
-```
+
     return (
       `<a href="${escapeAttribute(url)}"` +
       ` target="_blank"` +
@@ -1020,7 +1020,7 @@ url
 
   }
 );
-```
+
 
 /* ==========================================================
 RAW URLS
@@ -1035,7 +1035,7 @@ prefix,
 url
 ) => {
 
-```
+
     const cleanUrl =
       url.replace(
         /[),.;!?]+$/,
@@ -1054,7 +1054,7 @@ url
 
   }
 );
-```
+
 
 /* ==========================================================
 BOLD
@@ -1108,7 +1108,7 @@ match,
 block
 ) => {
 
-```
+
     const items =
       block
         .trim()
@@ -1136,7 +1136,7 @@ block
 
   }
 );
-```
+
 
 /* ==========================================================
 ORDERED LIST
@@ -1150,7 +1150,7 @@ match,
 block
 ) => {
 
-```
+
     const items =
       block
         .trim()
@@ -1178,7 +1178,7 @@ block
 
   }
 );
-```
+
 
 /* ==========================================================
 PARAGRAPHS
@@ -1199,7 +1199,7 @@ block,
 index
 ) => {
 
-```
+
   const token =
     `@@CODEBLOCK_${index}@@`;
 
@@ -1221,7 +1221,7 @@ index
     );
 
 }
-```
+
 
 );
 
@@ -1235,7 +1235,7 @@ diagram,
 index
 ) => {
 
-```
+
   const token =
     `@@MERMAID_${index}@@`;
 
@@ -1249,7 +1249,7 @@ index
     );
 
 }
-```
+
 
 );
 
@@ -1281,7 +1281,7 @@ i <
 lines.length
 ) {
 
-```
+
 const current =
   lines[i];
 
@@ -1398,7 +1398,7 @@ output.push(
 
 
 i++;
-```
+
 
 }
 
@@ -1419,12 +1419,12 @@ if (
 cleaned.startsWith("|")
 ) {
 
-```
+
 cleaned =
   cleaned.slice(
     1
   );
-```
+
 
 }
 
@@ -1432,13 +1432,13 @@ if (
 cleaned.endsWith("|")
 ) {
 
-```
+
 cleaned =
   cleaned.slice(
     0,
     -1
   );
-```
+
 
 }
 
@@ -1468,7 +1468,7 @@ return blocks
 .map(
 block => {
 
-```
+
     const trimmed =
       block.trim();
 
@@ -1518,7 +1518,7 @@ block => {
 .join(
   ""
 );
-```
+
 
 }
 
@@ -1545,9 +1545,9 @@ typeof mermaid ===
 "undefined"
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -1560,15 +1560,15 @@ if (
 !diagrams.length
 ) {
 
-```
+
 return;
-```
+
 
 }
 
 try {
 
-```
+
 await mermaid.run({
 
   nodes:
@@ -1577,7 +1577,7 @@ await mermaid.run({
     )
 
 });
-```
+
 
 }
 
@@ -1585,12 +1585,12 @@ catch (
 error
 ) {
 
-```
+
 console.warn(
   "Mermaid rendering failed:",
   error
 );
-```
+
 
 }
 
@@ -1610,9 +1610,9 @@ typeof externalInfo !==
 "object"
 ) {
 
-```
+
 return null;
-```
+
 
 }
 
@@ -1627,9 +1627,9 @@ if (
 !image
 ) {
 
-```
+
 return null;
-```
+
 
 }
 
@@ -1645,7 +1645,7 @@ if (
 image?.url
 ) {
 
-```
+
 const img =
   document.createElement(
     "img"
@@ -1674,7 +1674,7 @@ img.loading =
 card.appendChild(
   img
 );
-```
+
 
 }
 
@@ -1705,7 +1705,7 @@ if (
 wiki?.title
 ) {
 
-```
+
 const title =
   document.createElement(
     "div"
@@ -1723,7 +1723,7 @@ title.textContent =
 body.appendChild(
   title
 );
-```
+
 
 }
 
@@ -1731,7 +1731,7 @@ if (
 wiki?.description
 ) {
 
-```
+
 const description =
   document.createElement(
     "div"
@@ -1749,7 +1749,7 @@ description.textContent =
 body.appendChild(
   description
 );
-```
+
 
 }
 
@@ -1757,7 +1757,7 @@ if (
 wiki?.page
 ) {
 
-```
+
 const link =
   document.createElement(
     "a"
@@ -1787,7 +1787,7 @@ link.textContent =
 body.appendChild(
   link
 );
-```
+
 
 }
 
@@ -1843,7 +1843,7 @@ bubble.className =
 
 bubble.innerHTML = ` <div class="loading-bubble">
 
-```
+
   <div class="loading-icon">
     ✦
   </div>
@@ -1853,7 +1853,7 @@ bubble.innerHTML = ` <div class="loading-bubble">
   </div>
 
 </div>
-```
+
 
 `;
 
@@ -1879,9 +1879,9 @@ if (
 element
 ) {
 
-```
+
 element.remove();
-```
+
 
 }
 
@@ -1896,12 +1896,12 @@ function scrollMessages() {
 requestAnimationFrame(
 () => {
 
-```
+
   messagesEl.scrollTop =
     messagesEl.scrollHeight;
 
 }
-```
+
 
 );
 
@@ -1922,7 +1922,7 @@ if (
 sendButton
 ) {
 
-```
+
 sendButton.disabled =
   loading;
 
@@ -1933,7 +1933,7 @@ sendButton.textContent =
     ? "..."
 
     : "Αποστολή";
-```
+
 
 }
 
@@ -1941,11 +1941,11 @@ if (
 inputEl
 ) {
 
-```
+
 inputEl.disabled =
   loading ||
   voiceMode;
-```
+
 
 }
 
@@ -1953,10 +1953,10 @@ if (
 voiceButton
 ) {
 
-```
+
 voiceButton.disabled =
   false;
-```
+
 
 }
 
@@ -1981,9 +1981,9 @@ features
 !features.length
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -2003,7 +2003,7 @@ if (
 features.length === 1
 ) {
 
-```
+
 const feature =
   features[0];
 
@@ -2042,7 +2042,7 @@ if (
   );
 
 }
-```
+
 
 }
 
@@ -2052,7 +2052,7 @@ MANY RESULTS
 
 else {
 
-```
+
 const allButton =
   document.createElement(
     "button"
@@ -2194,7 +2194,7 @@ if (
   );
 
 }
-```
+
 
 }
 
@@ -2202,14 +2202,14 @@ if (
 actions.children.length
 ) {
 
-```
+
 messageElement.appendChild(
   actions
 );
 
 
 scrollMessages();
-```
+
 
 }
 
@@ -2231,9 +2231,9 @@ feature
 )
 ) {
 
-```
+
 return null;
-```
+
 
 }
 
@@ -2248,11 +2248,11 @@ button.type =
 button.className =
 primary
 
-```
+
   ? "chat-action primary"
 
   : "chat-action";
-```
+
 
 button.textContent =
 label;
@@ -2261,7 +2261,7 @@ button.addEventListener(
 "click",
 async () => {
 
-```
+
   button.disabled =
     true;
 
@@ -2291,7 +2291,7 @@ async () => {
   }
 
 }
-```
+
 
 );
 
@@ -2319,9 +2319,9 @@ if (
 !url
 ) {
 
-```
+
 return null;
-```
+
 
 }
 
@@ -2343,7 +2343,7 @@ button.addEventListener(
 "click",
 event => {
 
-```
+
   event.preventDefault();
 
 
@@ -2354,7 +2354,7 @@ event => {
   );
 
 }
-```
+
 
 );
 
@@ -2374,7 +2374,7 @@ if (
 window.city4allMap?.view
 ) {
 
-```
+
 try {
 
   if (
@@ -2402,13 +2402,13 @@ catch (
   );
 
 }
-```
+
 
 }
 
 await Promise.race([
 
-```
+
 mapReadyPromise,
 
 new Promise(
@@ -2418,7 +2418,7 @@ new Promise(
       timeoutMs
     )
 )
-```
+
 
 ]);
 
@@ -2439,7 +2439,7 @@ window.city4allMap;
 
 return {
 
-```
+
 exists:
   Boolean(
     map
@@ -2465,7 +2465,7 @@ graphicsCount:
     ?.graphics
     ?.length ??
   0
-```
+
 
 };
 
@@ -2485,9 +2485,9 @@ feature
 )
 ) {
 
-```
+
 return false;
-```
+
 
 }
 
@@ -2498,9 +2498,9 @@ if (
 !ready
 ) {
 
-```
+
 return false;
-```
+
 
 }
 
@@ -2512,7 +2512,7 @@ if (
 !map?.Graphic
 ) {
 
-```
+
 console.warn(
   "Incomplete map object:",
   getMapDiagnostics()
@@ -2520,7 +2520,7 @@ console.warn(
 
 
 return false;
-```
+
 
 }
 
@@ -2533,15 +2533,15 @@ if (
 existing
 ) {
 
-```
+
 return true;
-```
+
 
 }
 
 try {
 
-```
+
 const graphic =
   createGraphicForFeature(
 
@@ -2586,7 +2586,7 @@ map.lastFeatures =
 
 
 return true;
-```
+
 
 }
 
@@ -2594,7 +2594,7 @@ catch (
 error
 ) {
 
-```
+
 console.warn(
   "Could not ensure feature:",
   error
@@ -2602,7 +2602,7 @@ console.warn(
 
 
 return false;
-```
+
 
 }
 
@@ -2619,7 +2619,7 @@ mapCommand = null
 
 try {
 
-```
+
 const ready =
   await waitForMapReady(
     8000
@@ -2793,7 +2793,7 @@ if (
 
 
 return true;
-```
+
 
 }
 
@@ -2801,7 +2801,7 @@ catch (
 error
 ) {
 
-```
+
 console.warn(
   "Map update failed:",
   error
@@ -2809,7 +2809,7 @@ console.warn(
 
 
 return false;
-```
+
 
 }
 
@@ -2846,11 +2846,11 @@ feature.country ||
 const source =
 feature.external
 
-```
+
   ? "Internet / OpenStreetMap"
 
   : "City4All";
-```
+
 
 const accessibility =
 feature.accessibility ||
@@ -2901,7 +2901,7 @@ comments
 const graphic =
 new Graphic({
 
-```
+
   geometry: {
 
     type:
@@ -3057,7 +3057,7 @@ new Graphic({
   }
 
 });
-```
+
 
 graphic.__city4allFeature =
 feature;
@@ -3085,11 +3085,11 @@ feature.objectId
 ).trim() !== ""
 ) {
 
-```
+
 return String(
   feature.objectId
 );
-```
+
 
 }
 
@@ -3103,11 +3103,11 @@ feature.objectid
 ).trim() !== ""
 ) {
 
-```
+
 return String(
   feature.objectid
 );
-```
+
 
 }
 
@@ -3144,9 +3144,9 @@ if (
 !graphics.length
 ) {
 
-```
+
 return null;
-```
+
 
 }
 
@@ -3161,9 +3161,9 @@ if (
 byReference
 ) {
 
-```
+
 return byReference;
-```
+
 
 }
 
@@ -3177,7 +3177,7 @@ objectId !== null &&
 objectId !== undefined
 ) {
 
-```
+
 const wanted =
   String(
     objectId
@@ -3203,7 +3203,7 @@ if (
   return byId;
 
 }
-```
+
 
 }
 
@@ -3221,7 +3221,7 @@ return (
 graphics.find(
 graphic => {
 
-```
+
     const gLat =
       Number(
         graphic.geometry
@@ -3263,7 +3263,7 @@ graphic => {
   }
 ) ||
 null
-```
+
 
 );
 
@@ -3284,9 +3284,9 @@ feature
 )
 ) {
 
-```
+
 return false;
-```
+
 
 }
 
@@ -3298,7 +3298,7 @@ options;
 
 try {
 
-```
+
 const ready =
   await waitForMapReady(
     8000
@@ -3415,7 +3415,7 @@ if (
 
 
 return true;
-```
+
 
 }
 
@@ -3423,7 +3423,7 @@ catch (
 error
 ) {
 
-```
+
 console.warn(
   "Could not focus feature:",
   error
@@ -3431,7 +3431,7 @@ console.warn(
 
 
 return false;
-```
+
 
 }
 
@@ -3450,21 +3450,21 @@ Array.isArray(
 features
 )
 
-```
+
   ? features.filter(
       hasCoordinates
     )
 
   : [];
-```
+
 
 if (
 !validFeatures.length
 ) {
 
-```
+
 return false;
-```
+
 
 }
 
@@ -3473,7 +3473,7 @@ validFeatures.length ===
 1
 ) {
 
-```
+
 return focusMapFeature(
 
   validFeatures[0],
@@ -3484,13 +3484,13 @@ return focusMapFeature(
   }
 
 );
-```
+
 
 }
 
 try {
 
-```
+
 const ready =
   await waitForMapReady(
     8000
@@ -3591,7 +3591,7 @@ catch (
 return fallbackFitMap(
   validFeatures
 );
-```
+
 
 }
 
@@ -3599,7 +3599,7 @@ catch (
 error
 ) {
 
-```
+
 console.warn(
   "Could not zoom to all features:",
   error
@@ -3607,7 +3607,7 @@ console.warn(
 
 
 return false;
-```
+
 
 }
 
@@ -3629,9 +3629,9 @@ if (
 !features.length
 ) {
 
-```
+
 return false;
-```
+
 
 }
 
@@ -3686,7 +3686,7 @@ maxLat
 const span =
 Math.max(
 
-```
+
   maxLon -
   minLon,
 
@@ -3694,7 +3694,7 @@ Math.max(
   minLat
 
 );
-```
+
 
 let zoom =
 12;
@@ -3703,9 +3703,9 @@ if (
 span < 0.01
 ) {
 
-```
+
 zoom = 16;
-```
+
 
 }
 
@@ -3713,9 +3713,9 @@ else if (
 span < 0.03
 ) {
 
-```
+
 zoom = 14;
-```
+
 
 }
 
@@ -3723,9 +3723,9 @@ else if (
 span < 0.08
 ) {
 
-```
+
 zoom = 12;
-```
+
 
 }
 
@@ -3733,9 +3733,9 @@ else if (
 span < 0.2
 ) {
 
-```
+
 zoom = 10;
-```
+
 
 }
 
@@ -3743,9 +3743,9 @@ else if (
 span < 0.5
 ) {
 
-```
+
 zoom = 8;
-```
+
 
 }
 
@@ -3753,23 +3753,23 @@ else if (
 span < 1
 ) {
 
-```
+
 zoom = 7;
-```
+
 
 }
 
 else {
 
-```
+
 zoom = 5;
-```
+
 
 }
 
 await view.goTo(
 
-```
+
 {
 
   center: [
@@ -3787,7 +3787,7 @@ await view.goTo(
     900
 
 }
-```
+
 
 );
 
@@ -3807,9 +3807,9 @@ if (
 !feature
 ) {
 
-```
+
 return false;
-```
+
 
 }
 
@@ -3825,7 +3825,7 @@ feature.longitude
 
 return (
 
-```
+
 Number.isFinite(
   latitude
 ) &&
@@ -3841,7 +3841,7 @@ latitude <= 90 &&
 longitude >= -180 &&
 
 longitude <= 180
-```
+
 
 );
 
@@ -3861,9 +3861,9 @@ feature
 )
 ) {
 
-```
+
 return null;
-```
+
 
 }
 
@@ -3879,7 +3879,7 @@ feature.longitude
 
 return (
 
-```
+
 "https://www.google.com/maps/dir/?api=1" +
 
 "&destination=" +
@@ -3889,7 +3889,7 @@ encodeURIComponent(
 ) +
 
 "&travelmode=walking"
-```
+
 
 );
 
@@ -3905,9 +3905,9 @@ if (
 !voiceButton
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -3919,7 +3919,7 @@ if (
 !SpeechRecognition
 ) {
 
-```
+
 voiceButton.title =
   "Η φωνητική συνομιλία δεν υποστηρίζεται σε αυτόν τον browser.";
 
@@ -3942,7 +3942,7 @@ voiceButton.addEventListener(
 
 
 return;
-```
+
 
 }
 
@@ -3964,7 +3964,7 @@ recognition.maxAlternatives =
 recognition.onstart =
 () => {
 
-```
+
   listening =
     true;
 
@@ -3992,12 +3992,12 @@ recognition.onstart =
     "Μίλησε στον City4All Assistant...";
 
 };
-```
+
 
 recognition.onend =
 () => {
 
-```
+
   listening =
     false;
 
@@ -4043,12 +4043,12 @@ recognition.onend =
   }
 
 };
-```
+
 
 recognition.onresult =
 event => {
 
-```
+
   const transcript =
     event.results
       ?.[0]
@@ -4086,12 +4086,12 @@ event => {
   });
 
 };
-```
+
 
 recognition.onerror =
 event => {
 
-```
+
   console.warn(
     "Speech recognition error:",
     event.error
@@ -4114,7 +4114,7 @@ event => {
   }
 
 };
-```
+
 
 voiceButton.addEventListener(
 "click",
@@ -4129,9 +4129,9 @@ if (
 !recognition
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -4139,17 +4139,17 @@ if (
 voiceMode
 ) {
 
-```
+
 stopVoiceMode();
-```
+
 
 }
 
 else {
 
-```
+
 startVoiceMode();
-```
+
 
 }
 
@@ -4162,9 +4162,9 @@ if (
 voiceMode
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -4207,17 +4207,17 @@ listening ||
 isLoading
 ) {
 
-```
+
 return;
-```
+
 
 }
 
 try {
 
-```
+
 recognition.start();
-```
+
 
 }
 
@@ -4225,12 +4225,12 @@ catch (
 error
 ) {
 
-```
+
 console.warn(
   "Could not start speech recognition:",
   error
 );
-```
+
 
 }
 
@@ -4252,7 +4252,7 @@ recognition &&
 listening
 ) {
 
-```
+
 try {
 
   recognition.stop();
@@ -4260,7 +4260,7 @@ try {
 }
 
 catch {}
-```
+
 
 }
 
@@ -4283,9 +4283,9 @@ if (
 !voiceButton
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -4318,9 +4318,9 @@ if (
 !("speechSynthesis" in window)
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -4329,9 +4329,9 @@ if (
 !text.trim()
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -4340,7 +4340,7 @@ stopSpeaking();
 const cleanText =
 text
 
-```
+
   .replace(
     /https?:\/\/\S+/g,
     ""
@@ -4352,15 +4352,15 @@ text
   )
 
   .trim();
-```
+
 
 if (
 !cleanText
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -4384,17 +4384,17 @@ utterance.volume =
 utterance.onstart =
 () => {
 
-```
+
   isSpeaking =
     true;
 
 };
-```
+
 
 utterance.onend =
 () => {
 
-```
+
   isSpeaking =
     false;
 
@@ -4431,17 +4431,17 @@ utterance.onend =
   }
 
 };
-```
+
 
 utterance.onerror =
 () => {
 
-```
+
   isSpeaking =
     false;
 
 };
-```
+
 
 window.speechSynthesis.speak(
 utterance
@@ -4459,9 +4459,9 @@ if (
 "speechSynthesis" in window
 ) {
 
-```
+
 window.speechSynthesis.cancel();
-```
+
 
 }
 
@@ -4479,7 +4479,7 @@ function setupMobileViewport() {
 const setViewportHeight =
 () => {
 
-```
+
   const height =
     window.visualViewport?.height ||
     window.innerHeight;
@@ -4510,7 +4510,7 @@ const setViewportHeight =
   );
 
 };
-```
+
 
 setViewportHeight();
 
@@ -4523,7 +4523,7 @@ if (
 window.visualViewport
 ) {
 
-```
+
 window.visualViewport.addEventListener(
   "resize",
   setViewportHeight
@@ -4534,7 +4534,7 @@ window.visualViewport.addEventListener(
   "scroll",
   setViewportHeight
 );
-```
+
 
 }
 
@@ -4552,7 +4552,7 @@ return String(
 value ?? ""
 )
 
-```
+
 .replaceAll(
   "&",
   "&amp;"
@@ -4577,7 +4577,7 @@ value ?? ""
   "'",
   "&#039;"
 );
-```
+
 
 }
 
@@ -4593,7 +4593,7 @@ return String(
 value ?? ""
 )
 
-```
+
 .replaceAll(
   "&",
   "&amp;"
@@ -4618,7 +4618,7 @@ value ?? ""
   "'",
   "&#039;"
 );
-```
+
 
 }
 
@@ -4640,7 +4640,7 @@ window.addEventListener(
 "city4all-map-ready",
 async () => {
 
-```
+
 console.log(
   "City4All map-ready event received."
 );
@@ -4687,7 +4687,7 @@ catch (
   resolveMapReady();
 
 }
-```
+
 
 }
 );
