@@ -39,7 +39,7 @@ let mapReadyResolved = false;
 const mapReadyPromise =
 new Promise(resolve => {
 
-```
+
 resolveMapReady = () => {
 
   if (mapReadyResolved) {
@@ -51,7 +51,7 @@ resolveMapReady = () => {
   resolve();
 
 };
-```
+
 
 });
 
@@ -63,7 +63,7 @@ return;
 
 try {
 
-```
+
 if (window.city4allMap.view.when) {
 
   window.city4allMap.view.when()
@@ -79,13 +79,13 @@ if (window.city4allMap.view.when) {
   resolveMapReady();
 
 }
-```
+
 
 } catch {
 
-```
+
 resolveMapReady();
-```
+
 
 }
 
@@ -117,7 +117,7 @@ document.addEventListener(
 "DOMContentLoaded",
 () => {
 
-```
+
 setupQuickActions();
 
 setupInput();
@@ -133,7 +133,7 @@ initializeMermaid();
 console.log(
   "City4All AI frontend loaded."
 );
-```
+
 
 }
 );
@@ -146,19 +146,19 @@ function initializeMermaid() {
 
 if (typeof mermaid === "undefined") {
 
-```
+
 console.warn(
   "Mermaid library not available."
 );
 
 return;
-```
+
 
 }
 
 mermaid.initialize({
 
-```
+
 startOnLoad: false,
 
 securityLevel: "strict",
@@ -167,7 +167,7 @@ theme: "default",
 
 fontFamily:
   "Arial, Helvetica, sans-serif"
-```
+
 
 });
 
@@ -183,7 +183,7 @@ document
 .querySelectorAll(".quick-button")
 .forEach(button => {
 
-```
+
   button.addEventListener(
     "click",
     () => {
@@ -214,7 +214,7 @@ document
   );
 
 });
-```
+
 
 }
 
@@ -232,7 +232,7 @@ inputEl.addEventListener(
 "keydown",
 event => {
 
-```
+
   if (
     event.key === "Enter" &&
     !event.shiftKey
@@ -245,7 +245,7 @@ event => {
   }
 
 }
-```
+
 
 );
 
@@ -318,12 +318,12 @@ message
 
 if (inputEl) {
 
-```
+
 inputEl.value = "";
 
 inputEl.style.height =
   "43px";
-```
+
 
 }
 
@@ -345,7 +345,7 @@ controller.abort();
 
 try {
 
-```
+
 const response =
   await fetch(
     CHAT_URL,
@@ -515,13 +515,13 @@ if (
   );
 
 }
-```
+
 
 }
 
 catch (error) {
 
-```
+
 clearTimeout(
   timeoutId
 );
@@ -561,15 +561,15 @@ addMessage(
 if (voiceMode) {
   stopVoiceMode();
 }
-```
+
 
 }
 
 finally {
 
-```
+
 setLoading(false);
-```
+
 
 }
 
@@ -586,23 +586,23 @@ assistantMessage
 
 conversation.push({
 
-```
+
 role: "user",
 
 content:
   userMessage
-```
+
 
 });
 
 conversation.push({
 
-```
+
 role: "assistant",
 
 content:
   assistantMessage
-```
+
 
 });
 
@@ -610,10 +610,10 @@ if (
 conversation.length > 20
 ) {
 
-```
+
 conversation =
   conversation.slice(-20);
-```
+
 
 }
 
@@ -641,7 +641,7 @@ wrapper.className =
 
 if (role === "ai") {
 
-```
+
 const meta =
   document.createElement("div");
 
@@ -661,7 +661,7 @@ meta.innerHTML = `
 wrapper.appendChild(
   meta
 );
-```
+
 
 }
 
@@ -673,17 +673,17 @@ bubble.className =
 
 if (role === "ai") {
 
-```
+
 bubble.innerHTML =
   renderMarkdown(text);
-```
+
 
 } else {
 
-```
+
 bubble.textContent =
   text;
-```
+
 
 }
 
@@ -696,7 +696,7 @@ role === "ai" &&
 externalInfo
 ) {
 
-```
+
 const externalCard =
   createExternalInfoCard(
     externalInfo
@@ -710,7 +710,7 @@ if (externalCard) {
   );
 
 }
-```
+
 
 }
 
@@ -759,7 +759,7 @@ match,
 diagram
 ) => {
 
-```
+
     const index =
       mermaidBlocks.length;
 
@@ -775,7 +775,7 @@ diagram
 
   }
 );
-```
+
 
 /* ==========================================================
 NORMAL CODE BLOCKS
@@ -792,7 +792,7 @@ language,
 code
 ) => {
 
-```
+
     const index =
       codeBlocks.length;
 
@@ -816,7 +816,7 @@ code
 
   }
 );
-```
+
 
 /* ==========================================================
 ESCAPE HTML
@@ -885,7 +885,7 @@ label,
 url
 ) => {
 
-```
+
     return (
       `<a href="${escapeAttribute(url)}"` +
       ` target="_blank"` +
@@ -896,7 +896,7 @@ url
 
   }
 );
-```
+
 
 /* ==========================================================
 RAW URLS
@@ -911,7 +911,7 @@ prefix,
 url
 ) => {
 
-```
+
     const cleanUrl =
       url.replace(
         /[),.;!?]+$/,
@@ -930,7 +930,7 @@ url
 
   }
 );
-```
+
 
 /* ==========================================================
 BOLD
@@ -984,7 +984,7 @@ match,
 block
 ) => {
 
-```
+
     const items =
       block
         .trim()
@@ -1012,7 +1012,7 @@ block
 
   }
 );
-```
+
 
 /* ==========================================================
 ORDERED LIST
@@ -1026,7 +1026,7 @@ match,
 block
 ) => {
 
-```
+
     const items =
       block
         .trim()
@@ -1054,7 +1054,7 @@ block
 
   }
 );
-```
+
 
 /* ==========================================================
 PARAGRAPHS
@@ -1073,7 +1073,7 @@ block,
 index
 ) => {
 
-```
+
   const token =
     `@@CODEBLOCK_${index}@@`;
 
@@ -1094,7 +1094,7 @@ index
     );
 
 }
-```
+
 
 );
 
@@ -1108,7 +1108,7 @@ diagram,
 index
 ) => {
 
-```
+
   const token =
     `@@MERMAID_${index}@@`;
 
@@ -1122,7 +1122,7 @@ index
     );
 
 }
-```
+
 
 );
 
@@ -1149,7 +1149,7 @@ while (
 i < lines.length
 ) {
 
-```
+
 const current =
   lines[i];
 
@@ -1261,7 +1261,7 @@ output.push(
 
 
 i++;
-```
+
 
 }
 
@@ -1280,10 +1280,10 @@ if (
 cleaned.startsWith("|")
 ) {
 
-```
+
 cleaned =
   cleaned.slice(1);
-```
+
 
 }
 
@@ -1291,13 +1291,13 @@ if (
 cleaned.endsWith("|")
 ) {
 
-```
+
 cleaned =
   cleaned.slice(
     0,
     -1
   );
-```
+
 
 }
 
@@ -1325,7 +1325,7 @@ return blocks
 .map(
 block => {
 
-```
+
     const trimmed =
       block.trim();
 
@@ -1367,7 +1367,7 @@ block => {
   }
 )
 .join("");
-```
+
 
 }
 
@@ -1393,9 +1393,9 @@ if (
 typeof mermaid === "undefined"
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -1410,7 +1410,7 @@ return;
 
 try {
 
-```
+
 await mermaid.run({
 
   nodes:
@@ -1419,18 +1419,18 @@ await mermaid.run({
     )
 
 });
-```
+
 
 }
 
 catch (error) {
 
-```
+
 console.warn(
   "Mermaid rendering failed:",
   error
 );
-```
+
 
 }
 
@@ -1449,9 +1449,9 @@ if (
 typeof externalInfo !== "object"
 ) {
 
-```
+
 return null;
-```
+
 
 }
 
@@ -1466,9 +1466,9 @@ if (
 !image
 ) {
 
-```
+
 return null;
-```
+
 
 }
 
@@ -1482,7 +1482,7 @@ card.className =
 
 if (image?.url) {
 
-```
+
 const img =
   document.createElement(
     "img"
@@ -1519,7 +1519,7 @@ img.onerror =
 card.appendChild(
   img
 );
-```
+
 
 }
 
@@ -1548,7 +1548,7 @@ label
 
 if (wiki?.title) {
 
-```
+
 const title =
   document.createElement(
     "div"
@@ -1566,13 +1566,13 @@ title.textContent =
 body.appendChild(
   title
 );
-```
+
 
 }
 
 if (wiki?.description) {
 
-```
+
 const description =
   document.createElement(
     "div"
@@ -1590,13 +1590,13 @@ description.textContent =
 body.appendChild(
   description
 );
-```
+
 
 }
 
 if (wiki?.page) {
 
-```
+
 const link =
   document.createElement(
     "a"
@@ -1626,7 +1626,7 @@ link.textContent =
 body.appendChild(
   link
 );
-```
+
 
 }
 
@@ -1685,7 +1685,7 @@ bubble.className =
 
 bubble.innerHTML = ` <div class="loading-bubble">
 
-```
+
   <div class="loading-icon">
     ✦
   </div>
@@ -1695,7 +1695,7 @@ bubble.innerHTML = ` <div class="loading-bubble">
   </div>
 
 </div>
-```
+
 
 `;
 
@@ -1732,7 +1732,7 @@ function scrollMessages() {
 requestAnimationFrame(
 () => {
 
-```
+
   if (messagesEl) {
 
     messagesEl.scrollTop =
@@ -1741,7 +1741,7 @@ requestAnimationFrame(
   }
 
 }
-```
+
 
 );
 
@@ -1760,7 +1760,7 @@ loading;
 
 if (sendButton) {
 
-```
+
 sendButton.disabled =
   loading;
 
@@ -1769,26 +1769,26 @@ sendButton.textContent =
   loading
     ? "..."
     : "Αποστολή";
-```
+
 
 }
 
 if (inputEl) {
 
-```
+
 inputEl.disabled =
   loading ||
   voiceMode;
-```
+
 
 }
 
 if (voiceButton) {
 
-```
+
 voiceButton.disabled =
   false;
-```
+
 
 }
 
@@ -1812,9 +1812,9 @@ if (
 !messageElement
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -1834,7 +1834,7 @@ if (
 features.length === 1
 ) {
 
-```
+
 const feature =
   features[0];
 
@@ -1869,7 +1869,7 @@ if (routeButton) {
   );
 
 }
-```
+
 
 }
 
@@ -1879,7 +1879,7 @@ MANY RESULTS
 
 else {
 
-```
+
 const allButton =
   document.createElement(
     "button"
@@ -1995,7 +1995,7 @@ if (routeButton) {
   );
 
 }
-```
+
 
 }
 
@@ -2003,14 +2003,14 @@ if (
 actions.children.length
 ) {
 
-```
+
 messageElement.appendChild(
   actions
 );
 
 
 scrollMessages();
-```
+
 
 }
 
@@ -2030,9 +2030,9 @@ if (
 !hasCoordinates(feature)
 ) {
 
-```
+
 return null;
-```
+
 
 }
 
@@ -2056,7 +2056,7 @@ button.addEventListener(
 "click",
 async () => {
 
-```
+
   button.disabled =
     true;
 
@@ -2085,7 +2085,7 @@ async () => {
   }
 
 }
-```
+
 
 );
 
@@ -2128,7 +2128,7 @@ button.addEventListener(
 "click",
 event => {
 
-```
+
   event.preventDefault();
 
 
@@ -2139,7 +2139,7 @@ event => {
   );
 
 }
-```
+
 
 );
 
@@ -2159,7 +2159,7 @@ if (
 window.city4allMap?.view
 ) {
 
-```
+
 try {
 
   if (
@@ -2185,13 +2185,13 @@ catch (error) {
   );
 
 }
-```
+
 
 }
 
 await Promise.race([
 
-```
+
 mapReadyPromise,
 
 new Promise(
@@ -2201,7 +2201,7 @@ new Promise(
       timeoutMs
     )
 )
-```
+
 
 ]);
 
@@ -2222,7 +2222,7 @@ window.city4allMap;
 
 return {
 
-```
+
 exists:
   Boolean(map),
 
@@ -2240,7 +2240,7 @@ graphicsCount:
     ?.graphics
     ?.length ??
   0
-```
+
 
 };
 
@@ -2258,9 +2258,9 @@ if (
 !hasCoordinates(feature)
 ) {
 
-```
+
 return false;
-```
+
 
 }
 
@@ -2269,13 +2269,13 @@ await waitForMapReady();
 
 if (!ready) {
 
-```
+
 console.warn(
   "Map not ready."
 );
 
 return false;
-```
+
 
 }
 
@@ -2287,14 +2287,14 @@ if (
 !map?.Graphic
 ) {
 
-```
+
 console.warn(
   "Incomplete map object:",
   getMapDiagnostics()
 );
 
 return false;
-```
+
 
 }
 
@@ -2309,7 +2309,7 @@ return true;
 
 try {
 
-```
+
 const graphic =
   createGraphicForFeature(
     feature,
@@ -2347,13 +2347,13 @@ map.lastFeatures =
 
 
 return true;
-```
+
 
 }
 
 catch (error) {
 
-```
+
 console.warn(
   "Could not ensure feature:",
   error
@@ -2361,7 +2361,7 @@ console.warn(
 
 
 return false;
-```
+
 
 }
 
@@ -2378,7 +2378,7 @@ mapCommand = null
 
 try {
 
-```
+
 const ready =
   await waitForMapReady(
     8000
@@ -2520,13 +2520,13 @@ if (
 
 
 return true;
-```
+
 
 }
 
 catch (error) {
 
-```
+
 console.warn(
   "Map update failed:",
   error
@@ -2534,7 +2534,7 @@ console.warn(
 
 
 return false;
-```
+
 
 }
 
@@ -2618,7 +2618,7 @@ comments
 const graphic =
 new Graphic({
 
-```
+
   geometry: {
 
     type: "point",
@@ -2769,7 +2769,7 @@ new Graphic({
   }
 
 });
-```
+
 
 graphic.__city4allFeature =
 feature;
@@ -2795,11 +2795,11 @@ feature.objectId
 ).trim() !== ""
 ) {
 
-```
+
 return String(
   feature.objectId
 );
-```
+
 
 }
 
@@ -2811,11 +2811,11 @@ feature.objectid
 ).trim() !== ""
 ) {
 
-```
+
 return String(
   feature.objectid
 );
-```
+
 
 }
 
@@ -2873,7 +2873,7 @@ objectId !== null &&
 objectId !== undefined
 ) {
 
-```
+
 const wanted =
   String(
     objectId
@@ -2894,7 +2894,7 @@ const byId =
 if (byId) {
   return byId;
 }
-```
+
 
 }
 
@@ -2908,7 +2908,7 @@ return (
 graphics.find(
 graphic => {
 
-```
+
     const gLat =
       Number(
         graphic.geometry
@@ -2937,7 +2937,7 @@ graphic => {
   }
 ) ||
 null
-```
+
 
 );
 
@@ -2956,9 +2956,9 @@ if (
 !hasCoordinates(feature)
 ) {
 
-```
+
 return false;
-```
+
 
 }
 
@@ -2968,7 +2968,7 @@ openPopup = true
 
 try {
 
-```
+
 const ready =
   await waitForMapReady(
     8000
@@ -3073,13 +3073,13 @@ if (
 
 
 return true;
-```
+
 
 }
 
 catch (error) {
 
-```
+
 console.warn(
   "Could not focus feature:",
   error
@@ -3087,7 +3087,7 @@ console.warn(
 
 
 return false;
-```
+
 
 }
 
@@ -3116,20 +3116,20 @@ if (
 validFeatures.length === 1
 ) {
 
-```
+
 return focusMapFeature(
   validFeatures[0],
   {
     openPopup: true
   }
 );
-```
+
 
 }
 
 try {
 
-```
+
 const ready =
   await waitForMapReady(
     8000
@@ -3215,13 +3215,13 @@ catch (goToError) {
 return fallbackFitMap(
   validFeatures
 );
-```
+
 
 }
 
 catch (error) {
 
-```
+
 console.warn(
   "Could not zoom to all features:",
   error
@@ -3229,7 +3229,7 @@ console.warn(
 
 
 return false;
-```
+
 
 }
 
@@ -3251,9 +3251,9 @@ if (
 !features.length
 ) {
 
-```
+
 return false;
-```
+
 
 }
 
@@ -3308,75 +3308,75 @@ maxLat
 const span =
 Math.max(
 
-```
+
   maxLon - minLon,
 
   maxLat - minLat
 
 );
-```
+
 
 let zoom = 12;
 
 if (span < 0.01) {
 
-```
+
 zoom = 16;
-```
+
 
 }
 
 else if (span < 0.03) {
 
-```
+
 zoom = 14;
-```
+
 
 }
 
 else if (span < 0.08) {
 
-```
+
 zoom = 12;
-```
+
 
 }
 
 else if (span < 0.2) {
 
-```
+
 zoom = 10;
-```
+
 
 }
 
 else if (span < 0.5) {
 
-```
+
 zoom = 8;
-```
+
 
 }
 
 else if (span < 1) {
 
-```
+
 zoom = 7;
-```
+
 
 }
 
 else {
 
-```
+
 zoom = 5;
-```
+
 
 }
 
 await view.goTo(
 
-```
+
 {
 
   center: [
@@ -3393,7 +3393,7 @@ await view.goTo(
   duration: 900
 
 }
-```
+
 
 );
 
@@ -3425,7 +3425,7 @@ feature.longitude
 
 return (
 
-```
+
 Number.isFinite(latitude) &&
 
 Number.isFinite(longitude) &&
@@ -3437,7 +3437,7 @@ latitude <= 90 &&
 longitude >= -180 &&
 
 longitude <= 180
-```
+
 
 );
 
@@ -3455,9 +3455,9 @@ if (
 !hasCoordinates(feature)
 ) {
 
-```
+
 return null;
-```
+
 
 }
 
@@ -3498,7 +3498,7 @@ window.webkitSpeechRecognition;
 
 if (!SpeechRecognition) {
 
-```
+
 voiceButton.title =
   "Η φωνητική συνομιλία δεν υποστηρίζεται σε αυτόν τον browser.";
 
@@ -3521,7 +3521,7 @@ voiceButton.addEventListener(
 
 
 return;
-```
+
 
 }
 
@@ -3543,7 +3543,7 @@ recognition.maxAlternatives =
 recognition.onstart =
 () => {
 
-```
+
   listening = true;
 
 
@@ -3574,12 +3574,12 @@ recognition.onstart =
   }
 
 };
-```
+
 
 recognition.onend =
 () => {
 
-```
+
   listening = false;
 
 
@@ -3620,12 +3620,12 @@ recognition.onend =
   }
 
 };
-```
+
 
 recognition.onresult =
 event => {
 
-```
+
   const transcript =
     event.results
       ?.[0]
@@ -3661,12 +3661,12 @@ event => {
   });
 
 };
-```
+
 
 recognition.onerror =
 event => {
 
-```
+
   console.warn(
     "Speech recognition error:",
     event.error
@@ -3689,7 +3689,7 @@ event => {
   }
 
 };
-```
+
 
 voiceButton.addEventListener(
 "click",
@@ -3710,15 +3710,15 @@ return;
 
 if (voiceMode) {
 
-```
+
 stopVoiceMode();
-```
+
 
 } else {
 
-```
+
 startVoiceMode();
-```
+
 
 }
 
@@ -3731,9 +3731,9 @@ if (
 voiceMode
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -3758,14 +3758,14 @@ voiceButton.setAttribute(
 
 if (inputEl) {
 
-```
+
 inputEl.placeholder =
   "Μίλησε στον City4All Assistant...";
 
 
 inputEl.disabled =
   true;
-```
+
 
 }
 
@@ -3782,28 +3782,28 @@ listening ||
 isLoading
 ) {
 
-```
+
 return;
-```
+
 
 }
 
 try {
 
-```
+
 recognition.start();
-```
+
 
 }
 
 catch (error) {
 
-```
+
 console.warn(
   "Could not start speech recognition:",
   error
 );
-```
+
 
 }
 
@@ -3824,7 +3824,7 @@ recognition &&
 listening
 ) {
 
-```
+
 try {
 
   recognition.stop();
@@ -3832,7 +3832,7 @@ try {
 }
 
 catch {}
-```
+
 
 }
 
@@ -3840,14 +3840,14 @@ listening = false;
 
 if (inputEl) {
 
-```
+
 inputEl.disabled =
   false;
 
 
 inputEl.placeholder =
   "Ρώτησε τον City4All Assistant...";
-```
+
 
 }
 
@@ -3890,9 +3890,9 @@ if (
 !("speechSynthesis" in window)
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -3901,9 +3901,9 @@ if (
 !text.trim()
 ) {
 
-```
+
 return;
-```
+
 
 }
 
@@ -3912,7 +3912,7 @@ stopSpeaking();
 const cleanText =
 String(text)
 
-```
+
   .replace(
     /https?:\/\/\S+/g,
     ""
@@ -3929,7 +3929,7 @@ String(text)
   )
 
   .trim();
-```
+
 
 if (!cleanText) {
 return;
@@ -3955,16 +3955,16 @@ utterance.volume =
 utterance.onstart =
 () => {
 
-```
+
   isSpeaking = true;
 
 };
-```
+
 
 utterance.onend =
 () => {
 
-```
+
   isSpeaking = false;
 
 
@@ -4000,16 +4000,16 @@ utterance.onend =
   }
 
 };
-```
+
 
 utterance.onerror =
 () => {
 
-```
+
   isSpeaking = false;
 
 };
-```
+
 
 window.speechSynthesis.speak(
 utterance
@@ -4027,9 +4027,9 @@ if (
 "speechSynthesis" in window
 ) {
 
-```
+
 window.speechSynthesis.cancel();
-```
+
 
 }
 
@@ -4046,7 +4046,7 @@ function setupMobileViewport() {
 const setViewportHeight =
 () => {
 
-```
+
   const height =
     window.visualViewport?.height ||
     window.innerHeight;
@@ -4077,7 +4077,7 @@ const setViewportHeight =
   );
 
 };
-```
+
 
 setViewportHeight();
 
@@ -4090,7 +4090,7 @@ if (
 window.visualViewport
 ) {
 
-```
+
 window.visualViewport.addEventListener(
   "resize",
   setViewportHeight
@@ -4101,7 +4101,7 @@ window.visualViewport.addEventListener(
   "scroll",
   setViewportHeight
 );
-```
+
 
 }
 
@@ -4119,7 +4119,7 @@ return String(
 value ?? ""
 )
 
-```
+
 .replaceAll(
   "&",
   "&amp;"
@@ -4144,7 +4144,7 @@ value ?? ""
   "'",
   "&#039;"
 );
-```
+
 
 }
 
@@ -4160,7 +4160,7 @@ return String(
 value ?? ""
 )
 
-```
+
 .replaceAll(
   "&",
   "&amp;"
@@ -4185,7 +4185,7 @@ value ?? ""
   "'",
   "&#039;"
 );
-```
+
 
 }
 
@@ -4207,7 +4207,7 @@ window.addEventListener(
 "city4all-map-ready",
 async () => {
 
-```
+
 console.log(
   "City4All map-ready event received."
 );
@@ -4248,7 +4248,7 @@ catch (error) {
   resolveMapReady();
 
 }
-```
+
 
 }
 );
