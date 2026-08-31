@@ -1,10 +1,18 @@
 <!DOCTYPE html>
+
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
 
   <title>City4All AI</title>
+
+  <!-- =========================================================
+       ARCGIS
+  ========================================================== -->
 
   <link
     rel="stylesheet"
@@ -13,7 +21,12 @@
 
   <script src="https://js.arcgis.com/4.31/"></script>
 
+  <!-- =========================================================
+       STYLE
+  ========================================================== -->
+
   <style>
+
     * {
       box-sizing: border-box;
     }
@@ -22,12 +35,23 @@
     body {
       margin: 0;
       padding: 0;
+
       width: 100%;
       height: 100%;
-      font-family: Arial, Helvetica, sans-serif;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
       background: #f5f7fb;
       color: #172033;
+
       overflow: hidden;
+    }
+
+    body {
+      min-height: 100dvh;
     }
 
     button,
@@ -35,124 +59,211 @@
       font-family: inherit;
     }
 
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+
+    /* =========================================================
+       APP
+    ========================================================== */
+
     .app {
       width: 100%;
-      height: 100%;
+      height: 100dvh;
+
+      min-height: 0;
+
       display: flex;
       flex-direction: column;
+
+      overflow: hidden;
     }
+
 
     /* =========================================================
        HEADER
-    ========================================================= */
+    ========================================================== */
 
     .header {
       height: 68px;
+      min-height: 68px;
+
       background: #ffffff;
+
       border-bottom: 1px solid #e5e7eb;
+
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
+
+      padding:
+        0
+        max(24px, env(safe-area-inset-right))
+        0
+        max(24px, env(safe-area-inset-left));
+
       flex-shrink: 0;
+
       z-index: 20;
     }
+
 
     .brand {
       display: flex;
       align-items: center;
+
       gap: 11px;
+
+      min-width: 0;
     }
+
 
     .brand-icon {
       width: 38px;
       height: 38px;
+
+      flex: 0 0 38px;
+
       border-radius: 11px;
+
       background: #1976d2;
+
       color: #ffffff;
+
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 17px;
+
+      font-size: 11px;
       font-weight: 800;
+
+      text-align: center;
     }
+
 
     .logo {
       font-size: 21px;
+
       font-weight: 800;
+
       letter-spacing: -0.5px;
+
+      white-space: nowrap;
     }
+
 
     .logo span {
       color: #1976d2;
     }
 
+
     .header-subtitle {
       color: #667085;
+
       font-size: 12px;
+
       margin-top: 2px;
+
+      white-space: nowrap;
     }
+
 
     .status {
       display: flex;
       align-items: center;
+
       gap: 8px;
+
       color: #16803c;
+
       font-size: 12px;
+
       font-weight: 700;
+
       background: #ecfdf3;
+
       padding: 8px 12px;
+
       border-radius: 20px;
+
+      flex-shrink: 0;
     }
+
 
     .status-dot {
       width: 8px;
       height: 8px;
+
+      flex: 0 0 8px;
+
       border-radius: 50%;
+
       background: #20a464;
+
+      box-shadow:
+        0 0 0 3px rgba(32, 164, 100, 0.10);
     }
+
 
     /* =========================================================
        MAIN
-    ========================================================= */
+    ========================================================== */
 
     .main {
-      flex: 1;
+      flex: 1 1 auto;
+
       min-height: 0;
+
       display: grid;
+
       grid-template-columns:
         minmax(0, 1.55fr)
         minmax(390px, 0.65fr);
+
+      overflow: hidden;
     }
+
 
     /* =========================================================
        MAP
-    ========================================================= */
+    ========================================================== */
 
     .map-panel {
       position: relative;
+
       min-width: 0;
       min-height: 0;
+
       background: #e9eef4;
+
+      overflow: hidden;
     }
+
 
     #map {
       width: 100%;
       height: 100%;
     }
 
+
     .map-label {
       position: absolute;
+
       top: 18px;
       left: 18px;
+
       z-index: 5;
 
       display: flex;
       align-items: center;
+
       gap: 8px;
 
       background: rgba(255, 255, 255, 0.96);
+
       border: 1px solid rgba(0, 0, 0, 0.06);
+
       border-radius: 12px;
 
       padding: 10px 14px;
@@ -161,30 +272,41 @@
         0 3px 15px rgba(0, 0, 0, 0.12);
 
       font-size: 13px;
+
       font-weight: 700;
+
+      pointer-events: none;
     }
+
 
     .map-info {
       position: absolute;
+
       left: 18px;
       bottom: 18px;
+
       z-index: 5;
 
       background: rgba(255, 255, 255, 0.94);
+
       border-radius: 11px;
 
       padding: 9px 12px;
 
       color: #667085;
+
       font-size: 11px;
 
       box-shadow:
         0 2px 12px rgba(0, 0, 0, 0.10);
+
+      pointer-events: none;
     }
+
 
     /* =========================================================
        ASSISTANT
-    ========================================================= */
+    ========================================================== */
 
     .assistant-panel {
       min-width: 0;
@@ -196,26 +318,38 @@
       flex-direction: column;
 
       border-left: 1px solid #e5e7eb;
+
+      overflow: hidden;
     }
+
 
     .assistant-header {
       padding: 19px 20px 16px;
+
       border-bottom: 1px solid #eef0f3;
+
       flex-shrink: 0;
     }
+
 
     .assistant-heading {
       display: flex;
       align-items: center;
+
       gap: 11px;
     }
+
 
     .ai-icon {
       width: 40px;
       height: 40px;
+
+      flex: 0 0 40px;
+
       border-radius: 12px;
 
       background: #eaf3ff;
+
       color: #1976d2;
 
       display: flex;
@@ -223,50 +357,81 @@
       justify-content: center;
 
       font-size: 20px;
-      flex-shrink: 0;
     }
+
 
     .assistant-title {
       font-size: 18px;
+
       font-weight: 800;
     }
 
+
     .assistant-subtitle {
       color: #667085;
+
       font-size: 12px;
+
       line-height: 1.45;
+
       margin-top: 2px;
     }
 
+
     /* =========================================================
        MESSAGES
-    ========================================================= */
+    ========================================================== */
 
     .messages {
-      flex: 1;
+      flex: 1 1 auto;
+
       min-height: 0;
 
       overflow-y: auto;
+      overflow-x: hidden;
 
       padding: 20px;
 
       scroll-behavior: smooth;
+
       overscroll-behavior: contain;
+
+      -webkit-overflow-scrolling: touch;
     }
+
+
+    .messages::-webkit-scrollbar {
+      width: 6px;
+    }
+
+
+    .messages::-webkit-scrollbar-thumb {
+      background: #d0d7e2;
+
+      border-radius: 10px;
+    }
+
 
     .message {
       display: flex;
+
       flex-direction: column;
+
       margin-bottom: 17px;
+
+      width: 100%;
     }
+
 
     .message.user {
       align-items: flex-end;
     }
 
+
     .message.ai {
       align-items: flex-start;
     }
+
 
     .bubble {
       max-width: 88%;
@@ -276,31 +441,44 @@
       border-radius: 15px;
 
       line-height: 1.55;
+
       font-size: 13px;
 
       white-space: pre-wrap;
+
       word-break: break-word;
+
+      overflow-wrap: anywhere;
     }
+
 
     .message.ai .bubble {
       background: #f3f6fa;
+
       color: #172033;
+
       border-bottom-left-radius: 5px;
     }
 
+
     .message.user .bubble {
       background: #1976d2;
+
       color: #ffffff;
+
       border-bottom-right-radius: 5px;
     }
 
+
     /* =========================================================
        ACTIONS INSIDE CHAT
-    ========================================================= */
+    ========================================================== */
 
     .message-actions {
       display: flex;
+
       flex-wrap: wrap;
+
       gap: 7px;
 
       margin-top: 8px;
@@ -308,8 +486,10 @@
       max-width: 95%;
     }
 
+
     .chat-action {
       border: 1px solid #d7dee8;
+
       background: #ffffff;
 
       color: #344054;
@@ -319,49 +499,91 @@
       border-radius: 9px;
 
       font-size: 11px;
+
       font-weight: 700;
 
       cursor: pointer;
 
-      transition: 0.15s;
+      transition:
+        transform 0.15s ease,
+        border-color 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
     }
+
 
     .chat-action:hover {
       border-color: #1976d2;
+
       color: #1976d2;
+
       background: #f7fbff;
     }
 
+
     .chat-action.primary {
       background: #1976d2;
+
       color: #ffffff;
+
       border-color: #1976d2;
     }
 
+
     .chat-action.primary:hover {
       background: #125ea7;
+
+      color: #ffffff;
     }
+
 
     .chat-action:active {
       transform: scale(0.97);
     }
 
+
+    /* =========================================================
+       VOICE MODE NOTICE
+    ========================================================== */
+
+    .voice-mode-notice .bubble {
+      background: #eff6ff;
+
+      border: 1px solid #bfdbfe;
+
+      color: #174a7e;
+    }
+
+
     /* =========================================================
        QUICK ACTIONS
-    ========================================================= */
+    ========================================================== */
 
     .quick-actions {
       padding: 0 18px 13px;
 
       display: flex;
+
       flex-wrap: wrap;
+
       gap: 7px;
 
       flex-shrink: 0;
+
+      overflow-x: auto;
+
+      scrollbar-width: none;
     }
+
+
+    .quick-actions::-webkit-scrollbar {
+      display: none;
+    }
+
 
     .quick-button {
       border: 1px solid #dfe5ec;
+
       background: #ffffff;
 
       color: #344054;
@@ -371,41 +593,57 @@
       border-radius: 20px;
 
       font-size: 11px;
+
       font-weight: 600;
 
       cursor: pointer;
 
-      transition: 0.15s;
+      transition:
+        transform 0.15s ease,
+        border-color 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
     }
+
 
     .quick-button:hover {
       border-color: #1976d2;
+
       color: #1976d2;
+
       background: #f7fbff;
     }
+
 
     .quick-button:active {
       transform: scale(0.97);
     }
 
+
     /* =========================================================
        LOADING
-    ========================================================= */
+    ========================================================== */
 
     .loading-dots span {
       display: inline-block;
-      animation: loadingDot 1.2s infinite;
+
+      animation:
+        loadingDot 1.2s infinite;
     }
+
 
     .loading-dots span:nth-child(2) {
       animation-delay: 0.15s;
     }
 
+
     .loading-dots span:nth-child(3) {
-      animation-delay: 0.3s;
+      animation-delay: 0.30s;
     }
 
+
     @keyframes loadingDot {
+
       0%,
       60%,
       100% {
@@ -417,16 +655,21 @@
       }
     }
 
+
     /* =========================================================
        INPUT
-    ========================================================= */
+    ========================================================== */
 
     .input-area {
       border-top: 1px solid #e5e7eb;
 
-      padding: 11px;
+      padding:
+        11px
+        11px
+        max(11px, env(safe-area-inset-bottom));
 
       display: flex;
+
       align-items: flex-end;
 
       gap: 7px;
@@ -434,22 +677,24 @@
       background: #ffffff;
 
       flex-shrink: 0;
-
-      padding-bottom:
-        max(11px, env(safe-area-inset-bottom));
     }
 
+
     textarea {
-      flex: 1;
+      flex: 1 1 auto;
+
       min-width: 0;
 
       height: 45px;
+
       min-height: 45px;
+
       max-height: 100px;
 
       resize: none;
 
       border: 1px solid #d0d5dd;
+
       border-radius: 11px;
 
       padding: 12px;
@@ -461,7 +706,14 @@
       line-height: 1.35;
 
       background: #ffffff;
+
+      color: #172033;
+
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
     }
+
 
     textarea:focus {
       border-color: #1976d2;
@@ -469,6 +721,18 @@
       box-shadow:
         0 0 0 3px rgba(25, 118, 210, 0.08);
     }
+
+
+    textarea:disabled {
+      opacity: 0.55;
+
+      cursor: not-allowed;
+    }
+
+
+    /* =========================================================
+       VOICE BUTTON
+    ========================================================== */
 
     .voice-button,
     .send-button {
@@ -481,7 +745,10 @@
       font-weight: 700;
 
       height: 45px;
+
+      flex-shrink: 0;
     }
+
 
     .voice-button {
       width: 45px;
@@ -489,66 +756,101 @@
       background: #eef2f7;
 
       font-size: 17px;
-
-      flex-shrink: 0;
     }
+
 
     .voice-button:hover {
       background: #e2e8f0;
     }
 
-    .voice-button.active {
+
+    .voice-button.active,
+    .voice-button.voice-mode {
       background: #d93025;
+
       color: #ffffff;
 
-      animation: voicePulse 1.2s infinite;
+      animation:
+        voicePulse 1.2s infinite;
     }
 
+
     @keyframes voicePulse {
+
       0% {
-        box-shadow: 0 0 0 0 rgba(217, 48, 37, 0.35);
+        box-shadow:
+          0 0 0 0 rgba(217, 48, 37, 0.35);
       }
 
       70% {
-        box-shadow: 0 0 0 8px rgba(217, 48, 37, 0);
+        box-shadow:
+          0 0 0 8px rgba(217, 48, 37, 0);
       }
 
       100% {
-        box-shadow: 0 0 0 0 rgba(217, 48, 37, 0);
+        box-shadow:
+          0 0 0 0 rgba(217, 48, 37, 0);
       }
     }
+
+
+    /* =========================================================
+       SEND BUTTON
+    ========================================================== */
 
     .send-button {
       padding: 0 15px;
 
       background: #1976d2;
-      color: #ffffff;
 
-      flex-shrink: 0;
+      color: #ffffff;
     }
+
 
     .send-button:hover {
       background: #125ea7;
     }
 
+
     .send-button:disabled,
-    .voice-button:disabled,
-    textarea:disabled {
+    .voice-button:disabled {
       opacity: 0.55;
+
       cursor: not-allowed;
     }
 
+
     /* =========================================================
-       MAP POPUP
-    ========================================================= */
+       ARCGIS POPUP
+    ========================================================== */
 
     .esri-popup__main-container {
       border-radius: 12px;
     }
 
+
+    /* =========================================================
+       TABLET
+    ========================================================== */
+
+    @media (max-width: 1050px) {
+
+      .main {
+        grid-template-columns:
+          minmax(0, 1.25fr)
+          minmax(350px, 0.75fr);
+      }
+
+      .bubble {
+        max-width: 91%;
+      }
+
+    }
+
+
     /* =========================================================
        MOBILE
-    ========================================================= */
+    ========================================================== */
 
     @media (max-width: 850px) {
 
@@ -557,49 +859,88 @@
         overflow: hidden;
       }
 
+
       .app {
         height: 100dvh;
+
         min-height: 100dvh;
       }
 
+
+      /* HEADER */
+
       .header {
         height: 56px;
+
         min-height: 56px;
 
-        padding: 0 12px;
+        padding:
+          0
+          max(12px, env(safe-area-inset-right))
+          0
+          max(12px, env(safe-area-inset-left));
       }
+
 
       .header-subtitle {
         display: none;
       }
 
+
       .logo {
         font-size: 18px;
       }
 
+
       .brand-icon {
-        width: 33px;
-        height: 33px;
+        width: 34px;
+        height: 34px;
+
+        flex-basis: 34px;
+
         border-radius: 9px;
-        font-size: 14px;
+
+        font-size: 9px;
       }
+
 
       .status {
         padding: 6px 9px;
+
         font-size: 10px;
+
+        gap: 6px;
       }
 
+
+      .status-dot {
+        width: 7px;
+        height: 7px;
+
+        flex-basis: 7px;
+      }
+
+
+      /* MAIN */
+
       .main {
+        height: calc(100dvh - 56px);
+
+        min-height: 0;
+
         display: grid;
 
         grid-template-columns: 1fr;
 
         grid-template-rows:
-          43dvh
-          57dvh;
+          minmax(220px, 42dvh)
+          minmax(0, 58dvh);
 
-        height: calc(100dvh - 56px);
+        overflow: hidden;
       }
+
+
+      /* MAP */
 
       .map-panel {
         min-height: 0;
@@ -608,13 +949,6 @@
           1px solid #dfe4ea;
       }
 
-      .assistant-panel {
-        min-height: 0;
-
-        border-left: none;
-
-        overflow: hidden;
-      }
 
       .map-label {
         top: 10px;
@@ -625,159 +959,351 @@
         font-size: 11px;
       }
 
+
       .map-info {
         display: none;
       }
+
+
+      /* ASSISTANT */
+
+      .assistant-panel {
+        min-height: 0;
+
+        border-left: none;
+
+        overflow: hidden;
+      }
+
 
       .assistant-header {
         padding: 10px 13px;
       }
 
+
       .ai-icon {
         width: 34px;
         height: 34px;
+
+        flex-basis: 34px;
 
         border-radius: 10px;
 
         font-size: 17px;
       }
 
+
       .assistant-title {
         font-size: 15px;
       }
+
 
       .assistant-subtitle {
         font-size: 10px;
       }
 
+
+      /* MESSAGES */
+
       .messages {
-        padding: 12px 13px 8px;
+        padding:
+          11px
+          13px
+          7px;
       }
+
 
       .message {
         margin-bottom: 12px;
       }
 
+
       .bubble {
         max-width: 94%;
 
-        padding: 10px 12px;
+        padding:
+          10px
+          12px;
 
         font-size: 12px;
 
         line-height: 1.48;
       }
 
+
       .message-actions {
         max-width: 94%;
       }
 
+
       .chat-action {
-        padding: 8px 9px;
+        padding:
+          8px
+          9px;
 
         font-size: 10px;
       }
 
+
+      /* QUICK ACTIONS */
+
       .quick-actions {
-        padding: 0 12px 8px;
+        padding:
+          0
+          12px
+          8px;
 
         gap: 5px;
 
-        max-height: 48px;
+        max-height: 47px;
 
         overflow-x: auto;
         overflow-y: hidden;
 
         flex-wrap: nowrap;
-
-        scrollbar-width: none;
       }
 
-      .quick-actions::-webkit-scrollbar {
-        display: none;
-      }
 
       .quick-button {
         white-space: nowrap;
 
         flex-shrink: 0;
 
-        padding: 7px 9px;
+        padding:
+          7px
+          9px;
 
         font-size: 10px;
       }
 
+
+      /* INPUT */
+
       .input-area {
-        padding: 8px;
+        padding:
+          7px
+          8px
+          max(8px, env(safe-area-inset-bottom));
+
+        gap: 6px;
       }
+
 
       textarea {
         height: 43px;
+
         min-height: 43px;
 
         max-height: 82px;
 
-        padding: 11px;
+        padding:
+          11px;
 
-        font-size: 13px;
+        /*
+         * 16px prevents iOS Safari
+         * from zooming into the input.
+         */
+
+        font-size: 16px;
       }
+
 
       .voice-button,
       .send-button {
         height: 43px;
       }
 
+
       .voice-button {
         width: 43px;
       }
 
+
       .send-button {
-        padding: 0 12px;
+        padding:
+          0
+          12px;
 
         font-size: 12px;
       }
+
     }
+
+
+    /* =========================================================
+       SMALL MOBILE
+    ========================================================== */
 
     @media (max-width: 520px) {
 
       .main {
         grid-template-rows:
-          40dvh
-          60dvh;
+          minmax(190px, 39dvh)
+          minmax(0, 61dvh);
       }
+
 
       .assistant-subtitle {
         display: none;
       }
 
+
       .messages {
-        padding: 10px 11px 6px;
+        padding:
+          9px
+          11px
+          6px;
       }
+
 
       .bubble {
         max-width: 96%;
       }
 
+
       .message-actions {
         max-width: 96%;
       }
 
+
       .chat-action {
-        padding: 7px 8px;
+        padding:
+          7px
+          8px;
       }
 
+
       .send-button {
-        font-size: 0;
         width: 43px;
+
         padding: 0;
+
+        font-size: 0;
       }
+
 
       .send-button::after {
         content: "➤";
+
         font-size: 16px;
       }
+
     }
+
+
+    /* =========================================================
+       VERY SMALL MOBILE
+    ========================================================== */
+
+    @media (max-width: 380px) {
+
+      .status {
+        padding:
+          5px
+          7px;
+      }
+
+
+      .status-dot {
+        display: none;
+      }
+
+
+      .brand-icon {
+        width: 31px;
+        height: 31px;
+
+        flex-basis: 31px;
+      }
+
+
+      .logo {
+        font-size: 16px;
+      }
+
+
+      .voice-button {
+        width: 41px;
+      }
+
+
+      .send-button {
+        width: 41px;
+      }
+
+    }
+
+
+    /* =========================================================
+       LANDSCAPE MOBILE
+    ========================================================== */
+
+    @media (max-width: 850px) and (orientation: landscape) {
+
+      .header {
+        height: 50px;
+
+        min-height: 50px;
+      }
+
+
+      .main {
+        height: calc(100dvh - 50px);
+
+        grid-template-rows:
+          48dvh
+          52dvh;
+      }
+
+
+      .assistant-header {
+        padding:
+          6px
+          11px;
+      }
+
+
+      .quick-actions {
+        max-height: 38px;
+
+        padding-bottom: 5px;
+      }
+
+
+      .messages {
+        padding-top: 6px;
+      }
+
+
+      .input-area {
+        padding-top: 5px;
+      }
+
+    }
+
+
+    /* =========================================================
+       REDUCED MOTION
+    ========================================================== */
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+
+        animation-iteration-count: 1 !important;
+
+        transition-duration: 0.01ms !important;
+
+        scroll-behavior: auto !important;
+      }
+
+    }
+
   </style>
+
 </head>
 
 <body>
@@ -790,33 +1316,39 @@
 
   <header class="header">
 
-    <div class="brand">
+```
+<div class="brand">
 
-      <div class="brand-icon">
-        City4all
-      </div>
+  <div class="brand-icon">
+    C4A
+  </div>
 
-      <div>
 
-        <div class="logo">
-          City4<span>All</span> AI
-        </div>
+  <div>
 
-        <div class="header-subtitle">
-          Accessibility intelligence for everyone
-        </div>
-
-      </div>
-
+    <div class="logo">
+      City4<span>All</span> AI
     </div>
 
-    <div class="status">
-      <span class="status-dot"></span>
-      AI Online
+    <div class="header-subtitle">
+      Accessibility intelligence for everyone
     </div>
+
+  </div>
+
+</div>
+
+
+<div class="status">
+
+  <span class="status-dot"></span>
+
+  AI Online
+
+</div>
+```
 
   </header>
-
 
   <!-- =======================================================
        MAIN
@@ -824,163 +1356,193 @@
 
   <main class="main">
 
-    <!-- =====================================================
-         MAP
-    ====================================================== -->
+```
+<!-- =====================================================
+     MAP
+====================================================== -->
 
-    <section class="map-panel">
+<section class="map-panel">
 
-      <div
-        id="map"
-        aria-label="City4All Web Map"
-      ></div>
+  <div
+    id="map"
+    aria-label="City4All Web Map"
+  ></div>
 
-      <div class="map-label">
-        🗺️ City4All Map
+
+  <div class="map-label">
+    🗺️ City4All Map
+  </div>
+
+
+  <div class="map-info">
+    Ο AI εμφανίζει εδώ τα σημεία που βρίσκει.
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     ASSISTANT
+====================================================== -->
+
+<section class="assistant-panel">
+
+
+  <!-- ===================================================
+       ASSISTANT HEADER
+  ==================================================== -->
+
+  <div class="assistant-header">
+
+    <div class="assistant-heading">
+
+      <div class="ai-icon">
+        ✦
       </div>
 
-      <div class="map-info">
-        Ο AI εμφανίζει εδώ τα σημεία που βρίσκει.
-      </div>
 
-    </section>
+      <div>
+
+        <div class="assistant-title">
+          City4All Assistant
+        </div>
 
 
-    <!-- =====================================================
-         ASSISTANT
-    ====================================================== -->
-
-    <section class="assistant-panel">
-
-      <div class="assistant-header">
-
-        <div class="assistant-heading">
-
-          <div class="ai-icon">
-            ✦
-          </div>
-
-          <div>
-
-            <div class="assistant-title">
-              City4All Assistant
-            </div>
-
-            <div class="assistant-subtitle">
-              Βρες προσβάσιμα σημεία και πληροφορίες προσβασιμότητας.
-            </div>
-
-          </div>
-
+        <div class="assistant-subtitle">
+          Βρες προσβάσιμα σημεία και πληροφορίες προσβασιμότητας.
         </div>
 
       </div>
 
+    </div>
 
-      <!-- ===================================================
-           MESSAGES
-      ==================================================== -->
+  </div>
 
-      <div
-        id="messages"
-        class="messages"
-      >
 
-        <div class="message ai">
 
-          <div class="bubble">
-            👋 Γεια σου! Είμαι ο City4All AI Assistant.
-            Μπορώ να σε βοηθήσω να βρεις πραγματικά σημεία και πληροφορίες προσβασιμότητας από τα δεδομένα του City4all
-            Για παράδειγμα:«Βρες μου καφετέριες με ράμπα»
-          </div>
+  <!-- ===================================================
+       MESSAGES
+  ==================================================== -->
 
-        </div>
+  <div
+    id="messages"
+    class="messages"
+  >
 
+    <div class="message ai">
+
+      <div class="bubble">
+        👋 Γεια σου! Είμαι ο City4All AI Assistant.
+
+        Μπορώ να σε βοηθήσω να βρεις πραγματικά σημεία
+        και πληροφορίες προσβασιμότητας από τα δεδομένα
+        του City4All.
+
+        Για παράδειγμα:
+        «Βρες μου καφετέριες με ράμπα»
       </div>
 
+    </div>
 
-      <!-- ===================================================
-           QUICK ACTIONS
-      ==================================================== -->
-
-      <div class="quick-actions">
-
-        <button
-          class="quick-button"
-          type="button"
-          data-question="Βρες μου προσβάσιμα στάδια"
-        >
-          📍Αθλητικά κέντρα
-        </button>
-
-        <button
-          class="quick-button"
-          type="button"
-          data-question="Ποια σημεία έχουν ράμπα;"
-        >
-          ♿ Με ράμπα
-        </button>
-
-        <button
-          class="quick-button"
-          type="button"
-          data-question="Ποια σημεία έχουν προσβάσιμο WC;"
-        >
-          🚻 Προσβάσιμο WC
-        </button>
-
-        <button
-          class="quick-button"
-          type="button"
-          data-question="Ποια σημεία έχουν parking ΑμεΑ;"
-        >
-          🅿️ Parking ΑμεΑ
-        </button>
-
-      </div>
+  </div>
 
 
-      <!-- ===================================================
-           INPUT
-      ==================================================== -->
 
-      <div class="input-area">
+  <!-- ===================================================
+       QUICK ACTIONS
+  ==================================================== -->
 
-        <button
-          id="voiceButton"
-          class="voice-button"
-          type="button"
-          title="Μίλησε στον City4All Assistant"
-          aria-label="Φωνητική εισαγωγή"
-        >
-          🎤
-        </button>
+  <div class="quick-actions">
 
-        <textarea
-          id="messageInput"
-          placeholder="Ρώτησε τον City4All Assistant..."
-          aria-label="Μήνυμα"
-        ></textarea>
+    <button
+      class="quick-button"
+      type="button"
+      data-question="Βρες μου προσβάσιμα στάδια"
+    >
+      📍 Αθλητικά κέντρα
+    </button>
 
-        <button
-          id="sendButton"
-          class="send-button"
-          type="button"
-        >
-          Αποστολή
-        </button>
 
-      </div>
+    <button
+      class="quick-button"
+      type="button"
+      data-question="Ποια σημεία έχουν ράμπα;"
+    >
+      ♿ Με ράμπα
+    </button>
 
-    </section>
+
+    <button
+      class="quick-button"
+      type="button"
+      data-question="Ποια σημεία έχουν προσβάσιμο WC;"
+    >
+      🚻 Προσβάσιμο WC
+    </button>
+
+
+    <button
+      class="quick-button"
+      type="button"
+      data-question="Ποια σημεία έχουν parking ΑμεΑ;"
+    >
+      🅿️ Parking ΑμεΑ
+    </button>
+
+  </div>
+
+
+
+  <!-- ===================================================
+       INPUT
+  ==================================================== -->
+
+  <div class="input-area">
+
+
+    <button
+      id="voiceButton"
+      class="voice-button"
+      type="button"
+      title="Μίλησε στον City4All Assistant"
+      aria-label="Φωνητική εισαγωγή"
+    >
+      🎤
+    </button>
+
+
+    <textarea
+      id="messageInput"
+      placeholder="Ρώτησε τον City4All Assistant..."
+      aria-label="Μήνυμα"
+      autocomplete="off"
+      spellcheck="true"
+    ></textarea>
+
+
+    <button
+      id="sendButton"
+      class="send-button"
+      type="button"
+    >
+      Αποστολή
+    </button>
+
+  </div>
+
+</section>
+```
 
   </main>
 
 </div>
 
+<!-- =========================================================
+     APP JS
+========================================================= -->
 
 <script src="app.js"></script>
-
 
 <!-- =========================================================
      ARCGIS MAP
@@ -1003,38 +1565,60 @@ require(
     GraphicsLayer
   ) {
 
-    const webmap = new WebMap({
 
-      portalItem: {
-        id: "969e9e5433dd4b968cf06793dc7b7aca"
-      }
+    /* =======================================================
+       WEBMAP
+    ======================================================== */
 
-    });
+    const webmap =
+      new WebMap({
+
+        portalItem: {
+          id:
+            "969e9e5433dd4b968cf06793dc7b7aca"
+        }
+
+      });
 
 
-    /*
-     * Αρχικός χάρτης:
-     * Ευρύτερη Ευρώπη και όχι Ηλιούπολη.
-     */
 
-    const view = new MapView({
+    /* =======================================================
+       MAP VIEW
+    ======================================================== */
 
-      container: "map",
+    const view =
+      new MapView({
 
-      map: webmap,
+        container:
+          "map",
 
-      center: [
-        15.0,
-        50.0
-      ],
+        map:
+          webmap,
 
-      zoom: 4.3
+        /*
+         * Αρχική προβολή:
+         * Ευρύτερη Ευρώπη.
+         */
 
-    });
+        center: [
+          15.0,
+          50.0
+        ],
 
+        zoom:
+          4.3
+
+      });
+
+
+
+    /* =======================================================
+       AI RESULTS LAYER
+    ======================================================== */
 
     const resultsLayer =
       new GraphicsLayer();
+
 
 
     webmap.add(
@@ -1042,9 +1626,15 @@ require(
     );
 
 
+
+    /* =======================================================
+       GLOBAL CITY4ALL MAP OBJECT
+    ======================================================== */
+
     window.city4allMap = {
 
-      view: view,
+      view:
+        view,
 
       resultsLayer:
         resultsLayer,
@@ -1055,6 +1645,11 @@ require(
     };
 
 
+
+    /* =======================================================
+       MAP READY
+    ======================================================== */
+
     view.when(
 
       function () {
@@ -1063,6 +1658,11 @@ require(
           "City4All map loaded."
         );
 
+
+        /*
+         * Ενημερώνουμε το app.js
+         * ότι ο χάρτης είναι έτοιμος.
+         */
 
         window.dispatchEvent(
           new Event(
@@ -1093,3 +1693,14 @@ require(
 
 </body>
 </html>
+```
+
+Αυτό το `index.html` είναι σχεδιασμένο να δουλεύει **μαζί με το `app.js` που μου έστειλες**, όχι ανεξάρτητα.
+
+**Άρα τώρα έχεις:**
+
+* `index.html` → interface + ArcGIS map
+* `app.js` → AI chat + map results + Google Maps directions + Voice Mode
+* Cloudflare Worker → `/chat` API
+
+Και **δεν πειράζουμε το WebMap ID** που ήδη έχεις.
