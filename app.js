@@ -24,16 +24,29 @@ let isSpeaking = false;
 
 
 /*
- * IMPORTANT
- *
- * Το promise ΔΕΝ είναι πλέον ήδη resolved.
- * Περιμένει πραγματικά το ArcGIS map.
+ * Περιμένουμε πραγματικά να φορτώσει ο ArcGIS χάρτης.
  */
 let resolveMapReady;
 
+let mapReadyResolved = false;
+
 const mapReadyPromise =
   new Promise(resolve => {
-    resolveMapReady = resolve;
+
+    resolveMapReady =
+      () => {
+
+        if (!mapReadyResolved) {
+
+          mapReadyResolved =
+            true;
+
+          resolve();
+
+        }
+
+      };
+
   });
 
 
@@ -42,16 +55,24 @@ const mapReadyPromise =
 ============================================================ */
 
 const messagesEl =
-  document.getElementById("messages");
+  document.getElementById(
+    "messages"
+  );
 
 const inputEl =
-  document.getElementById("messageInput");
+  document.getElementById(
+    "messageInput"
+  );
 
 const sendButton =
-  document.getElementById("sendButton");
+  document.getElementById(
+    "sendButton"
+  );
 
 const voiceButton =
-  document.getElementById("voiceButton");
+  document.getElementById(
+    "voiceButton"
+  );
 
 
 /* ============================================================
@@ -85,38 +106,46 @@ document.addEventListener(
 function setupQuickActions() {
 
   document
-    .querySelectorAll(".quick-button")
-    .forEach(button => {
+    .querySelectorAll(
+      ".quick-button"
+    )
+    .forEach(
+      button => {
 
-      button.addEventListener(
-        "click",
-        () => {
+        button.addEventListener(
+          "click",
+          () => {
 
-          const question =
-            button.dataset.question;
+            const question =
+              button.dataset.question;
 
-          if (
-            !question ||
-            isLoading
-          ) {
 
-            return;
+            if (
+              !question ||
+              isLoading
+            ) {
+
+              return;
+
+            }
+
+
+            inputEl.value =
+              question;
+
+
+            inputEl.dispatchEvent(
+              new Event("input")
+            );
+
+
+            sendMessage();
 
           }
+        );
 
-          inputEl.value =
-            question;
-
-          inputEl.dispatchEvent(
-            new Event("input")
-          );
-
-          sendMessage();
-
-        }
-      );
-
-    });
+      }
+    );
 
 }
 
@@ -168,11 +197,13 @@ function resizeInput() {
   inputEl.style.height =
     "43px";
 
+
   const newHeight =
     Math.min(
       inputEl.scrollHeight,
       100
     );
+
 
   inputEl.style.height =
     `${Math.max(
@@ -196,8 +227,12 @@ async function sendMessage(
   } = options;
 
 
-  if (isLoading) {
+  if (
+    isLoading
+  ) {
+
     return;
+
   }
 
 
@@ -205,8 +240,12 @@ async function sendMessage(
     inputEl.value.trim();
 
 
-  if (!message) {
+  if (
+    !message
+  ) {
+
     return;
+
   }
 
 
@@ -238,14 +277,20 @@ async function sendMessage(
 
 
   /*
-   * 75 sec timeout.
+   * Ο Worker έχει δικούς του
+   * μικρότερους timeouts.
+   *
+   * Εδώ κρατάμε μεγαλύτερο timeout
+   * για network variance.
    */
   const timeoutId =
     setTimeout(
       () => {
+
         controller.abort();
+
       },
-      75000
+      30000
     );
 
 
@@ -358,10 +403,6 @@ async function sendMessage(
         : [];
 
 
-    /*
-     * Τα chat results χρησιμοποιούνται
-     * για follow-up ερωτήσεις.
-     */
     previousFeatures =
       features;
 
@@ -378,10 +419,6 @@ async function sendMessage(
         : features;
 
 
-    /*
-     * Το Worker μπορεί επίσης να στείλει
-     * explicit mapCommand.
-     */
     const mapCommand =
       data.mapCommand ||
       null;
@@ -394,12 +431,13 @@ async function sendMessage(
     addChatActions(
       messageElement,
       features,
-      mapFeatures
+      mapFeatures,
+      mapCommand
     );
 
 
     /* =====================================================
-       MAP
+       MAP CONTROL
     ===================================================== */
 
     await updateMap(
@@ -464,7 +502,9 @@ async function sendMessage(
     );
 
 
-    if (voiceMode) {
+    if (
+      voiceMode
+    ) {
 
       stopVoiceMode();
 
@@ -556,9 +596,6 @@ function addMessage(
     "bubble";
 
 
-  /*
-   * Ασφαλές rendering.
-   */
   bubble.textContent =
     text;
 
@@ -690,10 +727,6 @@ function setLoading(
     voiceMode;
 
 
-  /*
-   * Πάντα διαθέσιμο για έξοδο
-   * από Voice Mode.
-   */
   voiceButton.disabled =
     false;
 
@@ -713,7 +746,8 @@ function setLoading(
 function addChatActions(
   messageElement,
   features,
-  mapFeatures = features
+  mapFeatures = features,
+  mapCommand = null
 ) {
 
   if (
@@ -737,7 +771,7 @@ function addChatActions(
 
 
   /* ==========================================================
-     ONE
+     ONE RESULT
   ========================================================== */
 
   if (
@@ -787,7 +821,7 @@ function addChatActions(
 
 
   /* ==========================================================
-     MANY
+     MANY RESULTS
   ========================================================== */
 
   else {
@@ -807,7 +841,9 @@ function addChatActions(
 
 
     const count =
-      Array.isArray(mapFeatures)
+      Array.isArray(
+        mapFeatures
+      )
         ? mapFeatures.length
         : features.length;
 
@@ -820,8 +856,34 @@ function addChatActions(
       "click",
       async () => {
 
-        await focusAllFeatures(
-          mapFeatures
+        /*
+         * Σημαντικό:
+         *
+         * Δεν κάνουμε πλέον μόνο
+         * focusAllFeatures().
+         *
+         * Ξαναπερνάμε τα features
+         * στο map pipeline ώστε
+         * να είμαστε σίγουροι ότι
+         * υπάρχουν πραγματικά
+         * graphics στον χάρτη.
+         */
+
+        await updateMap(
+          mapFeatures,
+          {
+            mode:
+              "all",
+
+            autoZoom:
+              true,
+
+            autoOpenPopup:
+              false,
+
+            targetCount:
+              count
+          }
         );
 
       }
@@ -833,13 +895,32 @@ function addChatActions(
     );
 
 
-    const firstFeature =
-      features[0];
+    /*
+     * Popup για το πρώτο
+     * αποτέλεσμα.
+     */
+    const firstMapButton =
+      createMapActionButton(
+        features[0],
+        "📍 Πρώτο σημείο",
+        false
+      );
+
+
+    if (
+      firstMapButton
+    ) {
+
+      actions.appendChild(
+        firstMapButton
+      );
+
+    }
 
 
     const routeButton =
       createRouteButton(
-        firstFeature,
+        features[0],
         "🧭 Οδηγίες για το πρώτο"
       );
 
@@ -858,11 +939,9 @@ function addChatActions(
 
 
   /*
-   * ΔΕΝ δημιουργούμε πλέον
-   * "🔊 Ακρόαση".
-   *
-   * Η φωνή γίνεται μόνο από
-   * Voice Conversation.
+   * Δεν υπάρχει "Ακρόαση".
+   * Η φωνή λειτουργεί μόνο
+   * με Voice Mode.
    */
 
 
@@ -883,7 +962,7 @@ function addChatActions(
 
 
 /* ============================================================
-   MAP ACTION
+   MAP ACTION BUTTON
 ============================================================ */
 
 function createMapActionButton(
@@ -926,6 +1005,16 @@ function createMapActionButton(
   button.addEventListener(
     "click",
     async () => {
+
+      /*
+       * Πριν το focus,
+       * εξασφαλίζουμε ότι το feature
+       * έχει graphic στον χάρτη.
+       */
+      await ensureFeatureOnMap(
+        feature
+      );
+
 
       await focusMapFeature(
         feature
@@ -1006,6 +1095,206 @@ function createRouteButton(
 
 
 /* ============================================================
+   WAIT FOR MAP
+============================================================ */
+
+async function waitForMapReady(
+  timeoutMs = 10000
+) {
+
+  if (
+    window.city4allMap?.view
+  ) {
+
+    try {
+
+      await window.city4allMap
+        .view
+        .when();
+
+      return true;
+
+    }
+
+    catch {
+
+      return false;
+
+    }
+
+  }
+
+
+  try {
+
+    await Promise.race([
+
+      mapReadyPromise,
+
+      new Promise(
+        resolve =>
+          setTimeout(
+            resolve,
+            timeoutMs
+          )
+      )
+
+    ]);
+
+  }
+
+  catch {
+
+    return false;
+
+  }
+
+
+  return Boolean(
+    window.city4allMap?.view
+  );
+
+}
+
+
+/* ============================================================
+   ENSURE FEATURE ON MAP
+============================================================ */
+
+async function ensureFeatureOnMap(
+  feature
+) {
+
+  if (
+    !hasCoordinates(
+      feature
+    )
+  ) {
+
+    return false;
+
+  }
+
+
+  const ready =
+    await waitForMapReady();
+
+
+  if (
+    !ready
+  ) {
+
+    return false;
+
+  }
+
+
+  const map =
+    window.city4allMap;
+
+
+  if (
+    !map?.resultsLayer ||
+    !map?.Graphic
+  ) {
+
+    return false;
+
+  }
+
+
+  const existing =
+    findGraphicForFeature(
+      feature
+    );
+
+
+  if (
+    existing
+  ) {
+
+    return true;
+
+  }
+
+
+  /*
+   * Αν δεν υπάρχει graphic,
+   * δημιουργούμε μόνο αυτό
+   * το feature.
+   */
+
+  try {
+
+    const latitude =
+      Number(
+        feature.latitude
+      );
+
+
+    const longitude =
+      Number(
+        feature.longitude
+      );
+
+
+    const Graphic =
+      map.Graphic;
+
+
+    const key =
+      getFeatureKey(
+        feature,
+        0
+      );
+
+
+    const graphic =
+      createGraphicForFeature(
+        feature,
+        0,
+        key,
+        Graphic
+      );
+
+
+    map.resultsLayer.add(
+      graphic
+    );
+
+
+    map.lastGraphics =
+      map.resultsLayer
+        .graphics
+        .toArray();
+
+
+    map.lastFeatures =
+      [
+        feature
+      ];
+
+
+    return true;
+
+  }
+
+  catch (error) {
+
+    console.warn(
+      "Could not ensure feature on map:",
+      error
+    );
+
+
+    return false;
+
+  }
+
+}
+
+
+/* ============================================================
    UPDATE MAP
 ============================================================ */
 
@@ -1017,9 +1306,25 @@ async function updateMap(
   try {
 
     /*
-     * Πραγματική αναμονή για ArcGIS.
+     * Πραγματικό wait.
      */
-    await mapReadyPromise;
+    const ready =
+      await waitForMapReady(
+        10000
+      );
+
+
+    if (
+      !ready
+    ) {
+
+      console.warn(
+        "City4All map is not ready."
+      );
+
+      return;
+
+    }
 
 
     const map =
@@ -1033,7 +1338,7 @@ async function updateMap(
     ) {
 
       console.warn(
-        "City4All map is not ready."
+        "City4All map object is incomplete."
       );
 
       return;
@@ -1045,11 +1350,12 @@ async function updateMap(
       view,
       resultsLayer,
       Graphic
-    } = map;
+    } =
+      map;
 
 
     /*
-     * Κλείσε προηγούμενο popup.
+     * Κλείσιμο παλιού popup.
      */
     try {
 
@@ -1062,19 +1368,28 @@ async function updateMap(
     }
 
 
+    /*
+     * Καθαρισμός παλιών results.
+     */
     resultsLayer.removeAll();
 
 
     const validFeatures =
       Array.isArray(features)
+
         ? features.filter(
             hasCoordinates
           )
+
         : [];
 
 
     map.lastFeatures =
       validFeatures;
+
+
+    map.lastGraphics =
+      [];
 
 
     if (
@@ -1091,277 +1406,57 @@ async function updateMap(
     ======================================================== */
 
     const graphics =
-      [];
+      validFeatures.map(
+        (
+          feature,
+          index
+        ) => {
+
+          const key =
+            getFeatureKey(
+              feature,
+              index
+            );
 
 
-    validFeatures.forEach(
-      (
-        feature,
-        index
-      ) => {
-
-        const latitude =
-          Number(
-            feature.latitude
-          );
-
-
-        const longitude =
-          Number(
-            feature.longitude
-          );
-
-
-        const key =
-          getFeatureKey(
+          return createGraphicForFeature(
             feature,
-            index
+            index,
+            key,
+            Graphic
           );
 
-
-        const area =
-          feature.area ||
-          feature.municipality ||
-          feature.region ||
-          feature.country ||
-          "";
-
-
-        const source =
-          feature.external
-            ? "Internet / OpenStreetMap"
-            : "City4All";
-
-
-        const accessibility =
-          feature.accessibility ||
-          "Δεν έχει καταχωρηθεί πληροφορία";
-
-
-        const website =
-          feature.website
-            ? escapePopupText(
-                feature.website
-              )
-            : "";
-
-
-        const phone =
-          feature.phone
-            ? escapePopupText(
-                feature.phone
-              )
-            : "";
-
-
-        const websiteHtml =
-          website
-            ? `
-              <br><br>
-              <strong>Website:</strong>
-              ${website}
-            `
-            : "";
-
-
-        const phoneHtml =
-          phone
-            ? `
-              <br><br>
-              <strong>Τηλέφωνο:</strong>
-              ${phone}
-            `
-            : "";
-
-
-        const graphic =
-          new Graphic({
-
-            geometry: {
-
-              type:
-                "point",
-
-              longitude,
-
-              latitude
-
-            },
-
-
-            symbol: {
-
-              type:
-                "simple-marker",
-
-              size:
-                feature.external
-                  ? 12
-                  : 15,
-
-              color:
-                feature.external
-                  ? "#f59e0b"
-                  : "#1976d2",
-
-              outline: {
-
-                color:
-                  "#ffffff",
-
-                width:
-                  2
-
-              }
-
-            },
-
-
-            attributes: {
-
-              city4allKey:
-                key,
-
-              name:
-                feature.name ||
-                "Σημείο",
-
-              type:
-                feature.type ||
-                "Σημείο",
-
-              accessibility,
-
-              area,
-
-              municipality:
-                feature.municipality ||
-                "",
-
-              prefecture:
-                feature.prefecture ||
-                "",
-
-              region:
-                feature.region ||
-                "",
-
-              country:
-                feature.country ||
-                "",
-
-              source,
-
-              website:
-                feature.website ||
-                "",
-
-              phone:
-                feature.phone ||
-                "",
-
-              index:
-                index + 1
-
-            },
-
-
-            popupTemplate: {
-
-              title:
-                "{index}. {name}",
-
-              content: [
-
-                {
-
-                  type:
-                    "text",
-
-                  text: `
-
-                    <strong>Πηγή:</strong>
-                    {source}
-
-                    <br><br>
-
-                    <strong>Κατηγορία:</strong>
-                    {type}
-
-                    <br><br>
-
-                    <strong>Περιοχή:</strong>
-                    {area}
-
-                    <br><br>
-
-                    <strong>Δήμος:</strong>
-                    {municipality}
-
-                    <br><br>
-
-                    <strong>Περιφέρεια:</strong>
-                    {region}
-
-                    <br><br>
-
-                    <strong>Χώρα:</strong>
-                    {country}
-
-                    <br><br>
-
-                    <strong>Προσβασιμότητα:</strong>
-                    {accessibility}
-
-                    ${websiteHtml}
-
-                    ${phoneHtml}
-
-                  `
-
-                }
-
-              ]
-
-            }
-
-          });
-
-
-        /*
-         * Κρατάμε το feature επάνω
-         * στο Graphic για απόλυτο matching.
-         */
-        graphic.__city4allFeature =
-          feature;
-
-
-        graphics.push(
-          graphic
-        );
-
-      }
-    );
+        }
+      );
 
 
     /*
-     * Προσθέτουμε τα graphics
-     * μαζικά.
+     * Μαζική προσθήκη.
      */
     resultsLayer.addMany(
       graphics
     );
 
 
-    /*
-     * Αποθηκεύουμε references.
-     */
     map.lastGraphics =
       graphics;
 
 
+    /*
+     * Επιβεβαιώνουμε ότι
+     * τα graphics μπήκαν
+     * στο layer.
+     */
+    await new Promise(
+      resolve =>
+        requestAnimationFrame(
+          resolve
+        )
+    );
+
+
     /* ========================================================
-       MAP COMMAND
+       SINGLE
     ======================================================== */
 
     if (
@@ -1369,24 +1464,52 @@ async function updateMap(
     ) {
 
       await focusMapFeature(
-        validFeatures[0]
+        validFeatures[0],
+        {
+          openPopup:
+            true
+        }
       );
+
 
       return;
 
     }
 
 
-    /*
-     * Πολλά σημεία:
-     * γρήγορο zoom σε όλα.
-     */
+    /* ========================================================
+       MANY
+    ======================================================== */
+
     if (
       mapCommand?.autoZoom !== false
     ) {
 
       await focusAllFeatures(
         validFeatures
+      );
+
+    }
+
+
+    /*
+     * Για πολλά σημεία δεν ανοίγουμε
+     * 300 popups μαζί.
+     *
+     * Ανοίγουμε το popup του πρώτου
+     * μόνο όταν το Worker ζητά
+     * explicit autoOpenPopup.
+     */
+    if (
+      mapCommand?.autoOpenPopup === true
+    ) {
+
+      await focusMapFeature(
+        validFeatures[0],
+        {
+          openPopup:
+            true
+        }
       );
 
     }
@@ -1406,6 +1529,270 @@ async function updateMap(
 
 
 /* ============================================================
+   CREATE GRAPHIC
+============================================================ */
+
+function createGraphicForFeature(
+  feature,
+  index,
+  key,
+  Graphic
+) {
+
+  const latitude =
+    Number(
+      feature.latitude
+    );
+
+
+  const longitude =
+    Number(
+      feature.longitude
+    );
+
+
+  const area =
+    feature.area ||
+    feature.municipality ||
+    feature.region ||
+    feature.country ||
+    "";
+
+
+  const source =
+    feature.external
+      ? "Internet / OpenStreetMap"
+      : "City4All";
+
+
+  const accessibility =
+    feature.accessibility ||
+    "Δεν έχει καταχωρηθεί πληροφορία";
+
+
+  const website =
+    feature.website
+      ? escapePopupText(
+          feature.website
+        )
+      : "";
+
+
+  const phone =
+    feature.phone
+      ? escapePopupText(
+          feature.phone
+        )
+      : "";
+
+
+  const comments =
+    feature.comments
+      ? escapePopupText(
+          feature.comments
+        )
+      : "";
+
+
+  const websiteHtml =
+    website
+      ? `
+        <br><br>
+        <strong>Website:</strong>
+        ${website}
+      `
+      : "";
+
+
+  const phoneHtml =
+    phone
+      ? `
+        <br><br>
+        <strong>Τηλέφωνο:</strong>
+        ${phone}
+      `
+      : "";
+
+
+  const commentsHtml =
+    comments
+      ? `
+        <br><br>
+        <strong>Σχόλια:</strong>
+        ${comments}
+      `
+      : "";
+
+
+  const graphic =
+    new Graphic({
+
+      geometry: {
+
+        type:
+          "point",
+
+        longitude,
+
+        latitude
+
+      },
+
+
+      symbol: {
+
+        type:
+          "simple-marker",
+
+        size:
+          feature.external
+            ? 12
+            : 15,
+
+        color:
+          feature.external
+            ? "#f59e0b"
+            : "#1976d2",
+
+        outline: {
+
+          color:
+            "#ffffff",
+
+          width:
+            2
+
+        }
+
+      },
+
+
+      attributes: {
+
+        city4allKey:
+          key,
+
+        name:
+          feature.name ||
+          "Σημείο",
+
+        type:
+          feature.type ||
+          "Σημείο",
+
+        accessibility,
+
+        area,
+
+        municipality:
+          feature.municipality ||
+          "",
+
+        prefecture:
+          feature.prefecture ||
+          "",
+
+        region:
+          feature.region ||
+          "",
+
+        country:
+          feature.country ||
+          "",
+
+        source,
+
+        website:
+          feature.website ||
+          "",
+
+        phone:
+          feature.phone ||
+          "",
+
+        index:
+          index + 1
+
+      },
+
+
+      popupTemplate: {
+
+        title:
+          "{index}. {name}",
+
+        content: [
+
+          {
+
+            type:
+              "text",
+
+            text: `
+
+              <strong>Πηγή:</strong>
+              {source}
+
+              <br><br>
+
+              <strong>Κατηγορία:</strong>
+              {type}
+
+              <br><br>
+
+              <strong>Περιοχή:</strong>
+              {area}
+
+              <br><br>
+
+              <strong>Δήμος:</strong>
+              {municipality}
+
+              <br><br>
+
+              <strong>Περιφέρεια:</strong>
+              {region}
+
+              <br><br>
+
+              <strong>Χώρα:</strong>
+              {country}
+
+              <br><br>
+
+              <strong>Προσβασιμότητα:</strong>
+              {accessibility}
+
+              ${commentsHtml}
+
+              ${websiteHtml}
+
+              ${phoneHtml}
+
+            `
+
+          }
+
+        ]
+
+      }
+
+    });
+
+
+  /*
+   * Ολόκληρο το feature.
+   */
+  graphic.__city4allFeature =
+    feature;
+
+
+  return graphic;
+
+}
+
+
+/* ============================================================
    FEATURE KEY
 ============================================================ */
 
@@ -1415,8 +1802,10 @@ function getFeatureKey(
 ) {
 
   if (
-    feature?.objectId !== undefined &&
-    feature?.objectId !== null &&
+    feature?.objectId !==
+      undefined &&
+    feature?.objectId !==
+      null &&
     String(
       feature.objectId
     ).trim() !== ""
@@ -1430,8 +1819,10 @@ function getFeatureKey(
 
 
   if (
-    feature?.objectid !== undefined &&
-    feature?.objectid !== null &&
+    feature?.objectid !==
+      undefined &&
+    feature?.objectid !==
+      null &&
     String(
       feature.objectid
     ).trim() !== ""
@@ -1504,7 +1895,7 @@ function findGraphicForFeature(
 
 
   /*
-   * 2. objectId.
+   * 2. Object ID.
    */
   const objectId =
     feature?.objectId ??
@@ -1530,7 +1921,8 @@ function findGraphicForFeature(
             graphic.attributes
               ?.city4allKey ??
               ""
-          ) === wanted
+          ) ===
+          wanted
       );
 
 
@@ -1566,31 +1958,39 @@ function findGraphicForFeature(
 
         const gLat =
           Number(
-            graphic.geometry?.latitude
+            graphic.geometry
+              ?.latitude
           );
 
 
         const gLon =
           Number(
-            graphic.geometry?.longitude
+            graphic.geometry
+              ?.longitude
           );
 
 
         return (
 
-          Number.isFinite(gLat) &&
+          Number.isFinite(
+            gLat
+          ) &&
 
-          Number.isFinite(gLon) &&
+          Number.isFinite(
+            gLon
+          ) &&
 
           Math.abs(
             gLat -
             latitude
-          ) < 0.000001 &&
+          ) <
+          0.000001 &&
 
           Math.abs(
             gLon -
             longitude
-          ) < 0.000001
+          ) <
+          0.000001
 
         );
 
@@ -1609,7 +2009,8 @@ function findGraphicForFeature(
 ============================================================ */
 
 async function focusMapFeature(
-  feature
+  feature,
+  options = {}
 ) {
 
   if (
@@ -1618,14 +2019,33 @@ async function focusMapFeature(
     )
   ) {
 
-    return;
+    return false;
 
   }
 
 
+  const {
+    openPopup =
+      true
+  } =
+    options;
+
+
   try {
 
-    await mapReadyPromise;
+    const ready =
+      await waitForMapReady(
+        10000
+      );
+
+
+    if (
+      !ready
+    ) {
+
+      return false;
+
+    }
 
 
     const map =
@@ -1636,11 +2056,16 @@ async function focusMapFeature(
       map?.view;
 
 
+    const resultsLayer =
+      map?.resultsLayer;
+
+
     if (
-      !view
+      !view ||
+      !resultsLayer
     ) {
 
-      return;
+      return false;
 
     }
 
@@ -1658,11 +2083,38 @@ async function focusMapFeature(
 
 
     /*
-     * Zoom.
+     * Το graphic πρέπει να υπάρχει.
+     */
+    let graphic =
+      findGraphicForFeature(
+        feature
+      );
+
+
+    if (
+      !graphic
+    ) {
+
+      await ensureFeatureOnMap(
+        feature
+      );
+
+
+      graphic =
+        findGraphicForFeature(
+          feature
+        );
+
+    }
+
+
+    /*
+     * Zoom στο σημείο.
      */
     await view.goTo(
 
       {
+
         center: [
           longitude,
           latitude
@@ -1676,7 +2128,7 @@ async function focusMapFeature(
       {
 
         duration:
-          800
+          850
 
       }
 
@@ -1684,37 +2136,38 @@ async function focusMapFeature(
 
 
     /*
-     * Βρες Graphic.
+     * Άνοιγμα πραγματικού
+     * ArcGIS popup.
      */
-    const graphic =
-      findGraphicForFeature(
-        feature
+    if (
+      openPopup &&
+      graphic
+    ) {
+
+      await new Promise(
+        resolve =>
+          setTimeout(
+            resolve,
+            120
+          )
       );
 
 
-    if (
-      !graphic
-    ) {
+      await view.openPopup({
 
-      return;
+        features: [
+          graphic
+        ],
+
+        location:
+          graphic.geometry
+
+      });
 
     }
 
 
-    /*
-     * Άνοιξε πραγματικό
-     * ArcGIS popup.
-     */
-    await view.openPopup({
-
-      features: [
-        graphic
-      ],
-
-      location:
-        graphic.geometry
-
-    });
+    return true;
 
   }
 
@@ -1724,6 +2177,9 @@ async function focusMapFeature(
       "Could not focus to feature:",
       error
     );
+
+
+    return false;
 
   }
 
@@ -1740,9 +2196,11 @@ async function focusAllFeatures(
 
   const validFeatures =
     Array.isArray(features)
+
       ? features.filter(
           hasCoordinates
         )
+
       : [];
 
 
@@ -1750,27 +2208,42 @@ async function focusAllFeatures(
     !validFeatures.length
   ) {
 
-    return;
+    return false;
 
   }
 
 
   if (
-    validFeatures.length === 1
+    validFeatures.length ===
+    1
   ) {
 
-    await focusMapFeature(
-      validFeatures[0]
+    return focusMapFeature(
+      validFeatures[0],
+      {
+        openPopup:
+          true
+      }
     );
-
-    return;
 
   }
 
 
   try {
 
-    await mapReadyPromise;
+    const ready =
+      await waitForMapReady(
+        10000
+      );
+
+
+    if (
+      !ready
+    ) {
+
+      return false;
+
+    }
 
 
     const view =
@@ -1781,19 +2254,11 @@ async function focusAllFeatures(
       !view
     ) {
 
-      return;
+      return false;
 
     }
 
 
-    /*
-     * Δεν δημιουργούμε
-     * επιπλέον graphics.
-     *
-     * Απλώς χρησιμοποιούμε
-     * τα coordinates για
-     * το extent.
-     */
     const points =
       validFeatures.map(
         feature => ({
@@ -1816,8 +2281,7 @@ async function focusAllFeatures(
 
 
     /*
-     * ArcGIS κάνει fit όλα
-     * τα points στο viewport.
+     * goTo με πολλαπλά σημεία.
      */
     await view.goTo(
 
@@ -1842,11 +2306,14 @@ async function focusAllFeatures(
         },
 
         duration:
-          900
+          950
 
       }
 
     );
+
+
+    return true;
 
   }
 
@@ -1857,7 +2324,227 @@ async function focusAllFeatures(
       error
     );
 
+
+    /*
+     * Fallback:
+     *
+     * Αν το array goTo αποτύχει,
+     * κάνουμε center στο bounding box
+     * των coordinates.
+     */
+    try {
+
+      return await fallbackFitMap(
+        validFeatures
+      );
+
+    }
+
+    catch {
+
+      return false;
+
+    }
+
   }
+
+}
+
+
+/* ============================================================
+   FALLBACK FIT MAP
+============================================================ */
+
+async function fallbackFitMap(
+  features
+) {
+
+  const view =
+    window.city4allMap?.view;
+
+
+  if (
+    !view ||
+    !features.length
+  ) {
+
+    return false;
+
+  }
+
+
+  const longitudes =
+    features.map(
+      feature =>
+        Number(
+          feature.longitude
+        )
+    );
+
+
+  const latitudes =
+    features.map(
+      feature =>
+        Number(
+          feature.latitude
+        )
+    );
+
+
+  const minLon =
+    Math.min(
+      ...longitudes
+    );
+
+
+  const maxLon =
+    Math.max(
+      ...longitudes
+    );
+
+
+  const minLat =
+    Math.min(
+      ...latitudes
+    );
+
+
+  const maxLat =
+    Math.max(
+      ...latitudes
+    );
+
+
+  const centerLon =
+    (
+      minLon +
+      maxLon
+    ) / 2;
+
+
+  const centerLat =
+    (
+      minLat +
+      maxLat
+    ) / 2;
+
+
+  /*
+   * Rough dynamic zoom.
+   */
+  const lonSpan =
+    Math.max(
+      0.01,
+      maxLon -
+      minLon
+    );
+
+
+  const latSpan =
+    Math.max(
+      0.01,
+      maxLat -
+      minLat
+    );
+
+
+  const span =
+    Math.max(
+      lonSpan,
+      latSpan
+    );
+
+
+  let zoom =
+    12;
+
+
+  if (
+    span < 0.01
+  ) {
+
+    zoom =
+      16;
+
+  }
+
+  else if (
+    span < 0.03
+  ) {
+
+    zoom =
+      14;
+
+  }
+
+  else if (
+    span < 0.08
+  ) {
+
+    zoom =
+      12;
+
+  }
+
+  else if (
+    span < 0.2
+  ) {
+
+    zoom =
+      10;
+
+  }
+
+  else if (
+    span < 0.5
+  ) {
+
+    zoom =
+      8;
+
+  }
+
+  else if (
+    span < 1
+  ) {
+
+    zoom =
+      7;
+
+  }
+
+  else {
+
+    zoom =
+      5;
+
+  }
+
+
+  await view.goTo(
+
+    {
+
+      center: [
+        centerLon,
+        centerLat
+      ],
+
+      zoom
+
+    },
+
+    {
+
+      duration:
+        900
+
+    }
+
+  );
+
+
+  return true;
 
 }
 
@@ -2133,7 +2820,9 @@ function setupVoice() {
 
 
       inputEl.dispatchEvent(
-        new Event("input")
+        new Event(
+          "input"
+        )
       );
 
 
@@ -2173,9 +2862,14 @@ function setupVoice() {
 
 
       if (
-        event.error === "aborted" ||
-        event.error === "no-speech" ||
-        event.error === "network"
+        event.error ===
+          "aborted" ||
+
+        event.error ===
+          "no-speech" ||
+
+        event.error ===
+          "network"
       ) {
 
         return;
@@ -2375,7 +3069,7 @@ function stopVoiceMode() {
 
 
 /* ============================================================
-   RESET VOICE BUTTON
+   RESET VOICE
 ============================================================ */
 
 function resetVoiceButton() {
@@ -2585,11 +3279,6 @@ function setupMobileViewport() {
       );
 
 
-      /*
-       * Βοηθάει το ArcGIS να
-       * ξαναϋπολογίζει το container
-       * σε αλλαγή viewport.
-       */
       requestAnimationFrame(
         () => {
 
@@ -2749,9 +3438,8 @@ window.addEventListener(
 
 
       /*
-       * Τώρα πλέον το promise
-       * λύνει μόνο όταν το map
-       * είναι πραγματικά έτοιμο.
+       * Από εδώ και πέρα
+       * επιτρέπουμε map control.
        */
       resolveMapReady();
 
@@ -2767,7 +3455,7 @@ window.addEventListener(
 
       /*
        * Δεν αφήνουμε requests
-       * να κρέμονται για πάντα.
+       * να περιμένουν για πάντα.
        */
       resolveMapReady();
 
@@ -2775,7 +3463,7 @@ window.addEventListener(
 
   },
   {
-    once: true
+    once:
+      true
   }
 );
-
