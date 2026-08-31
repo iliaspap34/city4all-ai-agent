@@ -6,7 +6,7 @@ const API_BASE =
 "https://city4allfinalai.ilias-pap-net.workers.dev";
 
 const CHAT_URL =
-${API_BASE}/chat;
+`${API_BASE}/chat`;
 
 /* ============================================================
 STATE
@@ -39,19 +39,19 @@ let mapReadyResolved = false;
 const mapReadyPromise =
 new Promise(resolve => {
 
-resolveMapReady =
-  () => {
+```
+resolveMapReady = () => {
 
-    if (mapReadyResolved) {
-      return;
-    }
+  if (mapReadyResolved) {
+    return;
+  }
 
-    mapReadyResolved =
-      true;
+  mapReadyResolved = true;
 
-    resolve();
+  resolve();
 
-  };
+};
+```
 
 });
 
@@ -63,11 +63,10 @@ return;
 
 try {
 
+```
 if (window.city4allMap.view.when) {
 
-  window.city4allMap
-    .view
-    .when()
+  window.city4allMap.view.when()
     .then(() => {
       resolveMapReady();
     })
@@ -80,10 +79,13 @@ if (window.city4allMap.view.when) {
   resolveMapReady();
 
 }
+```
 
 } catch {
 
+```
 resolveMapReady();
+```
 
 }
 
@@ -96,24 +98,16 @@ DOM
 ============================================================ */
 
 const messagesEl =
-document.getElementById(
-"messages"
-);
+document.getElementById("messages");
 
 const inputEl =
-document.getElementById(
-"messageInput"
-);
+document.getElementById("messageInput");
 
 const sendButton =
-document.getElementById(
-"sendButton"
-);
+document.getElementById("sendButton");
 
 const voiceButton =
-document.getElementById(
-"voiceButton"
-);
+document.getElementById("voiceButton");
 
 /* ============================================================
 INITIALIZATION
@@ -123,6 +117,7 @@ document.addEventListener(
 "DOMContentLoaded",
 () => {
 
+```
 setupQuickActions();
 
 setupInput();
@@ -138,6 +133,7 @@ initializeMermaid();
 console.log(
   "City4All AI frontend loaded."
 );
+```
 
 }
 );
@@ -148,32 +144,30 @@ MERMAID
 
 function initializeMermaid() {
 
-if (
-typeof mermaid ===
-"undefined"
-) {
+if (typeof mermaid === "undefined") {
 
+```
 console.warn(
   "Mermaid library not available."
 );
 
 return;
+```
 
 }
 
 mermaid.initialize({
 
-startOnLoad:
-  false,
+```
+startOnLoad: false,
 
-securityLevel:
-  "strict",
+securityLevel: "strict",
 
-theme:
-  "default",
+theme: "default",
 
 fontFamily:
   "Arial, Helvetica, sans-serif"
+```
 
 });
 
@@ -186,42 +180,41 @@ QUICK ACTIONS
 function setupQuickActions() {
 
 document
-.querySelectorAll(
-".quick-button"
-)
-.forEach(
-button => {
+.querySelectorAll(".quick-button")
+.forEach(button => {
 
-    button.addEventListener(
-      "click",
-      () => {
+```
+  button.addEventListener(
+    "click",
+    () => {
 
-        const question =
-          button.dataset.question;
+      const question =
+        button.dataset.question;
 
-        if (
-          !question ||
-          isLoading
-        ) {
+      if (
+        !question ||
+        isLoading ||
+        !inputEl
+      ) {
 
-          return;
-
-        }
-
-        inputEl.value =
-          question;
-
-        inputEl.dispatchEvent(
-          new Event("input")
-        );
-
-        sendMessage();
+        return;
 
       }
-    );
 
-  }
-);
+      inputEl.value =
+        question;
+
+      inputEl.dispatchEvent(
+        new Event("input")
+      );
+
+      sendMessage();
+
+    }
+  );
+
+});
+```
 
 }
 
@@ -239,6 +232,7 @@ inputEl.addEventListener(
 "keydown",
 event => {
 
+```
   if (
     event.key === "Enter" &&
     !event.shiftKey
@@ -251,6 +245,7 @@ event => {
   }
 
 }
+```
 
 );
 
@@ -284,7 +279,10 @@ inputEl.scrollHeight,
 );
 
 inputEl.style.height =
-${Math.max( 43, newHeight )}px;
+`${Math.max(
+      43,
+      newHeight
+    )}px`;
 
 }
 
@@ -305,8 +303,7 @@ return;
 }
 
 const message =
-inputEl?.value?.trim() ||
-"";
+inputEl?.value?.trim() || "";
 
 if (!message) {
 return;
@@ -319,15 +316,18 @@ addMessage(
 message
 );
 
-inputEl.value =
-"";
+if (inputEl) {
+
+```
+inputEl.value = "";
 
 inputEl.style.height =
-"43px";
+  "43px";
+```
 
-setLoading(
-true
-);
+}
+
+setLoading(true);
 
 const loadingMessage =
 addLoadingMessage();
@@ -345,19 +345,17 @@ controller.abort();
 
 try {
 
+```
 const response =
   await fetch(
     CHAT_URL,
     {
 
-      method:
-        "POST",
+      method: "POST",
 
       headers: {
-
         "Content-Type":
           "application/json"
-
       },
 
       body:
@@ -517,11 +515,13 @@ if (
   );
 
 }
+```
 
 }
 
 catch (error) {
 
+```
 clearTimeout(
   timeoutId
 );
@@ -543,8 +543,7 @@ let errorMessage =
 
 
 if (
-  error?.name ===
-  "AbortError"
+  error?.name === "AbortError"
 ) {
 
   errorMessage =
@@ -562,14 +561,15 @@ addMessage(
 if (voiceMode) {
   stopVoiceMode();
 }
+```
 
 }
 
 finally {
 
-setLoading(
-  false
-);
+```
+setLoading(false);
+```
 
 }
 
@@ -586,33 +586,34 @@ assistantMessage
 
 conversation.push({
 
-role:
-  "user",
+```
+role: "user",
 
 content:
   userMessage
+```
 
 });
 
 conversation.push({
 
-role:
-  "assistant",
+```
+role: "assistant",
 
 content:
   assistantMessage
+```
 
 });
 
 if (
-conversation.length >
-20
+conversation.length > 20
 ) {
 
+```
 conversation =
-  conversation.slice(
-    -20
-  );
+  conversation.slice(-20);
+```
 
 }
 
@@ -633,21 +634,16 @@ return null;
 }
 
 const wrapper =
-document.createElement(
-"div"
-);
+document.createElement("div");
 
 wrapper.className =
-message ${role};
+`message ${role}`;
 
-if (
-role === "ai"
-) {
+if (role === "ai") {
 
+```
 const meta =
-  document.createElement(
-    "div"
-  );
+  document.createElement("div");
 
 
 meta.className =
@@ -665,30 +661,29 @@ meta.innerHTML = `
 wrapper.appendChild(
   meta
 );
+```
 
 }
 
 const bubble =
-document.createElement(
-"div"
-);
+document.createElement("div");
 
 bubble.className =
 "bubble";
 
-if (
-role === "ai"
-) {
+if (role === "ai") {
 
+```
 bubble.innerHTML =
-  renderMarkdown(
-    text
-  );
+  renderMarkdown(text);
+```
 
 } else {
 
+```
 bubble.textContent =
   text;
+```
 
 }
 
@@ -701,6 +696,7 @@ role === "ai" &&
 externalInfo
 ) {
 
+```
 const externalCard =
   createExternalInfoCard(
     externalInfo
@@ -714,6 +710,7 @@ if (externalCard) {
   );
 
 }
+```
 
 }
 
@@ -744,33 +741,25 @@ return "";
 }
 
 let text =
-String(
-markdown
-)
-.replace(
-/\r\n/g,
-"\n"
-)
-.replace(
-/\r/g,
-"\n"
-);
+String(markdown)
+.replace(/\r\n/g, "\n")
+.replace(/\r/g, "\n");
 
 /* ==========================================================
 MERMAID BLOCKS
 ========================================================== */
 
-const mermaidBlocks =
-[];
+const mermaidBlocks = [];
 
 text =
 text.replace(
-/mermaid\s*\n([\s\S]*?)/gi,
+/`mermaid\s*\n([\s\S]*?)`/gi,
 (
 match,
 diagram
 ) => {
 
+```
     const index =
       mermaidBlocks.length;
 
@@ -786,23 +775,24 @@ diagram
 
   }
 );
+```
 
 /* ==========================================================
 NORMAL CODE BLOCKS
 ========================================================== */
 
-const codeBlocks =
-[];
+const codeBlocks = [];
 
 text =
 text.replace(
-/([\w-]*)\s*\n([\s\S]*?)/g,
+/`([\w-]*)\s*\n([\s\S]*?)`/g,
 (
 match,
 language,
 code
 ) => {
 
+```
     const index =
       codeBlocks.length;
 
@@ -811,8 +801,7 @@ code
 
       language:
         String(
-          language ||
-          ""
+          language || ""
         ).toLowerCase(),
 
       code:
@@ -827,24 +816,21 @@ code
 
   }
 );
+```
 
 /* ==========================================================
 ESCAPE HTML
 ========================================================== */
 
 text =
-escapeHTML(
-text
-);
+escapeHTML(text);
 
 /* ==========================================================
 TABLES
 ========================================================== */
 
 text =
-renderMarkdownTables(
-text
-);
+renderMarkdownTables(text);
 
 /* ==========================================================
 HEADINGS
@@ -892,13 +878,14 @@ MARKDOWN LINKS
 
 text =
 text.replace(
-/([^]+)]\((https?:\/\/[^\s)]+)\)/g,
+/\(([^\)]+)]\((https?:\/\/[^\s)]+)\)/g,
 (
 match,
 label,
 url
 ) => {
 
+```
     return (
       `<a href="${escapeAttribute(url)}"` +
       ` target="_blank"` +
@@ -909,6 +896,7 @@ url
 
   }
 );
+```
 
 /* ==========================================================
 RAW URLS
@@ -923,6 +911,7 @@ prefix,
 url
 ) => {
 
+```
     const cleanUrl =
       url.replace(
         /[),.;!?]+$/,
@@ -941,6 +930,7 @@ url
 
   }
 );
+```
 
 /* ==========================================================
 BOLD
@@ -958,7 +948,7 @@ ITALIC
 
 text =
 text.replace(
-/(^|[^])*([^\n]+)*(?!*)/g,
+/(^|[^*])*([^*\n]+)*(?!*)/g,
 "$1<em>$2</em>"
 );
 
@@ -968,7 +958,7 @@ INLINE CODE
 
 text =
 text.replace(
-/([^\n]+)`/g,
+/`([^`\n]+)`/g,
 "<code>$1</code>"
 );
 
@@ -988,12 +978,13 @@ UNORDERED LIST
 
 text =
 text.replace(
-/(?:^|\n)((?:[-]\s+.(?:\n|$))+)/g,
+/(?:^|\n)((?:[-*]\s+.*(?:\n|$))+)/g,
 (
 match,
 block
 ) => {
 
+```
     const items =
       block
         .trim()
@@ -1021,6 +1012,7 @@ block
 
   }
 );
+```
 
 /* ==========================================================
 ORDERED LIST
@@ -1034,6 +1026,7 @@ match,
 block
 ) => {
 
+```
     const items =
       block
         .trim()
@@ -1061,15 +1054,14 @@ block
 
   }
 );
+```
 
 /* ==========================================================
 PARAGRAPHS
 ========================================================== */
 
 text =
-convertPlainTextParagraphs(
-text
-);
+convertPlainTextParagraphs(text);
 
 /* ==========================================================
 CODE BLOCKS
@@ -1081,18 +1073,18 @@ block,
 index
 ) => {
 
+```
   const token =
     `@@CODEBLOCK_${index}@@`;
 
 
-  const replacement =
-    `
-      <div class="code-block">
-        <code>${escapeHTML(
-          block.code
-        )}</code>
-      </div>
-    `;
+  const replacement = `
+    <div class="code-block">
+      <code>${escapeHTML(
+        block.code
+      )}</code>
+    </div>
+  `;
 
 
   text =
@@ -1102,6 +1094,7 @@ index
     );
 
 }
+```
 
 );
 
@@ -1115,6 +1108,7 @@ diagram,
 index
 ) => {
 
+```
   const token =
     `@@MERMAID_${index}@@`;
 
@@ -1128,6 +1122,7 @@ index
     );
 
 }
+```
 
 );
 
@@ -1144,21 +1139,17 @@ text
 ) {
 
 const lines =
-text.split(
-"\n"
-);
+text.split("\n");
 
-const output =
-[];
+const output = [];
 
-let i =
-0;
+let i = 0;
 
 while (
-i <
-lines.length
+i < lines.length
 ) {
 
+```
 const current =
   lines[i];
 
@@ -1171,9 +1162,7 @@ if (
   current &&
   next &&
   current.includes("|") &&
-  /^\s*\|?\s*:?-{3,}/.test(
-    next
-  )
+  /^\s*\|?\s*:?-{3,}/.test(next)
 ) {
 
   const headers =
@@ -1185,13 +1174,11 @@ if (
   i += 2;
 
 
-  const rows =
-    [];
+  const rows = [];
 
 
   while (
-    i <
-    lines.length &&
+    i < lines.length &&
     lines[i].includes("|") &&
     lines[i].trim() !== ""
   ) {
@@ -1231,8 +1218,7 @@ if (
   rows.forEach(
     row => {
 
-      html +=
-        "<tr>";
+      html += "<tr>";
 
 
       headers.forEach(
@@ -1275,12 +1261,11 @@ output.push(
 
 
 i++;
+```
 
 }
 
-return output.join(
-"\n"
-);
+return output.join("\n");
 
 }
 
@@ -1295,10 +1280,10 @@ if (
 cleaned.startsWith("|")
 ) {
 
+```
 cleaned =
-  cleaned.slice(
-    1
-  );
+  cleaned.slice(1);
+```
 
 }
 
@@ -1306,11 +1291,13 @@ if (
 cleaned.endsWith("|")
 ) {
 
+```
 cleaned =
   cleaned.slice(
     0,
     -1
   );
+```
 
 }
 
@@ -1332,14 +1319,13 @@ text
 ) {
 
 const blocks =
-text.split(
-/\n{2,}/
-);
+text.split(/\n{2,}/);
 
 return blocks
 .map(
 block => {
 
+```
     const trimmed =
       block.trim();
 
@@ -1361,9 +1347,7 @@ block => {
 
 
     if (
-      trimmed.includes(
-        "<br>"
-      )
+      trimmed.includes("<br>")
     ) {
 
       return trimmed;
@@ -1382,9 +1366,8 @@ block => {
 
   }
 )
-.join(
-  ""
-);
+.join("");
+```
 
 }
 
@@ -1396,7 +1379,9 @@ function createMermaidPlaceholder(
 diagram
 ) {
 
-return <div class="mermaid-wrap"> <div class="mermaid"> ${escapeHTML(diagram)} </div> </div> ;
+return `     <div class="mermaid-wrap">       <div class="mermaid">
+        ${escapeHTML(diagram)}       </div>     </div>
+  `;
 
 }
 
@@ -1405,11 +1390,12 @@ element
 ) {
 
 if (
-typeof mermaid ===
-"undefined"
+typeof mermaid === "undefined"
 ) {
 
+```
 return;
+```
 
 }
 
@@ -1418,16 +1404,13 @@ element.querySelectorAll(
 ".mermaid"
 );
 
-if (
-!diagrams.length
-) {
-
+if (!diagrams.length) {
 return;
-
 }
 
 try {
 
+```
 await mermaid.run({
 
   nodes:
@@ -1436,15 +1419,18 @@ await mermaid.run({
     )
 
 });
+```
 
 }
 
 catch (error) {
 
+```
 console.warn(
   "Mermaid rendering failed:",
   error
 );
+```
 
 }
 
@@ -1460,11 +1446,12 @@ externalInfo
 
 if (
 !externalInfo ||
-typeof externalInfo !==
-"object"
+typeof externalInfo !== "object"
 ) {
 
+```
 return null;
+```
 
 }
 
@@ -1479,7 +1466,9 @@ if (
 !image
 ) {
 
+```
 return null;
+```
 
 }
 
@@ -1491,10 +1480,9 @@ document.createElement(
 card.className =
 "external-card";
 
-if (
-image?.url
-) {
+if (image?.url) {
 
+```
 const img =
   document.createElement(
     "img"
@@ -1510,9 +1498,7 @@ img.src =
 
 
 img.alt =
-  externalInfo
-    ?.feature
-    ?.name ||
+  externalInfo?.feature?.name ||
   "Wikimedia image";
 
 
@@ -1524,9 +1510,16 @@ img.referrerPolicy =
   "no-referrer";
 
 
+img.onerror =
+  () => {
+    img.remove();
+  };
+
+
 card.appendChild(
   img
 );
+```
 
 }
 
@@ -1553,10 +1546,9 @@ body.appendChild(
 label
 );
 
-if (
-wiki?.title
-) {
+if (wiki?.title) {
 
+```
 const title =
   document.createElement(
     "div"
@@ -1574,13 +1566,13 @@ title.textContent =
 body.appendChild(
   title
 );
+```
 
 }
 
-if (
-wiki?.description
-) {
+if (wiki?.description) {
 
+```
 const description =
   document.createElement(
     "div"
@@ -1598,13 +1590,13 @@ description.textContent =
 body.appendChild(
   description
 );
+```
 
 }
 
-if (
-wiki?.page
-) {
+if (wiki?.page) {
 
+```
 const link =
   document.createElement(
     "a"
@@ -1634,6 +1626,7 @@ link.textContent =
 body.appendChild(
   link
 );
+```
 
 }
 
@@ -1650,6 +1643,10 @@ LOADING
 ============================================================ */
 
 function addLoadingMessage() {
+
+if (!messagesEl) {
+return null;
+}
 
 const wrapper =
 document.createElement(
@@ -1670,7 +1667,9 @@ document.createElement(
 meta.className =
 "message-meta";
 
-meta.innerHTML = <div class="message-meta-icon"> ✦ </div> <span>City4All AI</span> ;
+meta.innerHTML = `     <div class="message-meta-icon">
+      ✦     </div>     <span>City4All AI</span>
+  `;
 
 wrapper.appendChild(
 meta
@@ -1684,9 +1683,9 @@ document.createElement(
 bubble.className =
 "bubble";
 
-bubble.innerHTML = `
-<div class="loading-bubble">
+bubble.innerHTML = ` <div class="loading-bubble">
 
+```
   <div class="loading-icon">
     ✦
   </div>
@@ -1696,6 +1695,7 @@ bubble.innerHTML = `
   </div>
 
 </div>
+```
 
 `;
 
@@ -1732,6 +1732,7 @@ function scrollMessages() {
 requestAnimationFrame(
 () => {
 
+```
   if (messagesEl) {
 
     messagesEl.scrollTop =
@@ -1740,6 +1741,7 @@ requestAnimationFrame(
   }
 
 }
+```
 
 );
 
@@ -1758,28 +1760,35 @@ loading;
 
 if (sendButton) {
 
+```
 sendButton.disabled =
   loading;
+
 
 sendButton.textContent =
   loading
     ? "..."
     : "Αποστολή";
+```
 
 }
 
 if (inputEl) {
 
+```
 inputEl.disabled =
   loading ||
   voiceMode;
+```
 
 }
 
 if (voiceButton) {
 
+```
 voiceButton.disabled =
   false;
+```
 
 }
 
@@ -1799,10 +1808,13 @@ totalMatches = null
 
 if (
 !Array.isArray(features) ||
-!features.length
+!features.length ||
+!messageElement
 ) {
 
+```
 return;
+```
 
 }
 
@@ -1819,10 +1831,10 @@ ONE RESULT
 ========================================================== */
 
 if (
-features.length ===
-1
+features.length === 1
 ) {
 
+```
 const feature =
   features[0];
 
@@ -1857,6 +1869,7 @@ if (routeButton) {
   );
 
 }
+```
 
 }
 
@@ -1866,6 +1879,7 @@ MANY RESULTS
 
 else {
 
+```
 const allButton =
   document.createElement(
     "button"
@@ -1881,9 +1895,7 @@ allButton.className =
 
 
 const mapCount =
-  Array.isArray(
-    mapFeatures
-  )
+  Array.isArray(mapFeatures)
     ? mapFeatures.length
     : features.length;
 
@@ -1921,29 +1933,16 @@ allButton.addEventListener(
     try {
 
       await updateMap(
-
         mapFeatures,
-
         {
-
-          mode:
-            "all",
-
-          autoZoom:
-            true,
-
-          autoOpenPopup:
-            false,
-
-          targetCount:
-            mapCount
-
+          mode: "all",
+          autoZoom: true,
+          autoOpenPopup: false,
+          targetCount: mapCount
         }
-
       );
 
     }
-
 
     finally {
 
@@ -1996,6 +1995,7 @@ if (routeButton) {
   );
 
 }
+```
 
 }
 
@@ -2003,12 +2003,14 @@ if (
 actions.children.length
 ) {
 
+```
 messageElement.appendChild(
   actions
 );
 
 
 scrollMessages();
+```
 
 }
 
@@ -2025,12 +2027,12 @@ primary = false
 ) {
 
 if (
-!hasCoordinates(
-feature
-)
+!hasCoordinates(feature)
 ) {
 
+```
 return null;
+```
 
 }
 
@@ -2054,6 +2056,7 @@ button.addEventListener(
 "click",
 async () => {
 
+```
   button.disabled =
     true;
 
@@ -2068,13 +2071,11 @@ async () => {
     await focusMapFeature(
       feature,
       {
-        openPopup:
-          true
+        openPopup: true
       }
     );
 
   }
-
 
   finally {
 
@@ -2084,6 +2085,7 @@ async () => {
   }
 
 }
+```
 
 );
 
@@ -2097,15 +2099,12 @@ GOOGLE MAPS
 
 function createRouteButton(
 feature,
-label =
-"🧭 Οδηγίες"
+label = "🧭 Οδηγίες"
 ) {
 
 const url =
 feature?.googleMapsUrl ||
-createGoogleMapsUrl(
-feature
-);
+createGoogleMapsUrl(feature);
 
 if (!url) {
 return null;
@@ -2129,6 +2128,7 @@ button.addEventListener(
 "click",
 event => {
 
+```
   event.preventDefault();
 
 
@@ -2139,6 +2139,7 @@ event => {
   );
 
 }
+```
 
 );
 
@@ -2158,6 +2159,7 @@ if (
 window.city4allMap?.view
 ) {
 
+```
 try {
 
   if (
@@ -2175,7 +2177,6 @@ try {
 
 }
 
-
 catch (error) {
 
   console.warn(
@@ -2184,11 +2185,13 @@ catch (error) {
   );
 
 }
+```
 
 }
 
 await Promise.race([
 
+```
 mapReadyPromise,
 
 new Promise(
@@ -2198,6 +2201,7 @@ new Promise(
       timeoutMs
     )
 )
+```
 
 ]);
 
@@ -2218,31 +2222,25 @@ window.city4allMap;
 
 return {
 
+```
 exists:
-  Boolean(
-    map
-  ),
+  Boolean(map),
 
 view:
-  Boolean(
-    map?.view
-  ),
+  Boolean(map?.view),
 
 resultsLayer:
-  Boolean(
-    map?.resultsLayer
-  ),
+  Boolean(map?.resultsLayer),
 
 Graphic:
-  Boolean(
-    map?.Graphic
-  ),
+  Boolean(map?.Graphic),
 
 graphicsCount:
   map?.resultsLayer
     ?.graphics
     ?.length ??
   0
+```
 
 };
 
@@ -2257,12 +2255,12 @@ feature
 ) {
 
 if (
-!hasCoordinates(
-feature
-)
+!hasCoordinates(feature)
 ) {
 
+```
 return false;
+```
 
 }
 
@@ -2271,11 +2269,13 @@ await waitForMapReady();
 
 if (!ready) {
 
+```
 console.warn(
   "Map not ready."
 );
 
 return false;
+```
 
 }
 
@@ -2287,12 +2287,14 @@ if (
 !map?.Graphic
 ) {
 
+```
 console.warn(
   "Incomplete map object:",
   getMapDiagnostics()
 );
 
 return false;
+```
 
 }
 
@@ -2307,20 +2309,16 @@ return true;
 
 try {
 
+```
 const graphic =
   createGraphicForFeature(
-
     feature,
-
     0,
-
     getFeatureKey(
       feature,
       0
     ),
-
     map.Graphic
-
   );
 
 
@@ -2345,23 +2343,25 @@ map.lastGraphics =
 
 
 map.lastFeatures =
-  [
-    feature
-  ];
+  [feature];
 
 
 return true;
+```
 
 }
 
 catch (error) {
 
+```
 console.warn(
   "Could not ensure feature:",
   error
 );
 
+
 return false;
+```
 
 }
 
@@ -2378,6 +2378,7 @@ mapCommand = null
 
 try {
 
+```
 const ready =
   await waitForMapReady(
     8000
@@ -2408,16 +2409,12 @@ const {
   view,
   resultsLayer,
   Graphic
-} =
-  map;
+} = map;
 
 
 try {
-
   view.closePopup();
-
 }
-
 catch {}
 
 
@@ -2425,9 +2422,7 @@ resultsLayer.removeAll();
 
 
 const validFeatures =
-  Array.isArray(
-    features
-  )
+  Array.isArray(features)
     ? features.filter(
         hasCoordinates
       )
@@ -2442,12 +2437,8 @@ map.lastGraphics =
   [];
 
 
-if (
-  !validFeatures.length
-) {
-
+if (!validFeatures.length) {
   return false;
-
 }
 
 
@@ -2459,18 +2450,13 @@ const graphics =
     ) => {
 
       return createGraphicForFeature(
-
         feature,
-
         index,
-
         getFeatureKey(
           feature,
           index
         ),
-
         Graphic
-
       );
 
     }
@@ -2495,27 +2481,21 @@ await new Promise(
 
 
 if (
-  validFeatures.length ===
-  1
+  validFeatures.length === 1
 ) {
 
   return await focusMapFeature(
-
     validFeatures[0],
-
     {
-      openPopup:
-        true
+      openPopup: true
     }
-
   );
 
 }
 
 
 if (
-  mapCommand?.autoZoom !==
-  false
+  mapCommand?.autoZoom !== false
 ) {
 
   await focusAllFeatures(
@@ -2526,36 +2506,35 @@ if (
 
 
 if (
-  mapCommand?.autoOpenPopup ===
-  true
+  mapCommand?.autoOpenPopup === true
 ) {
 
   await focusMapFeature(
-
     validFeatures[0],
-
     {
-      openPopup:
-        true
+      openPopup: true
     }
-
   );
 
 }
 
 
 return true;
+```
 
 }
 
 catch (error) {
 
+```
 console.warn(
   "Map update failed:",
   error
 );
 
+
 return false;
+```
 
 }
 
@@ -2573,14 +2552,10 @@ Graphic
 ) {
 
 const latitude =
-Number(
-feature.latitude
-);
+Number(feature.latitude);
 
 const longitude =
-Number(
-feature.longitude
-);
+Number(feature.longitude);
 
 const area =
 feature.area ||
@@ -2621,26 +2596,32 @@ feature.comments
 
 const websiteHtml =
 website
-? <br><br> <strong>Website:</strong> ${website}
+? `           <br><br>           <strong>Website:</strong>
+          ${website}
+        `
 : "";
 
 const phoneHtml =
 phone
-? <br><br> <strong>Τηλέφωνο:</strong> ${phone}
+? `           <br><br>           <strong>Τηλέφωνο:</strong>
+          ${phone}
+        `
 : "";
 
 const commentsHtml =
 comments
-? <br><br> <strong>Σχόλια:</strong> ${comments}
+? `           <br><br>           <strong>Σχόλια:</strong>
+          ${comments}
+        `
 : "";
 
 const graphic =
 new Graphic({
 
+```
   geometry: {
 
-    type:
-      "point",
+    type: "point",
 
     longitude,
 
@@ -2788,6 +2769,7 @@ new Graphic({
   }
 
 });
+```
 
 graphic.__city4allFeature =
 feature;
@@ -2806,41 +2788,45 @@ fallbackIndex = 0
 ) {
 
 if (
-feature?.objectId !==
-undefined &&
-feature?.objectId !==
-null &&
+feature?.objectId !== undefined &&
+feature?.objectId !== null &&
 String(
 feature.objectId
 ).trim() !== ""
 ) {
 
+```
 return String(
   feature.objectId
 );
+```
 
 }
 
 if (
-feature?.objectid !==
-undefined &&
-feature?.objectid !==
-null &&
+feature?.objectid !== undefined &&
+feature?.objectid !== null &&
 String(
 feature.objectid
 ).trim() !== ""
 ) {
 
+```
 return String(
   feature.objectid
 );
+```
 
 }
 
 return (
-${Number( feature?.latitude )}: +
-${Number( feature?.longitude )}: +
-${fallbackIndex}
+`${Number(
+      feature?.latitude
+    )}:` +
+`${Number(
+      feature?.longitude
+    )}:` +
+`${fallbackIndex}`
 );
 
 }
@@ -2862,12 +2848,8 @@ map?.resultsLayer
 ?.toArray?.() ||
 [];
 
-if (
-!graphics.length
-) {
-
+if (!graphics.length) {
 return null;
-
 }
 
 const byReference =
@@ -2891,6 +2873,7 @@ objectId !== null &&
 objectId !== undefined
 ) {
 
+```
 const wanted =
   String(
     objectId
@@ -2904,31 +2887,28 @@ const byId =
         graphic.attributes
           ?.city4allKey ??
           ""
-      ) ===
-      wanted
+      ) === wanted
   );
 
 
 if (byId) {
   return byId;
 }
+```
 
 }
 
 const latitude =
-Number(
-feature?.latitude
-);
+Number(feature?.latitude);
 
 const longitude =
-Number(
-feature?.longitude
-);
+Number(feature?.longitude);
 
 return (
 graphics.find(
 graphic => {
 
+```
     const gLat =
       Number(
         graphic.geometry
@@ -2944,32 +2924,20 @@ graphic => {
 
 
     return (
-
-      Number.isFinite(
-        gLat
-      ) &&
-
-      Number.isFinite(
-        gLon
-      ) &&
-
+      Number.isFinite(gLat) &&
+      Number.isFinite(gLon) &&
       Math.abs(
-        gLat -
-        latitude
-      ) <
-      0.000001 &&
-
+        gLat - latitude
+      ) < 0.000001 &&
       Math.abs(
-        gLon -
-        longitude
-      ) <
-      0.000001
-
+        gLon - longitude
+      ) < 0.000001
     );
 
   }
 ) ||
 null
+```
 
 );
 
@@ -2985,22 +2953,22 @@ options = {}
 ) {
 
 if (
-!hasCoordinates(
-feature
-)
+!hasCoordinates(feature)
 ) {
 
+```
 return false;
+```
 
 }
 
 const {
 openPopup = true
-} =
-options;
+} = options;
 
 try {
 
+```
 const ready =
   await waitForMapReady(
     8000
@@ -3013,8 +2981,7 @@ if (!ready) {
 
 
 const view =
-  window.city4allMap
-    ?.view;
+  window.city4allMap?.view;
 
 
 if (!view) {
@@ -3064,15 +3031,13 @@ await view.goTo(
       latitude
     ],
 
-    zoom:
-      17
+    zoom: 17
 
   },
 
   {
 
-    duration:
-      850
+    duration: 850
 
   }
 
@@ -3108,11 +3073,13 @@ if (
 
 
 return true;
+```
 
 }
 
 catch (error) {
 
+```
 console.warn(
   "Could not focus feature:",
   error
@@ -3120,6 +3087,7 @@ console.warn(
 
 
 return false;
+```
 
 }
 
@@ -3134,42 +3102,34 @@ features
 ) {
 
 const validFeatures =
-Array.isArray(
-features
-)
+Array.isArray(features)
 ? features.filter(
 hasCoordinates
 )
 : [];
 
-if (
-!validFeatures.length
-) {
-
+if (!validFeatures.length) {
 return false;
-
 }
 
 if (
-validFeatures.length ===
-1
+validFeatures.length === 1
 ) {
 
+```
 return focusMapFeature(
-
   validFeatures[0],
-
   {
-    openPopup:
-      true
+    openPopup: true
   }
-
 );
+```
 
 }
 
 try {
 
+```
 const ready =
   await waitForMapReady(
     8000
@@ -3182,8 +3142,7 @@ if (!ready) {
 
 
 const view =
-  window.city4allMap
-    ?.view;
+  window.city4allMap?.view;
 
 
 if (!view) {
@@ -3222,22 +3181,17 @@ try {
 
       padding: {
 
-        top:
-          80,
+        top: 80,
 
-        right:
-          80,
+        right: 80,
 
-        bottom:
-          80,
+        bottom: 80,
 
-        left:
-          80
+        left: 80
 
       },
 
-      duration:
-        900
+      duration: 900
 
     }
 
@@ -3247,7 +3201,6 @@ try {
   return true;
 
 }
-
 
 catch (goToError) {
 
@@ -3262,11 +3215,13 @@ catch (goToError) {
 return fallbackFitMap(
   validFeatures
 );
+```
 
 }
 
 catch (error) {
 
+```
 console.warn(
   "Could not zoom to all features:",
   error
@@ -3274,6 +3229,7 @@ console.warn(
 
 
 return false;
+```
 
 }
 
@@ -3288,15 +3244,16 @@ features
 ) {
 
 const view =
-window.city4allMap
-?.view;
+window.city4allMap?.view;
 
 if (
 !view ||
 !features.length
 ) {
 
+```
 return false;
+```
 
 }
 
@@ -3351,86 +3308,75 @@ maxLat
 const span =
 Math.max(
 
-  maxLon -
-  minLon,
+```
+  maxLon - minLon,
 
-  maxLat -
-  minLat
+  maxLat - minLat
 
 );
+```
 
-let zoom =
-12;
+let zoom = 12;
 
-if (
-span <
-0.01
-) {
+if (span < 0.01) {
 
-zoom =
-  16;
+```
+zoom = 16;
+```
 
 }
 
-else if (
-span <
-0.03
-) {
+else if (span < 0.03) {
 
-zoom =
-  14;
+```
+zoom = 14;
+```
 
 }
 
-else if (
-span <
-0.08
-) {
+else if (span < 0.08) {
 
-zoom =
-  12;
+```
+zoom = 12;
+```
 
 }
 
-else if (
-span <
-0.2
-) {
+else if (span < 0.2) {
 
-zoom =
-  10;
+```
+zoom = 10;
+```
 
 }
 
-else if (
-span <
-0.5
-) {
+else if (span < 0.5) {
 
-zoom =
-  8;
+```
+zoom = 8;
+```
 
 }
 
-else if (
-span <
-1
-) {
+else if (span < 1) {
 
-zoom =
-  7;
+```
+zoom = 7;
+```
 
 }
 
 else {
 
-zoom =
-  5;
+```
+zoom = 5;
+```
 
 }
 
 await view.goTo(
 
+```
 {
 
   center: [
@@ -3444,10 +3390,10 @@ await view.goTo(
 
 {
 
-  duration:
-    900
+  duration: 900
 
 }
+```
 
 );
 
@@ -3479,13 +3425,10 @@ feature.longitude
 
 return (
 
-Number.isFinite(
-  latitude
-) &&
+```
+Number.isFinite(latitude) &&
 
-Number.isFinite(
-  longitude
-) &&
+Number.isFinite(longitude) &&
 
 latitude >= -90 &&
 
@@ -3494,6 +3437,7 @@ latitude <= 90 &&
 longitude >= -180 &&
 
 longitude <= 180
+```
 
 );
 
@@ -3508,12 +3452,12 @@ feature
 ) {
 
 if (
-!hasCoordinates(
-feature
-)
+!hasCoordinates(feature)
 ) {
 
+```
 return null;
+```
 
 }
 
@@ -3531,7 +3475,7 @@ return (
 "https://www.google.com/maps/dir/?api=1" +
 "&destination=" +
 encodeURIComponent(
-${latitude},${longitude}
+`${latitude},${longitude}`
 ) +
 "&travelmode=walking"
 );
@@ -3554,6 +3498,7 @@ window.webkitSpeechRecognition;
 
 if (!SpeechRecognition) {
 
+```
 voiceButton.title =
   "Η φωνητική συνομιλία δεν υποστηρίζεται σε αυτόν τον browser.";
 
@@ -3576,6 +3521,7 @@ voiceButton.addEventListener(
 
 
 return;
+```
 
 }
 
@@ -3597,8 +3543,8 @@ recognition.maxAlternatives =
 recognition.onstart =
 () => {
 
-  listening =
-    true;
+```
+  listening = true;
 
 
   voiceButton.classList.add(
@@ -3628,12 +3574,13 @@ recognition.onstart =
   }
 
 };
+```
 
 recognition.onend =
 () => {
 
-  listening =
-    false;
+```
+  listening = false;
 
 
   if (!voiceMode) {
@@ -3673,10 +3620,12 @@ recognition.onend =
   }
 
 };
+```
 
 recognition.onresult =
 event => {
 
+```
   const transcript =
     event.results
       ?.[0]
@@ -3689,7 +3638,8 @@ event => {
   if (
     !transcript ||
     isLoading ||
-    !voiceMode
+    !voiceMode ||
+    !inputEl
   ) {
 
     return;
@@ -3707,15 +3657,16 @@ event => {
 
 
   sendMessage({
-    fromVoice:
-      true
+    fromVoice: true
   });
 
 };
+```
 
 recognition.onerror =
 event => {
 
+```
   console.warn(
     "Speech recognition error:",
     event.error
@@ -3738,6 +3689,7 @@ event => {
   }
 
 };
+```
 
 voiceButton.addEventListener(
 "click",
@@ -3745,6 +3697,10 @@ toggleVoiceMode
 );
 
 }
+
+/* ============================================================
+VOICE MODE
+============================================================ */
 
 function toggleVoiceMode() {
 
@@ -3754,11 +3710,15 @@ return;
 
 if (voiceMode) {
 
+```
 stopVoiceMode();
+```
 
 } else {
 
+```
 startVoiceMode();
+```
 
 }
 
@@ -3771,12 +3731,13 @@ if (
 voiceMode
 ) {
 
+```
 return;
+```
 
 }
 
-voiceMode =
-true;
+voiceMode = true;
 
 stopSpeaking();
 
@@ -3797,12 +3758,14 @@ voiceButton.setAttribute(
 
 if (inputEl) {
 
+```
 inputEl.placeholder =
   "Μίλησε στον City4All Assistant...";
 
 
 inputEl.disabled =
   true;
+```
 
 }
 
@@ -3819,22 +3782,28 @@ listening ||
 isLoading
 ) {
 
+```
 return;
+```
 
 }
 
 try {
 
+```
 recognition.start();
+```
 
 }
 
 catch (error) {
 
+```
 console.warn(
   "Could not start speech recognition:",
   error
 );
+```
 
 }
 
@@ -3842,8 +3811,7 @@ console.warn(
 
 function stopVoiceMode() {
 
-voiceMode =
-false;
+voiceMode = false;
 
 clearTimeout(
 voiceRestartTimer
@@ -3856,6 +3824,7 @@ recognition &&
 listening
 ) {
 
+```
 try {
 
   recognition.stop();
@@ -3863,20 +3832,22 @@ try {
 }
 
 catch {}
+```
 
 }
 
-listening =
-false;
+listening = false;
 
 if (inputEl) {
 
+```
 inputEl.disabled =
   false;
 
 
 inputEl.placeholder =
   "Ρώτησε τον City4All Assistant...";
+```
 
 }
 
@@ -3916,13 +3887,12 @@ text
 ) {
 
 if (
-!(
-"speechSynthesis" in
-window
-)
+!("speechSynthesis" in window)
 ) {
 
+```
 return;
+```
 
 }
 
@@ -3931,7 +3901,9 @@ if (
 !text.trim()
 ) {
 
+```
 return;
+```
 
 }
 
@@ -3940,6 +3912,7 @@ stopSpeaking();
 const cleanText =
 String(text)
 
+```
   .replace(
     /https?:\/\/\S+/g,
     ""
@@ -3956,6 +3929,7 @@ String(text)
   )
 
   .trim();
+```
 
 if (!cleanText) {
 return;
@@ -3981,16 +3955,17 @@ utterance.volume =
 utterance.onstart =
 () => {
 
-  isSpeaking =
-    true;
+```
+  isSpeaking = true;
 
 };
+```
 
 utterance.onend =
 () => {
 
-  isSpeaking =
-    false;
+```
+  isSpeaking = false;
 
 
   if (
@@ -4025,14 +4000,16 @@ utterance.onend =
   }
 
 };
+```
 
 utterance.onerror =
 () => {
 
-  isSpeaking =
-    false;
+```
+  isSpeaking = false;
 
 };
+```
 
 window.speechSynthesis.speak(
 utterance
@@ -4047,16 +4024,16 @@ STOP SPEAKING
 function stopSpeaking() {
 
 if (
-"speechSynthesis" in
-window
+"speechSynthesis" in window
 ) {
 
+```
 window.speechSynthesis.cancel();
+```
 
 }
 
-isSpeaking =
-false;
+isSpeaking = false;
 
 }
 
@@ -4069,6 +4046,7 @@ function setupMobileViewport() {
 const setViewportHeight =
 () => {
 
+```
   const height =
     window.visualViewport?.height ||
     window.innerHeight;
@@ -4099,6 +4077,7 @@ const setViewportHeight =
   );
 
 };
+```
 
 setViewportHeight();
 
@@ -4111,6 +4090,7 @@ if (
 window.visualViewport
 ) {
 
+```
 window.visualViewport.addEventListener(
   "resize",
   setViewportHeight
@@ -4121,6 +4101,7 @@ window.visualViewport.addEventListener(
   "scroll",
   setViewportHeight
 );
+```
 
 }
 
@@ -4137,26 +4118,33 @@ value
 return String(
 value ?? ""
 )
+
+```
 .replaceAll(
-"&",
-"&"
+  "&",
+  "&amp;"
 )
+
 .replaceAll(
-"<",
-"<"
+  "<",
+  "&lt;"
 )
+
 .replaceAll(
-">",
-">"
+  ">",
+  "&gt;"
 )
+
 .replaceAll(
-'"',
-"""
+  '"',
+  "&quot;"
 )
+
 .replaceAll(
-"'",
-"'"
+  "'",
+  "&#039;"
 );
+```
 
 }
 
@@ -4171,26 +4159,33 @@ value
 return String(
 value ?? ""
 )
+
+```
 .replaceAll(
-"&",
-"&"
+  "&",
+  "&amp;"
 )
+
 .replaceAll(
-"<",
-"<"
+  "<",
+  "&lt;"
 )
+
 .replaceAll(
-">",
-">"
+  ">",
+  "&gt;"
 )
+
 .replaceAll(
-'"',
-"""
+  '"',
+  "&quot;"
 )
+
 .replaceAll(
-"'",
-"'"
+  "'",
+  "&#039;"
 );
+```
 
 }
 
@@ -4212,6 +4207,7 @@ window.addEventListener(
 "city4all-map-ready",
 async () => {
 
+```
 console.log(
   "City4All map-ready event received."
 );
@@ -4241,7 +4237,6 @@ try {
 
 }
 
-
 catch (error) {
 
   console.warn(
@@ -4253,6 +4248,7 @@ catch (error) {
   resolveMapReady();
 
 }
+```
 
 }
 );
