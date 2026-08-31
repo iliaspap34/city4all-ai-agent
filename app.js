@@ -1025,33 +1025,31 @@ RAW URLS
 ========================================================== */
 
 text =
-text.replace(
-/(^|[\s>])(https?:\/\/[^\s<]+)/g,
-(
-match,
-prefix,
-url
-) => {
+  text.replace(
+    /(^|[\s>])(https?:\/\/[^\s<]+)/g,
+    (
+      match,
+      prefix,
+      url
+    ) => {
 
+      const cleanUrl =
+        url.replace(
+          /[),.;!?]+$/,
+          ""
+        );
 
-    const cleanUrl =
-      url.replace(
-        /[),.;!?]+$/,
-        ""
+      return (
+        `${prefix}` +
+        `<a href="${escapeAttribute(cleanUrl)}"` +
+        ` target="_blank"` +
+        ` rel="noopener noreferrer">` +
+        `${escapeHTML(cleanUrl)}` +
+        `</a>`
       );
 
-
-    return (
-      `${prefix}` +
-      `<a href="${escapeAttribute(cleanUrl)}"` +
-      ` target="_blank"` +
-      ` rel="noopener noreferrer">` +
-      `${escapeHTML(cleanUrl)}` +
-      `</a>`
-    );
-
-  }
-);
+    }
+  );
 
 
 /* ==========================================================
@@ -1059,81 +1057,83 @@ BOLD
 ========================================================== */
 
 text =
-text.replace(
-/**(.+?)**/g,
-"<strong>$1</strong>"
-);
+  text.replace(
+    /\*\*(.+?)\*\*/g,
+    "<strong>$1</strong>"
+  );
+
 
 /* ==========================================================
 ITALIC
 ========================================================== */
 
 text =
-text.replace(
-/(^|[^*])*([^*\n]+)*(?!*)/g,
-"$1<em>$2</em>"
-);
+  text.replace(
+    /(?<!\*)\*([^*\n]+)\*(?!\*)/g,
+    "<em>$1</em>"
+  );
+
 
 /* ==========================================================
 INLINE CODE
 ========================================================== */
 
 text =
-text.replace(
-/`([^`\n]+)`/g,
-"<code>$1</code>"
-);
+  text.replace(
+    /`([^`\n]+)`/g,
+    "<code>$1</code>"
+  );
+
 
 /* ==========================================================
 BLOCKQUOTE
 ========================================================== */
 
 text =
-text.replace(
-/^> (.*)$/gm,
-"<blockquote>$1</blockquote>"
-);
+  text.replace(
+    /^> (.*)$/gm,
+    "<blockquote>$1</blockquote>"
+  );
+
 
 /* ==========================================================
 UNORDERED LIST
 ========================================================== */
 
 text =
-text.replace(
-/(?:^|\n)((?:[-*] .*(?:\n|$))+)/g,
-(
-match,
-block
-) => {
-
-
-    const items =
+  text.replace(
+    /(?:^|\n)((?:[-*] .*(?:\n|$))+)/g,
+    (
+      match,
       block
-        .trim()
-        .split("\n")
-        .map(
-          line =>
-            line.replace(
-              /^[-*]\s+/,
-              ""
-            )
-        )
-        .filter(Boolean);
+    ) => {
 
+      const items =
+        block
+          .trim()
+          .split("\n")
+          .map(
+            line =>
+              line.replace(
+                /^[-*]\s+/,
+                ""
+              )
+          )
+          .filter(Boolean);
 
-    return (
-      "\n<ul>" +
-      items
-        .map(
-          item =>
-            `<li>${item}</li>`
-        )
-        .join("") +
-      "</ul>\n"
-    );
+      return (
+        "\n<ul>" +
+        items
+          .map(
+            item =>
+              `<li>${item}</li>`
+          )
+          .join("") +
+        "</ul>\n"
+      );
 
-  }
-);
+    }
+  );
 
 
 /* ==========================================================
@@ -1141,43 +1141,40 @@ ORDERED LIST
 ========================================================== */
 
 text =
-text.replace(
-/(?:^|\n)((?:\d+.\s+.*(?:\n|$))+)/g,
-(
-match,
-block
-) => {
-
-
-    const items =
+  text.replace(
+    /(?:^|\n)((?:\d+\.\s+.*(?:\n|$))+)/g,
+    (
+      match,
       block
-        .trim()
-        .split("\n")
-        .map(
-          line =>
-            line.replace(
-              /^\d+\.\s+/,
-              ""
-            )
-        )
-        .filter(Boolean);
+    ) => {
 
+      const items =
+        block
+          .trim()
+          .split("\n")
+          .map(
+            line =>
+              line.replace(
+                /^\d+\.\s+/,
+                ""
+              )
+          )
+          .filter(Boolean);
 
-    return (
-      "\n<ol>" +
-      items
-        .map(
-          item =>
-            `<li>${item}</li>`
-        )
-        .join("") +
-      "</ol>\n"
-    );
+      return (
+        "\n<ol>" +
+        items
+          .map(
+            item =>
+              `<li>${item}</li>`
+          )
+          .join("") +
+        "</ol>\n"
+      );
 
-  }
-);
-
-
+    }
+  );
+  
 /* ==========================================================
 PARAGRAPHS
 ========================================================== */
