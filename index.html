@@ -1,11 +1,22 @@
 <!DOCTYPE html>
+
 <html lang="el">
+
 <head>
+
   <meta charset="UTF-8">
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  >
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+
+>
+
+<meta
+name="theme-color"
+content="#ffffff"
+
+>
 
   <title>City4All AI</title>
 
@@ -16,1037 +27,1682 @@
 
   <script src="https://js.arcgis.com/4.31/"></script>
 
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+
   <style>
+
     * {
       box-sizing: border-box;
+    }
+
+    :root {
+      --app-height: 100dvh;
+      --header-height: 68px;
+
+      --blue: #1976d2;
+      --blue-dark: #125ea7;
+
+      --text: #172033;
+      --muted: #667085;
+
+      --border: #e5e7eb;
+
+      --soft: #f5f7fb;
+      --ai-bg: #f7f9fc;
     }
 
     html,
     body {
       margin: 0;
       padding: 0;
+
       width: 100%;
       height: 100%;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f5f7fb;
-      color: #172033;
+      min-height: 100%;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      background:
+        var(--soft);
+
+      color:
+        var(--text);
+
+      overflow:
+        hidden;
     }
 
     body {
-      overflow: hidden;
+      overscroll-behavior:
+        none;
     }
 
     button,
     textarea {
-      font-family: inherit;
+      font-family:
+        inherit;
     }
 
-    /* =========================================================
-       APP
-    ========================================================= */
+    button {
+      -webkit-tap-highlight-color:
+        transparent;
+    }
 
     .app {
       width: 100%;
-      height: 100vh;
-      height: 100dvh;
+      height: var(--app-height);
+      min-height: 0;
 
-      display: flex;
-      flex-direction: column;
+      display:
+        flex;
 
-      overflow: hidden;
+      flex-direction:
+        column;
+
+      overflow:
+        hidden;
     }
 
-    /* =========================================================
-       HEADER
-    ========================================================= */
-
     .header {
-      height: 68px;
-      min-height: 68px;
+      height:
+        var(--header-height);
 
-      background: #ffffff;
-      border-bottom: 1px solid #e5e7eb;
+      min-height:
+        var(--header-height);
 
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      background:
+        #ffffff;
 
-      padding: 0 24px;
+      border-bottom:
+        1px solid var(--border);
 
-      flex-shrink: 0;
+      display:
+        flex;
 
-      z-index: 20;
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      padding:
+        0 24px;
+
+      flex-shrink:
+        0;
+
+      z-index:
+        20;
     }
 
     .brand {
-      display: flex;
-      align-items: center;
-      gap: 11px;
+      display:
+        flex;
 
-      min-width: 0;
+      align-items:
+        center;
+
+      gap:
+        11px;
+
+      min-width:
+        0;
     }
 
     .brand-icon {
-      width: 38px;
-      height: 38px;
+      width:
+        38px;
 
-      border-radius: 11px;
+      height:
+        38px;
 
-      background: #1976d2;
-      color: #ffffff;
+      border-radius:
+        11px;
 
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background:
+        var(--blue);
 
-      font-size: 17px;
-      font-weight: 800;
+      color:
+        #ffffff;
 
-      flex-shrink: 0;
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      font-size:
+        9px;
+
+      font-weight:
+        800;
+
+      flex-shrink:
+        0;
     }
 
     .logo {
-      font-size: 21px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
+      font-size:
+        21px;
+
+      font-weight:
+        800;
+
+      letter-spacing:
+        -0.5px;
     }
 
     .logo span {
-      color: #1976d2;
+      color:
+        var(--blue);
     }
 
     .header-subtitle {
-      color: #667085;
-      font-size: 12px;
-      margin-top: 2px;
+      color:
+        var(--muted);
+
+      font-size:
+        12px;
+
+      margin-top:
+        2px;
     }
 
     .status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      display:
+        flex;
 
-      color: #16803c;
-      font-size: 12px;
-      font-weight: 700;
+      align-items:
+        center;
 
-      background: #ecfdf3;
+      gap:
+        8px;
 
-      padding: 8px 12px;
+      color:
+        #16803c;
 
-      border-radius: 20px;
+      font-size:
+        12px;
 
-      flex-shrink: 0;
+      font-weight:
+        700;
+
+      background:
+        #ecfdf3;
+
+      padding:
+        8px 12px;
+
+      border-radius:
+        20px;
+
+      flex-shrink:
+        0;
     }
 
     .status-dot {
-      width: 8px;
-      height: 8px;
+      width:
+        8px;
 
-      border-radius: 50%;
+      height:
+        8px;
 
-      background: #20a464;
+      border-radius:
+        50%;
+
+      background:
+        #20a464;
+
+      box-shadow:
+        0 0 0 3px rgba(32,164,100,0.10);
     }
 
-    /* =========================================================
-       MAIN
-    ========================================================= */
-
     .main {
-      flex: 1;
-      min-height: 0;
+      flex:
+        1;
 
-      display: grid;
+      min-height:
+        0;
+
+      display:
+        grid;
 
       grid-template-columns:
         minmax(0, 1.55fr)
         minmax(390px, 0.65fr);
 
-      overflow: hidden;
+      overflow:
+        hidden;
     }
 
-    /* =========================================================
-       MAP
-    ========================================================= */
-
     .map-panel {
-      position: relative;
+      position:
+        relative;
 
-      min-width: 0;
-      min-height: 0;
+      min-width:
+        0;
 
-      background: #e9eef4;
+      min-height:
+        0;
 
-      overflow: hidden;
+      background:
+        #e9eef4;
     }
 
     #map {
-      width: 100%;
-      height: 100%;
+      width:
+        100%;
+
+      height:
+        100%;
     }
 
     .map-label {
-      position: absolute;
+      position:
+        absolute;
 
-      top: 18px;
-      left: 18px;
+      top:
+        18px;
 
-      z-index: 5;
+      left:
+        18px;
 
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      z-index:
+        5;
 
-      background: rgba(255, 255, 255, 0.96);
+      display:
+        flex;
 
-      border: 1px solid rgba(0, 0, 0, 0.06);
+      align-items:
+        center;
 
-      border-radius: 12px;
+      gap:
+        8px;
 
-      padding: 10px 14px;
+      background:
+        rgba(255,255,255,0.96);
+
+      border:
+        1px solid rgba(0,0,0,0.06);
+
+      border-radius:
+        12px;
+
+      padding:
+        10px 14px;
 
       box-shadow:
-        0 3px 15px rgba(0, 0, 0, 0.12);
+        0 3px 15px rgba(0,0,0,0.12);
 
-      font-size: 13px;
-      font-weight: 700;
+      font-size:
+        13px;
+
+      font-weight:
+        700;
     }
 
     .map-info {
-      position: absolute;
+      position:
+        absolute;
 
-      left: 18px;
-      bottom: 18px;
+      left:
+        18px;
 
-      z-index: 5;
+      bottom:
+        18px;
 
-      background: rgba(255, 255, 255, 0.94);
+      z-index:
+        5;
 
-      border-radius: 11px;
+      background:
+        rgba(255,255,255,0.94);
 
-      padding: 9px 12px;
+      border-radius:
+        11px;
 
-      color: #667085;
+      padding:
+        9px 12px;
 
-      font-size: 11px;
+      color:
+        var(--muted);
+
+      font-size:
+        11px;
 
       box-shadow:
-        0 2px 12px rgba(0, 0, 0, 0.10);
+        0 2px 12px rgba(0,0,0,0.10);
     }
 
-    /* =========================================================
-       ASSISTANT
-    ========================================================= */
-
     .assistant-panel {
-      min-width: 0;
-      min-height: 0;
+      min-width:
+        0;
 
-      background: #ffffff;
+      min-height:
+        0;
 
-      display: flex;
-      flex-direction: column;
+      background:
+        #ffffff;
 
-      border-left: 1px solid #e5e7eb;
+      display:
+        flex;
 
-      overflow: hidden;
+      flex-direction:
+        column;
+
+      border-left:
+        1px solid var(--border);
+
+      overflow:
+        hidden;
     }
 
     .assistant-header {
-      padding: 19px 20px 16px;
+      padding:
+        19px 20px 16px;
 
-      border-bottom: 1px solid #eef0f3;
+      border-bottom:
+        1px solid #eef0f3;
 
-      flex-shrink: 0;
+      flex-shrink:
+        0;
     }
 
     .assistant-heading {
-      display: flex;
-      align-items: center;
-      gap: 11px;
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        11px;
     }
 
     .ai-icon {
-      width: 40px;
-      height: 40px;
+      width:
+        40px;
 
-      border-radius: 12px;
+      height:
+        40px;
 
-      background: #eaf3ff;
-      color: #1976d2;
+      border-radius:
+        12px;
 
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background:
+        linear-gradient(
+          135deg,
+          #eaf3ff,
+          #f3f7ff
+        );
 
-      font-size: 20px;
+      color:
+        var(--blue);
 
-      flex-shrink: 0;
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      font-size:
+        20px;
+
+      flex-shrink:
+        0;
     }
 
     .assistant-title {
-      font-size: 18px;
-      font-weight: 800;
+      font-size:
+        18px;
+
+      font-weight:
+        800;
     }
 
     .assistant-subtitle {
-      color: #667085;
+      color:
+        var(--muted);
 
-      font-size: 12px;
-      line-height: 1.45;
+      font-size:
+        12px;
 
-      margin-top: 2px;
+      line-height:
+        1.45;
+
+      margin-top:
+        2px;
     }
 
-    /* =========================================================
-       MESSAGES
-    ========================================================= */
-
     .messages {
-      flex: 1;
-      min-height: 0;
+      flex:
+        1;
 
-      overflow-y: auto;
-      overflow-x: hidden;
+      min-height:
+        0;
 
-      padding: 20px;
+      overflow-y:
+        auto;
 
-      scroll-behavior: smooth;
+      overflow-x:
+        hidden;
 
-      overscroll-behavior: contain;
+      padding:
+        20px;
 
-      -webkit-overflow-scrolling: touch;
+      scroll-behavior:
+        smooth;
+
+      overscroll-behavior:
+        contain;
+
+      -webkit-overflow-scrolling:
+        touch;
     }
 
     .message {
-      display: flex;
-      flex-direction: column;
+      display:
+        flex;
 
-      margin-bottom: 17px;
+      flex-direction:
+        column;
+
+      margin-bottom:
+        20px;
+
+      animation:
+        messageAppear
+        .18s
+        ease-out;
+    }
+
+    @keyframes messageAppear {
+
+      from {
+        opacity:
+          0;
+
+        transform:
+          translateY(4px);
+      }
+
+      to {
+        opacity:
+          1;
+
+        transform:
+          translateY(0);
+      }
     }
 
     .message.user {
-      align-items: flex-end;
+      align-items:
+        flex-end;
     }
 
     .message.ai {
-      align-items: flex-start;
+      align-items:
+        flex-start;
+    }
+
+    .message-meta {
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        7px;
+
+      margin-bottom:
+        6px;
+
+      font-size:
+        10px;
+
+      font-weight:
+        700;
+
+      color:
+        #98a2b3;
+    }
+
+    .message-meta-icon {
+      width:
+        24px;
+
+      height:
+        24px;
+
+      border-radius:
+        8px;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      background:
+        #eaf3ff;
+
+      color:
+        var(--blue);
+
+      font-size:
+        12px;
+    }
+
+    .message.user .message-meta {
+      display:
+        none;
     }
 
     .bubble {
-      max-width: 88%;
+      max-width:
+        92%;
 
-      padding: 12px 14px;
+      padding:
+        13px 16px;
 
-      border-radius: 15px;
+      border-radius:
+        17px;
 
-      line-height: 1.55;
+      line-height:
+        1.62;
 
-      font-size: 13px;
+      font-size:
+        13px;
 
-      white-space: pre-wrap;
+      word-break:
+        break-word;
 
-      overflow-wrap: anywhere;
-      word-break: break-word;
+      overflow-wrap:
+        anywhere;
+
+      box-shadow:
+        0 1px 2px rgba(16,24,40,0.03);
     }
 
     .message.ai .bubble {
-      background: #f3f6fa;
+      background:
+        var(--ai-bg);
 
-      color: #172033;
+      color:
+        var(--text);
 
-      border-bottom-left-radius: 5px;
+      border:
+        1px solid #edf0f4;
+
+      border-bottom-left-radius:
+        5px;
     }
 
     .message.user .bubble {
-      background: #1976d2;
+      background:
+        linear-gradient(
+          135deg,
+          #1976d2,
+          #2584df
+        );
 
-      color: #ffffff;
+      color:
+        #ffffff;
 
-      border-bottom-right-radius: 5px;
+      border-bottom-right-radius:
+        5px;
+
+      white-space:
+        pre-wrap;
+
+      box-shadow:
+        0 3px 8px rgba(25,118,210,0.16);
     }
 
-    /* =========================================================
-       ACTIONS
-    ========================================================= */
+    .bubble h1,
+    .bubble h2,
+    .bubble h3,
+    .bubble h4 {
+      margin:
+        2px 0 10px;
+
+      line-height:
+        1.3;
+    }
+
+    .bubble h1 {
+      font-size:
+        20px;
+    }
+
+    .bubble h2 {
+      font-size:
+        18px;
+    }
+
+    .bubble h3 {
+      font-size:
+        16px;
+    }
+
+    .bubble h4 {
+      font-size:
+        14px;
+    }
+
+    .bubble p {
+      margin:
+        0 0 10px;
+    }
+
+    .bubble p:last-child {
+      margin-bottom:
+        0;
+    }
+
+    .bubble strong {
+      font-weight:
+        800;
+    }
+
+    .bubble em {
+      font-style:
+        italic;
+    }
+
+    .bubble ul,
+    .bubble ol {
+      margin:
+        8px 0 10px;
+
+      padding-left:
+        23px;
+    }
+
+    .bubble li {
+      margin:
+        5px 0;
+    }
+
+    .bubble blockquote {
+      margin:
+        10px 0;
+
+      padding:
+        9px 12px;
+
+      border-left:
+        3px solid #b8c7dc;
+
+      background:
+        rgba(25,118,210,0.04);
+
+      color:
+        #475467;
+
+      border-radius:
+        0 8px 8px 0;
+    }
+
+    .bubble code {
+      background:
+        rgba(0,0,0,0.055);
+
+      padding:
+        2px 5px;
+
+      border-radius:
+        5px;
+
+      font-family:
+        Consolas,
+        Monaco,
+        monospace;
+
+      font-size:
+        12px;
+    }
+
+    .bubble .code-block {
+      background:
+        #172033;
+
+      color:
+        #ffffff;
+
+      padding:
+        12px;
+
+      border-radius:
+        10px;
+
+      overflow-x:
+        auto;
+
+      margin:
+        10px 0;
+    }
+
+    .bubble .code-block code {
+      background:
+        transparent;
+
+      padding:
+        0;
+
+      color:
+        inherit;
+    }
+
+    .bubble a {
+      color:
+        var(--blue);
+
+      font-weight:
+        700;
+
+      text-decoration:
+        underline;
+
+      text-underline-offset:
+        2px;
+    }
+
+    .message.user .bubble a {
+      color:
+        #ffffff;
+    }
+
+    .markdown-table-wrap {
+      width:
+        100%;
+
+      overflow-x:
+        auto;
+
+      margin:
+        11px 0;
+
+      border-radius:
+        11px;
+
+      border:
+        1px solid #e1e6ee;
+
+      background:
+        #ffffff;
+    }
+
+    .markdown-table {
+      width:
+        100%;
+
+      border-collapse:
+        collapse;
+
+      min-width:
+        420px;
+
+      font-size:
+        12px;
+    }
+
+    .markdown-table th,
+    .markdown-table td {
+      padding:
+        9px 10px;
+
+      border-bottom:
+        1px solid #e8ecf2;
+
+      text-align:
+        left;
+
+      vertical-align:
+        top;
+    }
+
+    .markdown-table th {
+      background:
+        #f4f7fb;
+
+      font-weight:
+        800;
+    }
+
+    .markdown-table tr:last-child td {
+      border-bottom:
+        none;
+    }
+
+    .mermaid-wrap {
+      width:
+        100%;
+
+      overflow-x:
+        auto;
+
+      margin:
+        11px 0;
+
+      padding:
+        10px;
+
+      border-radius:
+        11px;
+
+      background:
+        #ffffff;
+
+      border:
+        1px solid #e5eaf1;
+    }
+
+    .mermaid {
+      min-width:
+        320px;
+    }
+
+    .external-card {
+      margin-top:
+        9px;
+
+      max-width:
+        92%;
+
+      background:
+        #ffffff;
+
+      border:
+        1px solid #e2e8f0;
+
+      border-radius:
+        13px;
+
+      overflow:
+        hidden;
+
+      box-shadow:
+        0 2px 9px rgba(16,24,40,0.05);
+    }
+
+    .external-image {
+      width:
+        100%;
+
+      max-height:
+        190px;
+
+      object-fit:
+        cover;
+
+      display:
+        block;
+    }
+
+    .external-body {
+      padding:
+        11px 12px;
+    }
+
+    .external-label {
+      font-size:
+        10px;
+
+      font-weight:
+        800;
+
+      text-transform:
+        uppercase;
+
+      letter-spacing:
+        .04em;
+
+      color:
+        #7a8699;
+
+      margin-bottom:
+        4px;
+    }
+
+    .external-title {
+      font-size:
+        13px;
+
+      font-weight:
+        800;
+
+      margin-bottom:
+        5px;
+    }
+
+    .external-description {
+      font-size:
+        12px;
+
+      color:
+        #667085;
+
+      line-height:
+        1.5;
+    }
+
+    .external-link {
+      display:
+        inline-block;
+
+      margin-top:
+        8px;
+
+      font-size:
+        11px;
+
+      color:
+        var(--blue);
+
+      font-weight:
+        700;
+
+      text-decoration:
+        none;
+    }
 
     .message-actions {
-      display: flex;
+      display:
+        flex;
 
-      flex-wrap: wrap;
+      flex-wrap:
+        wrap;
 
-      gap: 7px;
+      gap:
+        7px;
 
-      margin-top: 8px;
+      margin-top:
+        8px;
 
-      max-width: 95%;
+      max-width:
+        95%;
     }
 
     .chat-action {
-      border: 1px solid #d7dee8;
+      border:
+        1px solid #d7dee8;
 
-      background: #ffffff;
+      background:
+        #ffffff;
 
-      color: #344054;
+      color:
+        #344054;
 
-      padding: 8px 11px;
+      padding:
+        8px 11px;
 
-      border-radius: 9px;
+      border-radius:
+        10px;
 
-      font-size: 11px;
-      font-weight: 700;
+      font-size:
+        11px;
 
-      cursor: pointer;
+      font-weight:
+        700;
 
-      transition: 0.15s;
+      cursor:
+        pointer;
 
-      max-width: 100%;
+      transition:
+        .15s;
+
+      touch-action:
+        manipulation;
     }
 
     .chat-action:hover {
-      border-color: #1976d2;
+      border-color:
+        var(--blue);
 
-      color: #1976d2;
+      color:
+        var(--blue);
 
-      background: #f7fbff;
+      background:
+        #f7fbff;
     }
 
     .chat-action.primary {
-      background: #1976d2;
+      background:
+        var(--blue);
 
-      color: #ffffff;
+      color:
+        #ffffff;
 
-      border-color: #1976d2;
+      border-color:
+        var(--blue);
+
+      box-shadow:
+        0 2px 5px rgba(25,118,210,0.15);
     }
 
     .chat-action.primary:hover {
-      background: #125ea7;
-
-      color: #ffffff;
+      background:
+        var(--blue-dark);
     }
 
     .chat-action:active {
-      transform: scale(0.97);
+      transform:
+        scale(.97);
     }
 
-    /* =========================================================
-       QUICK ACTIONS
-    ========================================================= */
-
     .quick-actions {
-      padding: 0 18px 13px;
+      padding:
+        0 18px 13px;
 
-      display: flex;
+      display:
+        flex;
 
-      flex-wrap: wrap;
+      flex-wrap:
+        wrap;
 
-      gap: 7px;
+      gap:
+        7px;
 
-      flex-shrink: 0;
-
-      overflow: hidden;
+      flex-shrink:
+        0;
     }
 
     .quick-button {
-      border: 1px solid #dfe5ec;
+      border:
+        1px solid #dfe5ec;
 
-      background: #ffffff;
+      background:
+        #ffffff;
 
-      color: #344054;
+      color:
+        #344054;
 
-      padding: 8px 10px;
+      padding:
+        8px 10px;
 
-      border-radius: 20px;
+      border-radius:
+        20px;
 
-      font-size: 11px;
-      font-weight: 600;
+      font-size:
+        11px;
 
-      cursor: pointer;
+      font-weight:
+        600;
 
-      transition: 0.15s;
+      cursor:
+        pointer;
 
-      white-space: nowrap;
+      transition:
+        .15s;
+
+      touch-action:
+        manipulation;
     }
 
     .quick-button:hover {
-      border-color: #1976d2;
+      border-color:
+        var(--blue);
 
-      color: #1976d2;
+      color:
+        var(--blue);
 
-      background: #f7fbff;
+      background:
+        #f7fbff;
     }
 
     .quick-button:active {
-      transform: scale(0.97);
+      transform:
+        scale(.97);
     }
 
-    /* =========================================================
-       LOADING
-    ========================================================= */
+    .loading-bubble {
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        8px;
+    }
+
+    .loading-icon {
+      width:
+        23px;
+
+      height:
+        23px;
+
+      border-radius:
+        7px;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      background:
+        #eaf3ff;
+
+      color:
+        var(--blue);
+    }
 
     .loading-dots span {
-      display: inline-block;
+      display:
+        inline-block;
 
-      animation: loadingDot 1.2s infinite;
+      animation:
+        loadingDot
+        1.2s
+        infinite;
     }
 
     .loading-dots span:nth-child(2) {
-      animation-delay: 0.15s;
+      animation-delay:
+        .15s;
     }
 
     .loading-dots span:nth-child(3) {
-      animation-delay: 0.3s;
+      animation-delay:
+        .30s;
     }
 
     @keyframes loadingDot {
+
       0%,
       60%,
       100% {
-        opacity: 0.25;
+        opacity:
+          .25;
       }
 
       30% {
-        opacity: 1;
+        opacity:
+          1;
       }
+
     }
 
-    /* =========================================================
-       INPUT AREA
-    ========================================================= */
-
     .input-area {
-      border-top: 1px solid #e5e7eb;
+      border-top:
+        1px solid var(--border);
 
-      padding: 11px;
+      padding:
+        11px;
 
-      display: flex;
+      display:
+        flex;
 
-      align-items: flex-end;
+      align-items:
+        flex-end;
 
-      gap: 7px;
+      gap:
+        7px;
 
-      background: #ffffff;
+      background:
+        #ffffff;
 
-      flex-shrink: 0;
-
-      width: 100%;
-
-      position: relative;
-
-      z-index: 10;
+      flex-shrink:
+        0;
 
       padding-bottom:
-        max(11px, env(safe-area-inset-bottom));
+        max(
+          11px,
+          env(safe-area-inset-bottom)
+        );
     }
 
     textarea {
-      flex: 1;
+      flex:
+        1;
 
-      min-width: 0;
+      min-width:
+        0;
 
-      width: 100%;
+      height:
+        45px;
 
-      height: 45px;
+      min-height:
+        45px;
 
-      min-height: 45px;
+      max-height:
+        100px;
 
-      max-height: 100px;
+      resize:
+        none;
 
-      resize: none;
+      border:
+        1px solid #d0d5dd;
 
-      border: 1px solid #d0d5dd;
+      border-radius:
+        13px;
 
-      border-radius: 11px;
+      padding:
+        12px;
 
-      padding: 12px;
+      font-size:
+        13px;
 
-      font-size: 13px;
+      line-height:
+        1.35;
 
-      outline: none;
+      outline:
+        none;
 
-      line-height: 1.35;
+      background:
+        #ffffff;
 
-      background: #ffffff;
+      overflow-y:
+        auto;
 
-      overflow-y: auto;
-
-      display: block;
+      transition:
+        .15s;
     }
 
     textarea:focus {
-      border-color: #1976d2;
+      border-color:
+        var(--blue);
 
       box-shadow:
-        0 0 0 3px rgba(25, 118, 210, 0.08);
+        0 0 0 3px rgba(25,118,210,0.08);
     }
 
     .voice-button,
     .send-button {
-      border: none;
+      border:
+        none;
 
-      cursor: pointer;
+      cursor:
+        pointer;
 
-      border-radius: 11px;
+      border-radius:
+        12px;
 
-      font-weight: 700;
+      font-weight:
+        700;
 
-      height: 45px;
+      height:
+        45px;
 
-      flex-shrink: 0;
+      touch-action:
+        manipulation;
     }
 
     .voice-button {
-      width: 45px;
+      width:
+        45px;
 
-      background: #eef2f7;
+      background:
+        #eef2f7;
 
-      font-size: 17px;
+      font-size:
+        17px;
+
+      flex-shrink:
+        0;
     }
 
     .voice-button:hover {
-      background: #e2e8f0;
+      background:
+        #e2e8f0;
     }
 
     .voice-button.active {
-      background: #d93025;
+      background:
+        #d93025;
 
-      color: #ffffff;
+      color:
+        #ffffff;
 
-      animation: voicePulse 1.2s infinite;
+      animation:
+        voicePulse
+        1.2s
+        infinite;
     }
 
     @keyframes voicePulse {
+
       0% {
         box-shadow:
-          0 0 0 0 rgba(217, 48, 37, 0.35);
+          0 0 0 0 rgba(217,48,37,0.35);
       }
 
       70% {
         box-shadow:
-          0 0 0 8px rgba(217, 48, 37, 0);
+          0 0 0 8px rgba(217,48,37,0);
       }
 
       100% {
         box-shadow:
-          0 0 0 0 rgba(217, 48, 37, 0);
+          0 0 0 0 rgba(217,48,37,0);
       }
+
     }
 
     .send-button {
-      padding: 0 15px;
+      padding:
+        0 15px;
 
-      background: #1976d2;
+      background:
+        var(--blue);
 
-      color: #ffffff;
+      color:
+        #ffffff;
+
+      flex-shrink:
+        0;
+
+      box-shadow:
+        0 2px 5px rgba(25,118,210,0.17);
     }
 
     .send-button:hover {
-      background: #125ea7;
+      background:
+        var(--blue-dark);
     }
 
     .send-button:disabled,
     .voice-button:disabled,
     textarea:disabled {
-      opacity: 0.55;
+      opacity:
+        .55;
 
-      cursor: not-allowed;
+      cursor:
+        not-allowed;
     }
-
-    /* =========================================================
-       MAP POPUP
-    ========================================================= */
 
     .esri-popup__main-container {
-      border-radius: 12px;
+      border-radius:
+        12px;
     }
-
-    /* =========================================================
-       TABLET
-    ========================================================= */
-
-    @media (max-width: 1000px) {
-
-      .main {
-        grid-template-columns:
-          minmax(0, 1.25fr)
-          minmax(350px, 0.75fr);
-      }
-
-      .assistant-header {
-        padding: 15px 16px;
-      }
-
-      .messages {
-        padding: 16px;
-      }
-
-      .quick-actions {
-        padding-left: 14px;
-        padding-right: 14px;
-      }
-
-      .input-area {
-        padding-left: 9px;
-        padding-right: 9px;
-      }
-    }
-
-    /* =========================================================
-       MOBILE
-    ========================================================= */
 
     @media (max-width: 850px) {
 
-      html,
-      body {
-        width: 100%;
-        height: 100%;
-
-        overflow: hidden;
+      :root {
+        --header-height:
+          56px;
       }
-
-      .app {
-        width: 100%;
-
-        height: 100vh;
-        height: 100dvh;
-
-        min-height: 100vh;
-        min-height: 100dvh;
-
-        overflow: hidden;
-      }
-
-      /* HEADER */
 
       .header {
-        height: 56px;
-        min-height: 56px;
-
         padding:
           0 12px;
       }
 
       .header-subtitle {
-        display: none;
+        display:
+          none;
       }
 
       .logo {
-        font-size: 18px;
+        font-size:
+          18px;
       }
 
       .brand-icon {
-        width: 33px;
-        height: 33px;
+        width:
+          33px;
 
-        border-radius: 9px;
+        height:
+          33px;
 
-        font-size: 14px;
+        border-radius:
+          9px;
+
+        font-size:
+          8px;
       }
 
       .status {
-        padding: 6px 9px;
+        padding:
+          6px 9px;
 
-        font-size: 10px;
+        font-size:
+          10px;
       }
-
-      /* MAIN */
 
       .main {
-        display: grid;
-
-        grid-template-columns: 1fr;
-
-        /*
-         * Χρησιμοποιούμε minmax(0, ...)
-         * για να μην μεγαλώνει το chat
-         * και κόβεται το input.
-         */
+        grid-template-columns:
+          1fr;
 
         grid-template-rows:
-          minmax(220px, 40dvh)
-          minmax(0, 60dvh);
-
-        height: calc(100dvh - 56px);
-
-        min-height: 0;
-
-        overflow: hidden;
+          minmax(190px,42%)
+          minmax(0,58%);
       }
 
-      /* MAP */
-
       .map-panel {
-        min-height: 0;
-
-        height: 100%;
+        min-height:
+          0;
 
         border-bottom:
           1px solid #dfe4ea;
-
-        overflow: hidden;
       }
 
-      #map {
-        width: 100%;
-        height: 100%;
+      .assistant-panel {
+        min-height:
+          0;
+
+        border-left:
+          none;
       }
 
       .map-label {
-        top: 10px;
-        left: 10px;
+        top:
+          10px;
 
-        padding: 8px 10px;
+        left:
+          10px;
 
-        font-size: 11px;
+        padding:
+          8px 10px;
+
+        font-size:
+          11px;
       }
 
       .map-info {
-        display: none;
-      }
-
-      /* ASSISTANT */
-
-      .assistant-panel {
-        min-height: 0;
-
-        height: 100%;
-
-        border-left: none;
-
-        overflow: hidden;
-
-        display: flex;
-        flex-direction: column;
+        display:
+          none;
       }
 
       .assistant-header {
-        padding: 10px 13px;
-
-        flex-shrink: 0;
+        padding:
+          10px 13px;
       }
 
       .ai-icon {
-        width: 34px;
-        height: 34px;
+        width:
+          34px;
 
-        border-radius: 10px;
+        height:
+          34px;
 
-        font-size: 17px;
+        border-radius:
+          10px;
+
+        font-size:
+          17px;
       }
 
       .assistant-title {
-        font-size: 15px;
+        font-size:
+          15px;
       }
 
       .assistant-subtitle {
-        font-size: 10px;
+        font-size:
+          10px;
       }
 
-      /* MESSAGES */
-
       .messages {
-        flex: 1;
-
-        min-height: 0;
-
-        height: auto;
-
         padding:
           12px 13px 8px;
-
-        overflow-y: auto;
-        overflow-x: hidden;
-
-        -webkit-overflow-scrolling: touch;
       }
 
       .message {
-        margin-bottom: 12px;
+        margin-bottom:
+          14px;
       }
 
       .bubble {
-        max-width: 94%;
+        max-width:
+          95%;
 
         padding:
           10px 12px;
 
-        font-size: 12px;
+        font-size:
+          12px;
 
-        line-height: 1.48;
+        line-height:
+          1.55;
       }
 
+      .external-card,
       .message-actions {
-        max-width: 94%;
+        max-width:
+          95%;
       }
 
       .chat-action {
         padding:
           8px 9px;
 
-        font-size: 10px;
+        font-size:
+          10px;
       }
 
-      /* QUICK ACTIONS */
-
       .quick-actions {
-        flex-shrink: 0;
-
-        width: 100%;
-
         padding:
           0 12px 8px;
 
-        gap: 5px;
+        gap:
+          5px;
 
-        max-height: 48px;
+        max-height:
+          48px;
 
-        overflow-x: auto;
-        overflow-y: hidden;
+        overflow-x:
+          auto;
 
-        flex-wrap: nowrap;
+        overflow-y:
+          hidden;
 
-        scrollbar-width: none;
+        flex-wrap:
+          nowrap;
 
-        -webkit-overflow-scrolling: touch;
+        scrollbar-width:
+          none;
       }
 
       .quick-actions::-webkit-scrollbar {
-        display: none;
+        display:
+          none;
       }
 
       .quick-button {
-        white-space: nowrap;
+        white-space:
+          nowrap;
 
-        flex-shrink: 0;
+        flex-shrink:
+          0;
 
         padding:
           7px 9px;
 
-        font-size: 10px;
+        font-size:
+          10px;
       }
 
-      /* INPUT */
-
       .input-area {
-        flex-shrink: 0;
-
-        width: 100%;
-
-        min-height: 59px;
-
         padding:
           8px;
 
-        gap: 6px;
-
-        /*
-         * Πολύ σημαντικό:
-         * το input δεν βγαίνει ποτέ
-         * έξω από το assistant.
-         */
-
-        position: relative;
-
-        bottom: auto;
-
-        overflow: visible;
+        padding-bottom:
+          max(
+            8px,
+            env(safe-area-inset-bottom)
+          );
       }
 
       textarea {
-        width: 100%;
+        height:
+          43px;
 
-        height: 43px;
+        min-height:
+          43px;
 
-        min-height: 43px;
+        max-height:
+          82px;
 
-        max-height: 82px;
+        padding:
+          11px;
 
-        padding: 11px;
-
-        font-size: 13px;
+        font-size:
+          13px;
       }
 
       .voice-button,
       .send-button {
-        height: 43px;
+        height:
+          43px;
       }
 
       .voice-button {
-        width: 43px;
+        width:
+          43px;
       }
 
       .send-button {
         padding:
           0 12px;
 
-        font-size: 12px;
+        font-size:
+          12px;
       }
-    }
 
-    /* =========================================================
-       SMALL MOBILE
-    ========================================================= */
+    }
 
     @media (max-width: 520px) {
 
-      .header {
-        padding: 0 9px;
-      }
-
-      .brand {
-        gap: 8px;
-      }
-
-      .brand-icon {
-        width: 31px;
-        height: 31px;
-      }
-
-      .logo {
-        font-size: 16px;
-      }
-
-      .status {
-        padding:
-          5px 7px;
-
-        font-size: 9px;
-      }
-
       .main {
-        /*
-         * Λίγο περισσότερο χώρο
-         * στο chat.
-         */
-
         grid-template-rows:
-          minmax(190px, 36dvh)
-          minmax(0, 64dvh);
-      }
-
-      .assistant-header {
-        padding:
-          8px 11px;
+          minmax(170px,37%)
+          minmax(0,63%);
       }
 
       .assistant-subtitle {
-        display: none;
+        display:
+          none;
       }
 
       .messages {
         padding:
-          9px 10px 6px;
+          10px 11px 6px;
       }
 
-      .bubble {
-        max-width: 96%;
-
-        font-size: 12px;
-      }
-
+      .bubble,
+      .external-card,
       .message-actions {
-        max-width: 96%;
+        max-width:
+          97%;
       }
 
       .chat-action {
@@ -1054,446 +1710,374 @@
           7px 8px;
       }
 
-      .quick-actions {
-        padding:
-          0 10px 7px;
-
-        max-height: 43px;
-      }
-
-      .input-area {
-        min-height: 59px;
-
-        padding:
-          7px;
-      }
-
-      textarea {
-        height: 43px;
-        min-height: 43px;
-      }
-
-      .voice-button {
-        width: 43px;
-      }
-
       .send-button {
-        font-size: 0;
+        font-size:
+          0;
 
-        width: 43px;
+        width:
+          43px;
 
-        padding: 0;
+        padding:
+          0;
       }
 
       .send-button::after {
-        content: "➤";
+        content:
+          "➤";
 
-        font-size: 16px;
+        font-size:
+          16px;
       }
+
     }
 
-    /* =========================================================
-       VERY SMALL PHONES
-    ========================================================= */
-
-    @media (max-width: 380px) {
-
-      .status {
-        display: none;
-      }
+    @media
+      (max-height:650px)
+      and
+      (max-width:850px) {
 
       .main {
         grid-template-rows:
-          minmax(175px, 34dvh)
-          minmax(0, 66dvh);
-      }
-
-      .bubble {
-        font-size: 11.5px;
-      }
-
-      .quick-button {
-        font-size: 9.5px;
-      }
-    }
-
-    /* =========================================================
-       LANDSCAPE MOBILE
-    ========================================================= */
-
-    @media (max-width: 850px) and (orientation: landscape) {
-
-      .header {
-        height: 48px;
-        min-height: 48px;
-      }
-
-      .main {
-        height: calc(100dvh - 48px);
-
-        grid-template-columns:
-          45% 55%;
-
-        grid-template-rows: 1fr;
-      }
-
-      .map-panel {
-        border-bottom: none;
-
-        border-right:
-          1px solid #dfe4ea;
-      }
-
-      .assistant-panel {
-        border-left: none;
+          minmax(130px,30%)
+          minmax(0,70%);
       }
 
       .assistant-header {
         padding:
-          7px 10px;
+          7px 11px;
       }
 
       .messages {
-        padding:
-          8px 10px;
+        padding-top:
+          8px;
+
+        padding-bottom:
+          5px;
       }
 
       .quick-actions {
-        max-height: 38px;
+        max-height:
+          42px;
 
-        padding-bottom: 5px;
+        padding-bottom:
+          5px;
       }
 
       .input-area {
-        min-height: 55px;
-
-        padding: 6px;
+        padding-top:
+          6px;
       }
 
-      textarea {
-        height: 41px;
-        min-height: 41px;
-      }
-
-      .voice-button,
-      .send-button {
-        height: 41px;
-      }
     }
+
   </style>
+
 </head>
 
 <body>
 
-<div class="app">
+  <div class="app">
 
-  <!-- =======================================================
-       HEADER
-  ======================================================== -->
+<header class="header">
 
-  <header class="header">
+  <div class="brand">
 
-    <div class="brand">
+    <div class="brand-icon">
+      City4All
+    </div>
 
-      <div class="brand-icon">
-        City4all
+    <div>
+
+      <div class="logo">
+        City4<span>All</span> AI
       </div>
 
-      <div>
+      <div class="header-subtitle">
+        Accessibility intelligence for everyone
+      </div>
 
-        <div class="logo">
-          City4<span>All</span> AI
+    </div>
+
+  </div>
+
+  <div class="status">
+
+    <span class="status-dot"></span>
+
+    AI Online
+
+  </div>
+
+</header>
+
+<main class="main">
+
+  <section class="map-panel">
+
+    <div
+      id="map"
+      aria-label="City4All Web Map"
+    ></div>
+
+    <div class="map-label">
+      🗺️ City4All Map
+    </div>
+
+    <div class="map-info">
+      Ο AI εμφανίζει εδώ τα σημεία που βρίσκει.
+    </div>
+
+  </section>
+
+  <section class="assistant-panel">
+
+    <div class="assistant-header">
+
+      <div class="assistant-heading">
+
+        <div class="ai-icon">
+          ✦
         </div>
 
-        <div class="header-subtitle">
-          Accessibility intelligence for everyone
+        <div>
+
+          <div class="assistant-title">
+            City4All Assistant
+          </div>
+
+          <div class="assistant-subtitle">
+            Βρες προσβάσιμα σημεία και πληροφορίες προσβασιμότητας.
+          </div>
+
         </div>
 
       </div>
 
     </div>
 
-    <div class="status">
-      <span class="status-dot"></span>
-      AI Online
-    </div>
+    <div
+      id="messages"
+      class="messages"
+    >
 
-  </header>
+      <div class="message ai">
 
+        <div class="message-meta">
 
-  <!-- =======================================================
-       MAIN
-  ======================================================== -->
-
-  <main class="main">
-
-    <!-- =====================================================
-         MAP
-    ====================================================== -->
-
-    <section class="map-panel">
-
-      <div
-        id="map"
-        aria-label="City4All Web Map"
-      ></div>
-
-      <div class="map-label">
-        🗺️ City4All Map
-      </div>
-
-      <div class="map-info">
-        Ο AI εμφανίζει εδώ τα σημεία που βρίσκει.
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         ASSISTANT
-    ====================================================== -->
-
-    <section class="assistant-panel">
-
-      <div class="assistant-header">
-
-        <div class="assistant-heading">
-
-          <div class="ai-icon">
+          <div class="message-meta-icon">
             ✦
           </div>
 
-          <div>
+          <span>
+            City4All AI
+          </span>
 
-            <div class="assistant-title">
-              City4All Assistant
-            </div>
+        </div>
 
-            <div class="assistant-subtitle">
-              Βρες προσβάσιμα σημεία και πληροφορίες προσβασιμότητας.
-            </div>
+        <div class="bubble">
 
-          </div>
+          <strong>👋 Γεια σου!</strong>
+
+          <p>
+            Είμαι ο <strong>City4All AI Assistant</strong>.
+            Μπορώ να σε βοηθήσω να βρεις προσβάσιμα σημεία,
+            να εξερευνήσεις τον χάρτη και να μάθεις περισσότερα
+            για τα μέρη που βρίσκεις.
+          </p>
+
+          <p>
+            Μπορείς να μου μιλήσεις φυσικά, όπως θα μιλούσες
+            σε έναν άνθρωπο.
+          </p>
+
+          <p>
+            💡 Για παράδειγμα:
+            <strong>«Βρες μου προσβάσιμα στάδια στην Αθήνα»</strong>
+          </p>
 
         </div>
 
       </div>
 
+    </div>
 
-      <!-- ===================================================
-           MESSAGES
-      ==================================================== -->
+    <div class="quick-actions">
 
-      <div
-        id="messages"
-        class="messages"
+      <button
+        class="quick-button"
+        type="button"
+        data-question="Βρες μου προσβάσιμα στάδια"
       >
+        📍 Αθλητικά κέντρα
+      </button>
 
-        <div class="message ai">
+      <button
+        class="quick-button"
+        type="button"
+        data-question="Ποια σημεία έχουν ράμπα;"
+      >
+        ♿ Με ράμπα
+      </button>
 
-          <div class="bubble">
-            👋 Γεια σου! Είμαι ο City4All AI Assistant.
-            Μπορώ να σε βοηθήσω να βρεις πραγματικά σημεία και πληροφορίες προσβασιμότητας από τα δεδομένα του City4all.
-            Για παράδειγμα: «Βρες μου καφετέριες με ράμπα»
-          </div>
+      <button
+        class="quick-button"
+        type="button"
+        data-question="Ποια σημεία έχουν προσβάσιμο WC;"
+      >
+        🚻 Προσβάσιμο WC
+      </button>
 
-        </div>
+      <button
+        class="quick-button"
+        type="button"
+        data-question="Ποια σημεία έχουν parking ΑμεΑ;"
+      >
+        🅿️ Parking ΑμεΑ
+      </button>
 
-      </div>
+    </div>
 
+    <div class="input-area">
 
-      <!-- ===================================================
-           QUICK ACTIONS
-      ==================================================== -->
+      <button
+        id="voiceButton"
+        class="voice-button"
+        type="button"
+        title="Έναρξη φωνητικής συνομιλίας"
+        aria-label="Έναρξη φωνητικής συνομιλίας"
+      >
+        🎤
+      </button>
 
-      <div class="quick-actions">
+      <textarea
+        id="messageInput"
+        placeholder="Ρώτησε τον City4All Assistant..."
+        aria-label="Μήνυμα"
+        rows="1"
+      ></textarea>
 
-        <button
-          class="quick-button"
-          type="button"
-          data-question="Βρες μου προσβάσιμα στάδια"
-        >
-          📍 Αθλητικά κέντρα
-        </button>
+      <button
+        id="sendButton"
+        class="send-button"
+        type="button"
+      >
+        Αποστολή
+      </button>
 
-        <button
-          class="quick-button"
-          type="button"
-          data-question="Ποια σημεία έχουν ράμπα;"
-        >
-          ♿ Με ράμπα
-        </button>
+    </div>
 
-        <button
-          class="quick-button"
-          type="button"
-          data-question="Ποια σημεία έχουν προσβάσιμο WC;"
-        >
-          🚻 Προσβάσιμο WC
-        </button>
+  </section>
 
-        <button
-          class="quick-button"
-          type="button"
-          data-question="Ποια σημεία έχουν parking ΑμεΑ;"
-        >
-          🅿️ Parking ΑμεΑ
-        </button>
-
-      </div>
-
-
-      <!-- ===================================================
-           INPUT
-      ==================================================== -->
-
-      <div class="input-area">
-
-        <button
-          id="voiceButton"
-          class="voice-button"
-          type="button"
-          title="Μίλησε στον City4All Assistant"
-          aria-label="Φωνητική εισαγωγή"
-        >
-          🎤
-        </button>
-
-        <textarea
-          id="messageInput"
-          placeholder="Ρώτησε τον City4All Assistant..."
-          aria-label="Μήνυμα"
-          rows="1"
-        ></textarea>
-
-        <button
-          id="sendButton"
-          class="send-button"
-          type="button"
-        >
-          Αποστολή
-        </button>
-
-      </div>
-
-    </section>
-
-  </main>
-
-</div>
+</main>
 
 
-<script src="app.js"></script>
+  </div>
 
+  <script src="app.js"></script>
 
-<!-- =========================================================
-     ARCGIS MAP
-========================================================= -->
+  <script>
 
-<script>
-
-require(
-  [
-    "esri/WebMap",
-    "esri/views/MapView",
-    "esri/Graphic",
-    "esri/layers/GraphicsLayer"
-  ],
-
-  function (
-    WebMap,
-    MapView,
-    Graphic,
-    GraphicsLayer
-  ) {
-
-    const webmap = new WebMap({
-
-      portalItem: {
-        id: "969e9e5433dd4b968cf06793dc7b7aca"
-      }
-
-    });
-
-
-    /*
-     * Αρχικός χάρτης:
-     * Ευρύτερη Ευρώπη
-     */
-
-    const view = new MapView({
-
-      container: "map",
-
-      map: webmap,
-
-      center: [
-        15.0,
-        50.0
+    require(
+      [
+        "esri/WebMap",
+        "esri/views/MapView",
+        "esri/Graphic",
+        "esri/layers/GraphicsLayer"
       ],
 
-      zoom: 4.3
+      function(
+        WebMap,
+        MapView,
+        Graphic,
+        GraphicsLayer
+      ) {
 
-    });
+        const webmap =
+          new WebMap({
 
+            portalItem: {
+              id:
+                "969e9e5433dd4b968cf06793dc7b7aca"
+            }
 
-    const resultsLayer =
-      new GraphicsLayer();
+          });
 
+        const view =
+          new MapView({
 
-    webmap.add(
-      resultsLayer
-    );
+            container:
+              "map",
 
+            map:
+              webmap,
 
-    window.city4allMap = {
+            center: [
+              15.0,
+              50.0
+            ],
 
-      view: view,
+            zoom:
+              4.3
 
-      resultsLayer:
-        resultsLayer,
+          });
 
-      Graphic:
-        Graphic
+        const resultsLayer =
+          new GraphicsLayer({
 
-    };
+            title:
+              "City4All AI Results"
 
+          });
 
-    view.when(
-
-      function () {
-
-        console.log(
-          "City4All map loaded."
+        webmap.add(
+          resultsLayer
         );
 
+        window.city4allMap = {
 
-        window.dispatchEvent(
-          new Event(
-            "city4all-map-ready"
-          )
+          view,
+
+          resultsLayer,
+
+          Graphic
+
+        };
+
+        view.when(
+
+          function() {
+
+            console.log(
+              "City4All map loaded."
+            );
+
+            window.dispatchEvent(
+              new Event(
+                "city4all-map-ready"
+              )
+            );
+
+          }
+
+        ).catch(
+
+          function(error) {
+
+            console.error(
+              "City4All map loading error:",
+              error
+            );
+
+          }
+
         );
 
       }
 
-    ).catch(
-
-      function (error) {
-
-        console.error(
-          "City4All map loading error:",
-          error
-        );
-
-      }
-
     );
 
-  }
-
-);
-
-</script>
+  </script>
 
 </body>
+
 </html>
