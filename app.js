@@ -1,8 +1,7 @@
 const API_BASE =
   "https://city4allfinalai.ilias-pap-net.workers.dev";
 
-const CHAT_URL =
-  `${API_BASE}/chat`;
+const CHAT_URL = `${API_BASE}/chat`;
 
 
 /* ============================================================
@@ -10,12 +9,21 @@ const CHAT_URL =
 ============================================================ */
 
 let conversation = [];
-
 let previousFeatures = [];
 
 let isLoading = false;
-
 let isSpeaking = false;
+
+/*
+ * Voice Mode
+ *
+ * false = κανονικό text chat
+ * true  = συνεχόμενη φωνητική συνομιλία
+ */
+let voiceMode = false;
+let recognition = null;
+let listening = false;
+let shouldContinueListening = false;
 
 
 /* ============================================================
@@ -44,10 +52,9 @@ document.addEventListener(
   () => {
 
     setupQuickActions();
-
     setupInput();
-
     setupVoice();
+    setupMobileViewport();
 
     console.log(
       "City4All AI frontend loaded."
@@ -127,20 +134,7 @@ function setupInput() {
     "input",
     () => {
 
-      inputEl.style.height =
-        "43px";
-
-      const newHeight =
-        Math.min(
-          inputEl.scrollHeight,
-          100
-        );
-
-      inputEl.style.height =
-        `${Math.max(
-          43,
-          newHeight
-        )}px`;
+      autoResizeInput();
 
     }
   );
@@ -154,11 +148,33 @@ function setupInput() {
 }
 
 
+function autoResizeInput() {
+
+  inputEl.style.height =
+    "43px";
+
+  const newHeight =
+    Math.min(
+      inputEl.scrollHeight,
+      100
+    );
+
+  inputEl.style.height =
+    `${Math.max(
+      43,
+      newHeight
+    )}px`;
+
+}
+
+
 /* ============================================================
    SEND MESSAGE
 ============================================================ */
 
-async function sendMessage() {
+async function sendMessage(
+  fromVoice = false
+) {
 
   if (isLoading) {
     return;
@@ -174,16 +190,19 @@ async function sendMessage() {
   }
 
 
-  /* ----------------------------------------------------------
-     STOP CURRENT SPEECH
-  ---------------------------------------------------------- */
+  /*
+   * Στο text mode σταματάμε τυχόν προηγούμενη ομιλία.
+   *
+   * Στο voice mode επίσης σταματάμε την προηγούμενη
+   * απάντηση πριν ξεκινήσει η νέα.
+   */
 
   stopSpeaking();
 
 
-  /* ----------------------------------------------------------
-     USER MESSAGE
-  ---------------------------------------------------------- */
+  /*
+   * USER MESSAGE
+   */
 
   addMessage(
     "user",
@@ -259,19 +278,14 @@ async function sendMessage() {
     }
 
 
-    /* --------------------------------------------------------
-       ANSWER
-    -------------------------------------------------------- */
+    /*
+     * ANSWER
+     */
 
     const answer =
       data.answer ||
       "Δεν μπόρεσα να δημιουργήσω απάντηση.";
 
-
-    /*
-     * Το AI απαντάει κανονικά
-     * μέσα στο chat.
-     */
 
     const messageElement =
       addMessage(
@@ -280,9 +294,9 @@ async function sendMessage() {
       );
 
 
-    /* --------------------------------------------------------
-       CONVERSATION
-    -------------------------------------------------------- */
+    /*
+     * CONVERSATION
+     */
 
     updateConversation(
       message,
@@ -290,9 +304,9 @@ async function sendMessage() {
     );
 
 
-    /* --------------------------------------------------------
-       FEATURES
-    -------------------------------------------------------- */
+    /*
+     * FEATURES
+     */
 
     const features =
       Array.isArray(
@@ -306,9 +320,9 @@ async function sendMessage() {
       features;
 
 
-    /* --------------------------------------------------------
-       CHAT ACTIONS
-    -------------------------------------------------------- */
+    /*
+     * CHAT ACTIONS
+     */
 
     addChatActions(
       messageElement,
@@ -316,22 +330,36 @@ async function sendMessage() {
     );
 
 
-    /* --------------------------------------------------------
-       MAP
-    -------------------------------------------------------- */
+    /*
+     * MAP
+     */
 
     updateMap(
       features
     );
 
 
-    /* --------------------------------------------------------
-       VOICE RESPONSE
-    -------------------------------------------------------- */
+    /*
+     * VOICE RESPONSE
+     *
+     * ΣΗΜΑΝΤΙΚΟ:
+     *
+     * Στο κανονικό text mode ΔΕΝ
+     * διαβάζουμε αυτόματα την απάντηση.
+     *
+     * Μόνο στο Voice Mode.
+     */
 
-    speakAnswer(
-      answer
-    );
+    if (
+      voiceMode &&
+      fromVoice
+    ) {
+
+      speakAnswer(
+        answer
+      );
+
+    }
 
   }
 
@@ -352,6 +380,19 @@ async function sendMessage() {
       "ai",
       "⚠️ Κάτι πήγε στραβά. Δεν μπόρεσα να επικοινωνήσω με το City4All AI."
     );
+
+
+    /*
+     * Αν είμαστε σε Voice Mode,
+     * σταματάμε προσωρινά την ακρόαση.
+     */
+
+    if (voiceMode) {
+
+      shouldContinueListening =
+        false;
+
+    }
 
   }
 
@@ -566,12 +607,26 @@ function setLoading(
     loading;
 
 
-  voiceButton.disabled =
-    loading;
+  /*
+   * Μην απενεργοποιούμε το voice button
+   * όταν είμαστε σε Voice Mode.
+   *
+   * Χρειάζεται να μπορεί ο χρήστης
+   * να κλείσει το Voice Mode.
+   */
 
+  voiceButton.disabled =
+    false;
+
+
+  /*
+   * Στο voice mode δεν χρειάζεται
+   * να γράφει ο χρήστης.
+   */
 
   inputEl.disabled =
-    loading;
+    loading ||
+    voiceMode;
 
 
   sendButton.textContent =
@@ -596,6 +651,16 @@ function addChatActions(
     !features.length
   ) {
 
+    /*
+     * Ακόμη και όταν δεν υπάρχουν
+     * features, μπορούμε να έχουμε
+     * κουμπί ακρόασης.
+     */
+
+    addSpeakAction(
+      messageElement
+    );
+
     return;
 
   }
@@ -612,7 +677,7 @@ function addChatActions(
 
 
   /*
-   * Αν υπάρχει μόνο ένα σημείο
+   * ΕΝΑ ΣΗΜΕΙΟ
    */
 
   if (
@@ -658,7 +723,7 @@ function addChatActions(
 
 
   /*
-   * Πολλά αποτελέσματα
+   * ΠΟΛΛΑ ΣΗΜΕΙΑ
    */
 
   else {
@@ -698,10 +763,6 @@ function addChatActions(
     );
 
 
-    /*
-     * Οδηγίες για το πρώτο
-     */
-
     const first =
       features[0];
 
@@ -725,7 +786,7 @@ function addChatActions(
 
 
   /*
-   * Text-to-speech control
+   * SPEECH BUTTON
    */
 
   if (
@@ -782,6 +843,77 @@ function addChatActions(
     scrollMessages();
 
   }
+
+}
+
+
+/* ============================================================
+   SPEAK ACTION
+============================================================ */
+
+function addSpeakAction(
+  messageElement
+) {
+
+  if (
+    !"speechSynthesis" in window
+  ) {
+
+    return;
+
+  }
+
+
+  const actions =
+    document.createElement(
+      "div"
+    );
+
+
+  actions.className =
+    "message-actions";
+
+
+  const speakButton =
+    document.createElement(
+      "button"
+    );
+
+
+  speakButton.type =
+    "button";
+
+
+  speakButton.className =
+    "chat-action";
+
+
+  speakButton.textContent =
+    "🔊 Ακρόαση";
+
+
+  speakButton.addEventListener(
+    "click",
+    () => {
+
+      speakAnswer(
+        getBubbleText(
+          messageElement
+        )
+      );
+
+    }
+  );
+
+
+  actions.appendChild(
+    speakButton
+  );
+
+
+  messageElement.appendChild(
+    actions
+  );
 
 }
 
@@ -887,12 +1019,21 @@ function createRouteButton(
 
   button.addEventListener(
     "click",
-    () => {
+    event => {
+
+      event.preventDefault();
+      event.stopPropagation();
+
+
+      /*
+       * Χρησιμοποιούμε location.href
+       * για καλύτερη συμβατότητα σε
+       * mobile browsers / WebView.
+       */
 
       window.open(
         url,
-        "_blank",
-        "noopener,noreferrer"
+        "_blank"
       );
 
     }
@@ -943,6 +1084,25 @@ function updateMap(
       "City4All map is not ready."
     );
 
+    /*
+     * Αν ο χάρτης δεν είναι ακόμη
+     * έτοιμος, περιμένουμε το event.
+     */
+
+    window.addEventListener(
+      "city4all-map-ready",
+      () => {
+
+        updateMap(
+          features
+        );
+
+      },
+      {
+        once: true
+      }
+    );
+
     return;
 
   }
@@ -968,8 +1128,7 @@ function updateMap(
 
 
   /*
-   * Δεν έχουμε αποτελέσματα.
-   * Καθαρίζουμε μόνο τα markers.
+   * ΔΕΝ ΕΧΟΥΜΕ ΑΠΟΤΕΛΕΣΜΑΤΑ
    */
 
   if (
@@ -1104,26 +1263,42 @@ function updateMap(
 
 
   /*
-   * Αυτόματο zoom.
+   * ΠΕΡΙΜΕΝΟΥΜΕ ΝΑ ΣΧΕΔΙΑΣΤΟΥΝ
+   * ΤΑ GRAPHICS ΠΡΙΝ ΤΟ GO TO.
+   *
+   * Αυτό βοηθάει ιδιαίτερα στο
+   * mobile ArcGIS view.
    */
 
-  if (
-    validFeatures.length === 1
-  ) {
+  requestAnimationFrame(
+    () => {
 
-    focusMapFeature(
-      validFeatures[0]
-    );
+      requestAnimationFrame(
+        () => {
 
-  }
+          if (
+            validFeatures.length === 1
+          ) {
 
-  else {
+            focusMapFeature(
+              validFeatures[0]
+            );
 
-    focusAllFeatures(
-      validFeatures
-    );
+          }
 
-  }
+          else {
+
+            focusAllFeatures(
+              validFeatures
+            );
+
+          }
+
+        }
+      );
+
+    }
+  );
 
 }
 
@@ -1168,30 +1343,43 @@ function focusMapFeature(
   }
 
 
-  window.city4allMap.view
-    .goTo(
-      {
+  const view =
+    window.city4allMap.view;
 
-        center: [
-          longitude,
-          latitude
-        ],
 
-        zoom:
-          17
+  view.goTo(
+    {
 
-      },
+      center: [
+        longitude,
+        latitude
+      ],
 
-      {
+      zoom:
+        17
 
-        duration:
-          900
+    },
 
-      }
-    )
-    .catch(
-      () => {}
-    );
+    {
+
+      duration:
+        900,
+
+      easing:
+        "ease-in-out"
+
+    }
+  )
+  .catch(
+    error => {
+
+      console.warn(
+        "Map goTo error:",
+        error
+      );
+
+    }
+  );
 
 }
 
@@ -1287,12 +1475,22 @@ function focusAllFeatures(
         },
 
         duration:
-          1000
+          1000,
+
+        easing:
+          "ease-in-out"
 
       }
     )
     .catch(
-      () => {}
+      error => {
+
+        console.warn(
+          "Map goTo error:",
+          error
+        );
+
+      }
     );
 
 }
@@ -1375,7 +1573,7 @@ function createGoogleMapsUrl(
 
 
 /* ============================================================
-   VOICE INPUT
+   VOICE INPUT / VOICE CONVERSATION
 ============================================================ */
 
 function setupVoice() {
@@ -1415,13 +1613,24 @@ function setupVoice() {
   }
 
 
-  const recognition =
+  recognition =
     new SpeechRecognition();
 
 
   recognition.lang =
     "el-GR";
 
+
+  /*
+   * continuous = false:
+   *
+   * Κάθε φορά ακούμε μία φυσική
+   * φράση/απάντηση και μετά ξαναρχίζουμε
+   * αυτόματα.
+   *
+   * Έτσι έχουμε περισσότερο έλεγχο
+   * και καλύτερη συμβατότητα browser.
+   */
 
   recognition.continuous =
     false;
@@ -1435,51 +1644,31 @@ function setupVoice() {
     1;
 
 
-  let listening =
-    false;
-
+  /*
+   * CLICK VOICE BUTTON
+   */
 
   voiceButton.addEventListener(
     "click",
     () => {
 
       if (
-        isLoading
+        voiceMode
       ) {
+
+        /*
+         * Αν είμαστε ήδη σε Voice Mode,
+         * το κουμπί λειτουργεί ως STOP.
+         */
+
+        exitVoiceMode();
 
         return;
 
       }
 
 
-      if (
-        listening
-      ) {
-
-        recognition.stop();
-
-        return;
-
-      }
-
-
-      stopSpeaking();
-
-
-      try {
-
-        recognition.start();
-
-      }
-
-      catch (error) {
-
-        console.warn(
-          "Speech recognition:",
-          error
-        );
-
-      }
+      startVoiceMode();
 
     }
   );
@@ -1500,6 +1689,15 @@ function setupVoice() {
       voiceButton.textContent =
         "⏹️";
 
+
+      voiceButton.title =
+        "Κλείσιμο Voice Mode";
+
+
+      console.log(
+        "City4All Voice Mode: listening"
+      );
+
     };
 
 
@@ -1515,8 +1713,38 @@ function setupVoice() {
       );
 
 
-      voiceButton.textContent =
-        "🎤";
+      /*
+       * Μόνο αν παραμένουμε
+       * σε Voice Mode ξαναρχίζουμε.
+       */
+
+      if (
+        voiceMode &&
+        shouldContinueListening
+      ) {
+
+        setTimeout(
+          () => {
+
+            startListening();
+
+          },
+          250
+        );
+
+      }
+
+      else if (
+        !voiceMode
+      ) {
+
+        voiceButton.textContent =
+          "🎤";
+
+        voiceButton.title =
+          "Μίλησε στον City4All Assistant";
+
+      }
 
     };
 
@@ -1530,40 +1758,71 @@ function setupVoice() {
 
 
       if (
-        transcript.trim()
+        !transcript.trim()
       ) {
 
-        inputEl.value =
-          transcript.trim();
+        return;
+
+      }
 
 
-        inputEl.dispatchEvent(
-          new Event(
-            "input"
-          )
-        );
+      inputEl.value =
+        transcript.trim();
 
+
+      inputEl.dispatchEvent(
+        new Event(
+          "input"
+        )
+      );
+
+
+      /*
+       * Στο Voice Mode στέλνουμε
+       * αυτόματα το μήνυμα.
+       */
+
+      if (
+        voiceMode
+      ) {
 
         /*
-         * Πολύ σημαντικό:
-         * Η φωνή στέλνεται αυτόματα
-         * στον AI.
+         * Σταματάμε προσωρινά
+         * το recognition.
          */
+
+        shouldContinueListening =
+          false;
+
 
         setTimeout(
           () => {
 
             if (
+              voiceMode &&
               !isLoading
             ) {
 
-              sendMessage();
+              sendMessage(
+                true
+              );
 
             }
 
           },
           100
         );
+
+      }
+
+      else {
+
+        /*
+         * Κανονικό text mode:
+         * απλώς γεμίζουμε το input.
+         */
+
+        inputEl.focus();
 
       }
 
@@ -1579,6 +1838,10 @@ function setupVoice() {
       );
 
 
+      listening =
+        false;
+
+
       if (
         event.error ===
         "not-allowed"
@@ -1589,9 +1852,286 @@ function setupVoice() {
           "🎤 Χρειάζεται να επιτρέψεις πρόσβαση στο μικρόφωνο από τον browser."
         );
 
+
+        exitVoiceMode();
+
+        return;
+
+      }
+
+
+      /*
+       * No-speech / aborted:
+       * αν είμαστε σε Voice Mode,
+       * δοκιμάζουμε ξανά.
+       */
+
+      if (
+        voiceMode &&
+        (
+          event.error === "no-speech" ||
+          event.error === "aborted"
+        )
+      ) {
+
+        setTimeout(
+          () => {
+
+            if (
+              voiceMode
+            ) {
+
+              startListening();
+
+            }
+
+          },
+          400
+        );
+
       }
 
     };
+
+}
+
+
+/* ============================================================
+   START VOICE MODE
+============================================================ */
+
+function startVoiceMode() {
+
+  if (
+    !recognition
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+   * Σταματάμε οποιαδήποτε
+   * speech synthesis.
+   */
+
+  stopSpeaking();
+
+
+  voiceMode =
+    true;
+
+
+  shouldContinueListening =
+    true;
+
+
+  inputEl.disabled =
+    true;
+
+
+  voiceButton.classList.add(
+    "voice-mode"
+  );
+
+
+  voiceButton.textContent =
+    "⏹️";
+
+
+  voiceButton.title =
+    "Κλείσιμο Voice Mode";
+
+
+  /*
+   * Μικρό UI μήνυμα.
+   */
+
+  showVoiceModeMessage();
+
+
+  startListening();
+
+}
+
+
+/* ============================================================
+   START LISTENING
+============================================================ */
+
+function startListening() {
+
+  if (
+    !recognition ||
+    !voiceMode ||
+    listening ||
+    isLoading
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    recognition.start();
+
+  }
+
+  catch (error) {
+
+    console.warn(
+      "Could not start speech recognition:",
+      error
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   EXIT VOICE MODE
+============================================================ */
+
+function exitVoiceMode() {
+
+  voiceMode =
+    false;
+
+
+  shouldContinueListening =
+    false;
+
+
+  stopSpeaking();
+
+
+  if (
+    recognition &&
+    listening
+  ) {
+
+    try {
+
+      recognition.stop();
+
+    }
+
+    catch (error) {
+
+      console.warn(
+        "Could not stop recognition:",
+        error
+      );
+
+    }
+
+  }
+
+
+  listening =
+    false;
+
+
+  inputEl.disabled =
+    false;
+
+
+  voiceButton.disabled =
+    false;
+
+
+  voiceButton.classList.remove(
+    "active"
+  );
+
+
+  voiceButton.classList.remove(
+    "voice-mode"
+  );
+
+
+  voiceButton.textContent =
+    "🎤";
+
+
+  voiceButton.title =
+    "Μίλησε στον City4All Assistant";
+
+
+  /*
+   * Επιστροφή στο κανονικό text chat.
+   */
+
+  inputEl.focus();
+
+}
+
+
+/* ============================================================
+   VOICE MODE UI MESSAGE
+============================================================ */
+
+function showVoiceModeMessage() {
+
+  /*
+   * Δεν δημιουργούμε κάθε φορά
+   * νέο μήνυμα.
+   */
+
+  const existing =
+    document.querySelector(
+      ".voice-mode-notice"
+    );
+
+
+  if (
+    existing
+  ) {
+
+    return;
+
+  }
+
+
+  const wrapper =
+    document.createElement(
+      "div"
+    );
+
+
+  wrapper.className =
+    "message ai voice-mode-notice";
+
+
+  const bubble =
+    document.createElement(
+      "div"
+    );
+
+
+  bubble.className =
+    "bubble";
+
+
+  bubble.textContent =
+    "🎙️ Voice Conversation ενεργό. Μίλησέ μου. Πάτησε ⏹️ για έξοδο.";
+
+
+  wrapper.appendChild(
+    bubble
+  );
+
+
+  messagesEl.appendChild(
+    wrapper
+  );
+
+
+  scrollMessages();
 
 }
 
@@ -1627,8 +2167,7 @@ function speakAnswer(
 
 
   /*
-   * Αφαιρούμε υπερβολικά UI text
-   * πριν τη φωνητική ανάγνωση.
+   * Αφαιρούμε URLs.
    */
 
   const cleanText =
@@ -1686,6 +2225,39 @@ function speakAnswer(
       isSpeaking =
         false;
 
+
+      /*
+       * ΜΟΛΙΣ τελειώσει η απάντηση,
+       * αν είμαστε σε Voice Mode,
+       * ακούμε ξανά τον χρήστη.
+       */
+
+      if (
+        voiceMode
+      ) {
+
+        shouldContinueListening =
+          true;
+
+
+        setTimeout(
+          () => {
+
+            if (
+              voiceMode &&
+              !isLoading
+            ) {
+
+              startListening();
+
+            }
+
+          },
+          250
+        );
+
+      }
+
     };
 
 
@@ -1694,6 +2266,33 @@ function speakAnswer(
 
       isSpeaking =
         false;
+
+
+      if (
+        voiceMode
+      ) {
+
+        shouldContinueListening =
+          true;
+
+
+        setTimeout(
+          () => {
+
+            if (
+              voiceMode &&
+              !isLoading
+            ) {
+
+              startListening();
+
+            }
+
+          },
+          300
+        );
+
+      }
 
     };
 
@@ -1722,6 +2321,82 @@ function stopSpeaking() {
 
   isSpeaking =
     false;
+
+}
+
+
+/* ============================================================
+   MOBILE KEYBOARD / VISUAL VIEWPORT
+============================================================ */
+
+function setupMobileViewport() {
+
+  if (
+    !window.visualViewport
+  ) {
+
+    return;
+
+  }
+
+
+  const updateViewport =
+    () => {
+
+      const viewport =
+        window.visualViewport;
+
+
+      /*
+       * Το πραγματικό visible ύψος
+       * όταν ανοίγει το keyboard.
+       */
+
+      document.documentElement.style.setProperty(
+        "--visual-height",
+        `${viewport.height}px`
+      );
+
+
+      /*
+       * Μετακινούμε ελάχιστα το app
+       * αν το browser κάνει resize/pan.
+       */
+
+      const offsetTop =
+        viewport.offsetTop;
+
+
+      document.documentElement.style.setProperty(
+        "--viewport-offset",
+        `${offsetTop}px`
+      );
+
+
+      requestAnimationFrame(
+        () => {
+
+          scrollMessages();
+
+        }
+      );
+
+    };
+
+
+  window.visualViewport.addEventListener(
+    "resize",
+    updateViewport
+  );
+
+
+  window.visualViewport.addEventListener(
+    "scroll",
+    updateViewport
+  );
+
+
+  updateViewport();
 
 }
 
