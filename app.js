@@ -1026,7 +1026,7 @@ RAW URLS
 
 text =
 text.replace(
-/(^|[\s>])(https?://[^\s<]+)/g,
+/(^|[\s>])(https?:\/\/[^\s<]+)/g,
 (
 match,
 prefix,
