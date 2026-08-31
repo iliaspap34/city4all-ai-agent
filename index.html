@@ -20,10 +20,6 @@ content="#ffffff"
 
   <title>City4All AI</title>
 
-  <!-- =========================================================
-       ARCGIS
-  ========================================================== -->
-
   <link
     rel="stylesheet"
     href="https://js.arcgis.com/4.31/esri/themes/light/main.css"
@@ -31,15 +27,7 @@ content="#ffffff"
 
   <script src="https://js.arcgis.com/4.31/"></script>
 
-  <!-- =========================================================
-       MERMAID
-  ========================================================== -->
-
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-
-  <!-- =========================================================
-       STYLE
-  ========================================================== -->
 
   <style>
 
@@ -48,7 +36,6 @@ content="#ffffff"
     }
 
     :root {
-
       --app-height: 100dvh;
       --header-height: 68px;
 
@@ -62,18 +49,15 @@ content="#ffffff"
 
       --soft: #f5f7fb;
       --ai-bg: #f7f9fc;
-
     }
 
     html,
     body {
-
       margin: 0;
       padding: 0;
 
       width: 100%;
       height: 100%;
-
       min-height: 100%;
 
       font-family:
@@ -89,55 +73,40 @@ content="#ffffff"
 
       overflow:
         hidden;
-
     }
 
     body {
-
       overscroll-behavior:
         none;
-
     }
 
     button,
     textarea {
-
       font-family:
         inherit;
-
     }
 
     button {
-
       -webkit-tap-highlight-color:
         transparent;
-
     }
-
-    /* =========================================================
-       APP
-    ========================================================== */
 
     .app {
-
       width: 100%;
       height: var(--app-height);
-
       min-height: 0;
 
-      display: flex;
-      flex-direction: column;
+      display:
+        flex;
 
-      overflow: hidden;
+      flex-direction:
+        column;
 
+      overflow:
+        hidden;
     }
 
-    /* =========================================================
-       HEADER
-    ========================================================== */
-
     .header {
-
       height:
         var(--header-height);
 
@@ -167,11 +136,9 @@ content="#ffffff"
 
       z-index:
         20;
-
     }
 
     .brand {
-
       display:
         flex;
 
@@ -183,11 +150,9 @@ content="#ffffff"
 
       min-width:
         0;
-
     }
 
     .brand-icon {
-
       width:
         38px;
 
@@ -213,18 +178,16 @@ content="#ffffff"
         center;
 
       font-size:
-        10px;
+        9px;
 
       font-weight:
         800;
 
       flex-shrink:
         0;
-
     }
 
     .logo {
-
       font-size:
         21px;
 
@@ -233,18 +196,14 @@ content="#ffffff"
 
       letter-spacing:
         -0.5px;
-
     }
 
     .logo span {
-
       color:
         var(--blue);
-
     }
 
     .header-subtitle {
-
       color:
         var(--muted);
 
@@ -253,11 +212,9 @@ content="#ffffff"
 
       margin-top:
         2px;
-
     }
 
     .status {
-
       display:
         flex;
 
@@ -287,11 +244,9 @@ content="#ffffff"
 
       flex-shrink:
         0;
-
     }
 
     .status-dot {
-
       width:
         8px;
 
@@ -305,16 +260,10 @@ content="#ffffff"
         #20a464;
 
       box-shadow:
-        0 0 0 3px rgba(32, 164, 100, 0.10);
-
+        0 0 0 3px rgba(32,164,100,0.10);
     }
 
-    /* =========================================================
-       MAIN
-    ========================================================== */
-
     .main {
-
       flex:
         1;
 
@@ -330,15 +279,9 @@ content="#ffffff"
 
       overflow:
         hidden;
-
     }
 
-    /* =========================================================
-       MAP
-    ========================================================== */
-
     .map-panel {
-
       position:
         relative;
 
@@ -350,21 +293,17 @@ content="#ffffff"
 
       background:
         #e9eef4;
-
     }
 
     #map {
-
       width:
         100%;
 
       height:
         100%;
-
     }
 
     .map-label {
-
       position:
         absolute;
 
@@ -406,11 +345,9 @@ content="#ffffff"
 
       font-weight:
         700;
-
     }
 
     .map-info {
-
       position:
         absolute;
 
@@ -440,15 +377,9 @@ content="#ffffff"
 
       box-shadow:
         0 2px 12px rgba(0,0,0,0.10);
-
     }
 
-    /* =========================================================
-       ASSISTANT
-    ========================================================== */
-
     .assistant-panel {
-
       min-width:
         0;
 
@@ -469,11 +400,9 @@ content="#ffffff"
 
       overflow:
         hidden;
-
     }
 
     .assistant-header {
-
       padding:
         19px 20px 16px;
 
@@ -482,11 +411,9 @@ content="#ffffff"
 
       flex-shrink:
         0;
-
     }
 
     .assistant-heading {
-
       display:
         flex;
 
@@ -495,11 +422,9 @@ content="#ffffff"
 
       gap:
         11px;
-
     }
 
     .ai-icon {
-
       width:
         40px;
 
@@ -533,21 +458,17 @@ content="#ffffff"
 
       flex-shrink:
         0;
-
     }
 
     .assistant-title {
-
       font-size:
         18px;
 
       font-weight:
         800;
-
     }
 
     .assistant-subtitle {
-
       color:
         var(--muted);
 
@@ -559,15 +480,9 @@ content="#ffffff"
 
       margin-top:
         2px;
-
     }
 
-    /* =========================================================
-       MESSAGES
-    ========================================================== */
-
     .messages {
-
       flex:
         1;
 
@@ -591,11 +506,9 @@ content="#ffffff"
 
       -webkit-overflow-scrolling:
         touch;
-
     }
 
     .message {
-
       display:
         flex;
 
@@ -607,55 +520,40 @@ content="#ffffff"
 
       animation:
         messageAppear
-        0.18s
+        .18s
         ease-out;
-
     }
 
     @keyframes messageAppear {
 
       from {
-
         opacity:
           0;
 
         transform:
           translateY(4px);
-
       }
 
       to {
-
         opacity:
           1;
 
         transform:
           translateY(0);
-
       }
-
     }
 
     .message.user {
-
       align-items:
         flex-end;
-
     }
 
     .message.ai {
-
       align-items:
         flex-start;
-
     }
 
-    /* =========================================================
-       META
-    ========================================================== */
-
     .message-meta {
-
       display:
         flex;
 
@@ -676,11 +574,9 @@ content="#ffffff"
 
       color:
         #98a2b3;
-
     }
 
     .message-meta-icon {
-
       width:
         24px;
 
@@ -707,22 +603,14 @@ content="#ffffff"
 
       font-size:
         12px;
-
     }
 
     .message.user .message-meta {
-
       display:
         none;
-
     }
 
-    /* =========================================================
-       BUBBLE
-    ========================================================== */
-
     .bubble {
-
       max-width:
         92%;
 
@@ -746,11 +634,9 @@ content="#ffffff"
 
       box-shadow:
         0 1px 2px rgba(16,24,40,0.03);
-
     }
 
     .message.ai .bubble {
-
       background:
         var(--ai-bg);
 
@@ -762,11 +648,9 @@ content="#ffffff"
 
       border-bottom-left-radius:
         5px;
-
     }
 
     .message.user .bubble {
-
       background:
         linear-gradient(
           135deg,
@@ -785,102 +669,74 @@ content="#ffffff"
 
       box-shadow:
         0 3px 8px rgba(25,118,210,0.16);
-
     }
-
-    /* =========================================================
-       MARKDOWN
-    ========================================================== */
 
     .bubble h1,
     .bubble h2,
     .bubble h3,
     .bubble h4 {
-
       margin:
         2px 0 10px;
 
       line-height:
         1.3;
-
     }
 
     .bubble h1 {
-
       font-size:
         20px;
-
     }
 
     .bubble h2 {
-
       font-size:
         18px;
-
     }
 
     .bubble h3 {
-
       font-size:
         16px;
-
     }
 
     .bubble h4 {
-
       font-size:
         14px;
-
     }
 
     .bubble p {
-
       margin:
         0 0 10px;
-
     }
 
     .bubble p:last-child {
-
       margin-bottom:
         0;
-
     }
 
     .bubble strong {
-
       font-weight:
         800;
-
     }
 
     .bubble em {
-
       font-style:
         italic;
-
     }
 
     .bubble ul,
     .bubble ol {
-
       margin:
         8px 0 10px;
 
       padding-left:
         23px;
-
     }
 
     .bubble li {
-
       margin:
         5px 0;
-
     }
 
     .bubble blockquote {
-
       margin:
         10px 0;
 
@@ -898,11 +754,9 @@ content="#ffffff"
 
       border-radius:
         0 8px 8px 0;
-
     }
 
     .bubble code {
-
       background:
         rgba(0,0,0,0.055);
 
@@ -919,11 +773,9 @@ content="#ffffff"
 
       font-size:
         12px;
-
     }
 
     .bubble .code-block {
-
       background:
         #172033;
 
@@ -941,11 +793,9 @@ content="#ffffff"
 
       margin:
         10px 0;
-
     }
 
     .bubble .code-block code {
-
       background:
         transparent;
 
@@ -954,11 +804,9 @@ content="#ffffff"
 
       color:
         inherit;
-
     }
 
     .bubble a {
-
       color:
         var(--blue);
 
@@ -970,22 +818,14 @@ content="#ffffff"
 
       text-underline-offset:
         2px;
-
     }
 
     .message.user .bubble a {
-
       color:
         #ffffff;
-
     }
 
-    /* =========================================================
-       TABLES
-    ========================================================== */
-
     .markdown-table-wrap {
-
       width:
         100%;
 
@@ -1003,11 +843,9 @@ content="#ffffff"
 
       background:
         #ffffff;
-
     }
 
     .markdown-table {
-
       width:
         100%;
 
@@ -1019,12 +857,10 @@ content="#ffffff"
 
       font-size:
         12px;
-
     }
 
     .markdown-table th,
     .markdown-table td {
-
       padding:
         9px 10px;
 
@@ -1036,32 +872,22 @@ content="#ffffff"
 
       vertical-align:
         top;
-
     }
 
     .markdown-table th {
-
       background:
         #f4f7fb;
 
       font-weight:
         800;
-
     }
 
     .markdown-table tr:last-child td {
-
       border-bottom:
         none;
-
     }
 
-    /* =========================================================
-       MERMAID
-    ========================================================== */
-
     .mermaid-wrap {
-
       width:
         100%;
 
@@ -1082,22 +908,14 @@ content="#ffffff"
 
       border:
         1px solid #e5eaf1;
-
     }
 
     .mermaid {
-
       min-width:
         320px;
-
     }
 
-    /* =========================================================
-       EXTERNAL INFO CARD
-    ========================================================== */
-
     .external-card {
-
       margin-top:
         9px;
 
@@ -1118,11 +936,9 @@ content="#ffffff"
 
       box-shadow:
         0 2px 9px rgba(16,24,40,0.05);
-
     }
 
     .external-image {
-
       width:
         100%;
 
@@ -1134,18 +950,14 @@ content="#ffffff"
 
       display:
         block;
-
     }
 
     .external-body {
-
       padding:
         11px 12px;
-
     }
 
     .external-label {
-
       font-size:
         10px;
 
@@ -1163,11 +975,9 @@ content="#ffffff"
 
       margin-bottom:
         4px;
-
     }
 
     .external-title {
-
       font-size:
         13px;
 
@@ -1176,11 +986,9 @@ content="#ffffff"
 
       margin-bottom:
         5px;
-
     }
 
     .external-description {
-
       font-size:
         12px;
 
@@ -1189,11 +997,9 @@ content="#ffffff"
 
       line-height:
         1.5;
-
     }
 
     .external-link {
-
       display:
         inline-block;
 
@@ -1211,15 +1017,9 @@ content="#ffffff"
 
       text-decoration:
         none;
-
     }
 
-    /* =========================================================
-       ACTIONS
-    ========================================================== */
-
     .message-actions {
-
       display:
         flex;
 
@@ -1234,11 +1034,9 @@ content="#ffffff"
 
       max-width:
         95%;
-
     }
 
     .chat-action {
-
       border:
         1px solid #d7dee8;
 
@@ -1268,11 +1066,9 @@ content="#ffffff"
 
       touch-action:
         manipulation;
-
     }
 
     .chat-action:hover {
-
       border-color:
         var(--blue);
 
@@ -1281,11 +1077,9 @@ content="#ffffff"
 
       background:
         #f7fbff;
-
     }
 
     .chat-action.primary {
-
       background:
         var(--blue);
 
@@ -1297,29 +1091,19 @@ content="#ffffff"
 
       box-shadow:
         0 2px 5px rgba(25,118,210,0.15);
-
     }
 
     .chat-action.primary:hover {
-
       background:
         var(--blue-dark);
-
     }
 
     .chat-action:active {
-
       transform:
         scale(.97);
-
     }
 
-    /* =========================================================
-       QUICK ACTIONS
-    ========================================================== */
-
     .quick-actions {
-
       padding:
         0 18px 13px;
 
@@ -1334,11 +1118,9 @@ content="#ffffff"
 
       flex-shrink:
         0;
-
     }
 
     .quick-button {
-
       border:
         1px solid #dfe5ec;
 
@@ -1368,11 +1150,9 @@ content="#ffffff"
 
       touch-action:
         manipulation;
-
     }
 
     .quick-button:hover {
-
       border-color:
         var(--blue);
 
@@ -1381,22 +1161,14 @@ content="#ffffff"
 
       background:
         #f7fbff;
-
     }
 
     .quick-button:active {
-
       transform:
         scale(.97);
-
     }
 
-    /* =========================================================
-       LOADING
-    ========================================================== */
-
     .loading-bubble {
-
       display:
         flex;
 
@@ -1405,11 +1177,9 @@ content="#ffffff"
 
       gap:
         8px;
-
     }
 
     .loading-icon {
-
       width:
         23px;
 
@@ -1433,11 +1203,9 @@ content="#ffffff"
 
       color:
         var(--blue);
-
     }
 
     .loading-dots span {
-
       display:
         inline-block;
 
@@ -1445,21 +1213,16 @@ content="#ffffff"
         loadingDot
         1.2s
         infinite;
-
     }
 
     .loading-dots span:nth-child(2) {
-
       animation-delay:
         .15s;
-
     }
 
     .loading-dots span:nth-child(3) {
-
       animation-delay:
         .30s;
-
     }
 
     @keyframes loadingDot {
@@ -1467,27 +1230,18 @@ content="#ffffff"
       0%,
       60%,
       100% {
-
         opacity:
           .25;
-
       }
 
       30% {
-
         opacity:
           1;
-
       }
 
     }
 
-    /* =========================================================
-       INPUT
-    ========================================================== */
-
     .input-area {
-
       border-top:
         1px solid var(--border);
 
@@ -1514,11 +1268,9 @@ content="#ffffff"
           11px,
           env(safe-area-inset-bottom)
         );
-
     }
 
     textarea {
-
       flex:
         1;
 
@@ -1563,22 +1315,18 @@ content="#ffffff"
 
       transition:
         .15s;
-
     }
 
     textarea:focus {
-
       border-color:
         var(--blue);
 
       box-shadow:
         0 0 0 3px rgba(25,118,210,0.08);
-
     }
 
     .voice-button,
     .send-button {
-
       border:
         none;
 
@@ -1596,11 +1344,9 @@ content="#ffffff"
 
       touch-action:
         manipulation;
-
     }
 
     .voice-button {
-
       width:
         45px;
 
@@ -1612,18 +1358,14 @@ content="#ffffff"
 
       flex-shrink:
         0;
-
     }
 
     .voice-button:hover {
-
       background:
         #e2e8f0;
-
     }
 
     .voice-button.active {
-
       background:
         #d93025;
 
@@ -1634,36 +1376,28 @@ content="#ffffff"
         voicePulse
         1.2s
         infinite;
-
     }
 
     @keyframes voicePulse {
 
       0% {
-
         box-shadow:
           0 0 0 0 rgba(217,48,37,0.35);
-
       }
 
       70% {
-
         box-shadow:
           0 0 0 8px rgba(217,48,37,0);
-
       }
 
       100% {
-
         box-shadow:
           0 0 0 0 rgba(217,48,37,0);
-
       }
 
     }
 
     .send-button {
-
       padding:
         0 15px;
 
@@ -1678,75 +1412,51 @@ content="#ffffff"
 
       box-shadow:
         0 2px 5px rgba(25,118,210,0.17);
-
     }
 
     .send-button:hover {
-
       background:
         var(--blue-dark);
-
     }
 
     .send-button:disabled,
     .voice-button:disabled,
     textarea:disabled {
-
       opacity:
         .55;
 
       cursor:
         not-allowed;
-
     }
-
-    /* =========================================================
-       ARCGIS POPUP
-    ========================================================== */
 
     .esri-popup__main-container {
-
       border-radius:
         12px;
-
     }
-
-    /* =========================================================
-       MOBILE
-    ========================================================== */
 
     @media (max-width: 850px) {
 
       :root {
-
         --header-height:
           56px;
-
       }
 
       .header {
-
         padding:
           0 12px;
-
       }
 
       .header-subtitle {
-
         display:
           none;
-
       }
 
       .logo {
-
         font-size:
           18px;
-
       }
 
       .brand-icon {
-
         width:
           33px;
 
@@ -1757,53 +1467,43 @@ content="#ffffff"
           9px;
 
         font-size:
-          9px;
-
+          8px;
       }
 
       .status {
-
         padding:
           6px 9px;
 
         font-size:
           10px;
-
       }
 
       .main {
-
         grid-template-columns:
           1fr;
 
         grid-template-rows:
           minmax(190px,42%)
           minmax(0,58%);
-
       }
 
       .map-panel {
-
         min-height:
           0;
 
         border-bottom:
           1px solid #dfe4ea;
-
       }
 
       .assistant-panel {
-
         min-height:
           0;
 
         border-left:
           none;
-
       }
 
       .map-label {
-
         top:
           10px;
 
@@ -1815,25 +1515,19 @@ content="#ffffff"
 
         font-size:
           11px;
-
       }
 
       .map-info {
-
         display:
           none;
-
       }
 
       .assistant-header {
-
         padding:
           10px 13px;
-
       }
 
       .ai-icon {
-
         width:
           34px;
 
@@ -1845,39 +1539,29 @@ content="#ffffff"
 
         font-size:
           17px;
-
       }
 
       .assistant-title {
-
         font-size:
           15px;
-
       }
 
       .assistant-subtitle {
-
         font-size:
           10px;
-
       }
 
       .messages {
-
         padding:
           12px 13px 8px;
-
       }
 
       .message {
-
         margin-bottom:
           14px;
-
       }
 
       .bubble {
-
         max-width:
           95%;
 
@@ -1889,35 +1573,23 @@ content="#ffffff"
 
         line-height:
           1.55;
-
       }
 
-      .external-card {
-
-        max-width:
-          95%;
-
-      }
-
+      .external-card,
       .message-actions {
-
         max-width:
           95%;
-
       }
 
       .chat-action {
-
         padding:
           8px 9px;
 
         font-size:
           10px;
-
       }
 
       .quick-actions {
-
         padding:
           0 12px 8px;
 
@@ -1938,18 +1610,14 @@ content="#ffffff"
 
         scrollbar-width:
           none;
-
       }
 
       .quick-actions::-webkit-scrollbar {
-
         display:
           none;
-
       }
 
       .quick-button {
-
         white-space:
           nowrap;
 
@@ -1961,11 +1629,9 @@ content="#ffffff"
 
         font-size:
           10px;
-
       }
 
       .input-area {
-
         padding:
           8px;
 
@@ -1974,11 +1640,9 @@ content="#ffffff"
             8px,
             env(safe-area-inset-bottom)
           );
-
       }
 
       textarea {
-
         height:
           43px;
 
@@ -1993,94 +1657,60 @@ content="#ffffff"
 
         font-size:
           13px;
-
       }
 
       .voice-button,
       .send-button {
-
         height:
           43px;
-
       }
 
       .voice-button {
-
         width:
           43px;
-
       }
 
       .send-button {
-
         padding:
           0 12px;
 
         font-size:
           12px;
-
       }
 
     }
 
-    /* =========================================================
-       SMALL MOBILE
-    ========================================================== */
-
     @media (max-width: 520px) {
 
       .main {
-
         grid-template-rows:
           minmax(170px,37%)
           minmax(0,63%);
-
       }
 
       .assistant-subtitle {
-
         display:
           none;
-
       }
 
       .messages {
-
         padding:
           10px 11px 6px;
-
       }
 
-      .bubble {
-
-        max-width:
-          97%;
-
-      }
-
-      .external-card {
-
-        max-width:
-          97%;
-
-      }
-
+      .bubble,
+      .external-card,
       .message-actions {
-
         max-width:
           97%;
-
       }
 
       .chat-action {
-
         padding:
           7px 8px;
-
       }
 
       .send-button {
-
         font-size:
           0;
 
@@ -2089,24 +1719,17 @@ content="#ffffff"
 
         padding:
           0;
-
       }
 
       .send-button::after {
-
         content:
           "➤";
 
         font-size:
           16px;
-
       }
 
     }
-
-    /* =========================================================
-       SMALL HEIGHT
-    ========================================================== */
 
     @media
       (max-height:650px)
@@ -2114,45 +1737,35 @@ content="#ffffff"
       (max-width:850px) {
 
       .main {
-
         grid-template-rows:
           minmax(130px,30%)
           minmax(0,70%);
-
       }
 
       .assistant-header {
-
         padding:
           7px 11px;
-
       }
 
       .messages {
-
         padding-top:
           8px;
 
         padding-bottom:
           5px;
-
       }
 
       .quick-actions {
-
         max-height:
           42px;
 
         padding-bottom:
           5px;
-
       }
 
       .input-area {
-
         padding-top:
           6px;
-
       }
 
     }
@@ -2166,10 +1779,6 @@ content="#ffffff"
   <div class="app">
 
 ```
-<!-- =======================================================
-     HEADER
-======================================================== -->
-
 <header class="header">
 
   <div class="brand">
@@ -2202,15 +1811,7 @@ content="#ffffff"
 
 </header>
 
-<!-- =======================================================
-     MAIN
-======================================================== -->
-
 <main class="main">
-
-  <!-- =====================================================
-       MAP
-  ====================================================== -->
 
   <section class="map-panel">
 
@@ -2228,10 +1829,6 @@ content="#ffffff"
     </div>
 
   </section>
-
-  <!-- =====================================================
-       ASSISTANT
-  ====================================================== -->
 
   <section class="assistant-panel">
 
@@ -2259,10 +1856,6 @@ content="#ffffff"
 
     </div>
 
-    <!-- ===================================================
-         MESSAGES
-    ==================================================== -->
-
     <div
       id="messages"
       class="messages"
@@ -2276,7 +1869,9 @@ content="#ffffff"
             ✦
           </div>
 
-          City4All AI
+          <span>
+            City4All AI
+          </span>
 
         </div>
 
@@ -2306,10 +1901,6 @@ content="#ffffff"
       </div>
 
     </div>
-
-    <!-- ===================================================
-         QUICK ACTIONS
-    ==================================================== -->
 
     <div class="quick-actions">
 
@@ -2347,10 +1938,6 @@ content="#ffffff"
 
     </div>
 
-    <!-- ===================================================
-         INPUT
-    ==================================================== -->
-
     <div class="input-area">
 
       <button
@@ -2387,15 +1974,7 @@ content="#ffffff"
 
   </div>
 
-  <!-- =========================================================
-       APP
-  ========================================================== -->
-
   <script src="app.js"></script>
-
-  <!-- =========================================================
-       ARCGIS MAP
-  ========================================================== -->
 
   <script>
 
@@ -2481,9 +2060,7 @@ content="#ffffff"
 
           }
 
-        )
-
-        .catch(
+        ).catch(
 
           function(error) {
 
