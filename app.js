@@ -186,8 +186,6 @@ return;
 }
 
 mermaid.initialize({
-
-
 startOnLoad:
   false,
 
