@@ -1,22 +1,24 @@
 <!DOCTYPE html>
+
 <html lang="el">
 
 <head>
 
   <meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  >
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0, viewport-fit=cover"
 
-  <meta
-    name="theme-color"
-    content="#ffffff"
-  >
+>
+
+<meta
+name="theme-color"
+content="#ffffff"
+
+>
 
   <title>City4All AI</title>
-
 
   <!-- =========================================================
        ARCGIS
@@ -29,6 +31,11 @@
 
   <script src="https://js.arcgis.com/4.31/"></script>
 
+  <!-- =========================================================
+       MERMAID
+  ========================================================== -->
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 
   <!-- =========================================================
        STYLE
@@ -42,10 +49,19 @@
 
 
     :root {
-
       --app-height: 100dvh;
       --header-height: 68px;
 
+      --blue: #1976d2;
+      --blue-dark: #125ea7;
+
+      --text: #172033;
+      --muted: #667085;
+
+      --border: #e5e7eb;
+
+      --soft: #f5f7fb;
+      --ai-bg: #f7f9fc;
     }
 
 
@@ -65,8 +81,9 @@
         Helvetica,
         sans-serif;
 
-      background: #f5f7fb;
-      color: #172033;
+      background: var(--soft);
+
+      color: var(--text);
 
       overflow: hidden;
 
@@ -103,11 +120,14 @@
     .app {
 
       width: 100%;
-      height: var(--app-height);
+
+      height:
+        var(--app-height);
 
       min-height: 0;
 
       display: flex;
+
       flex-direction: column;
 
       overflow: hidden;
@@ -121,13 +141,16 @@
 
     .header {
 
-      height: var(--header-height);
-      min-height: var(--header-height);
+      height:
+        var(--header-height);
+
+      min-height:
+        var(--header-height);
 
       background: #ffffff;
 
       border-bottom:
-        1px solid #e5e7eb;
+        1px solid var(--border);
 
       display: flex;
 
@@ -165,7 +188,8 @@
 
       border-radius: 11px;
 
-      background: #1976d2;
+      background:
+        var(--blue);
 
       color: #ffffff;
 
@@ -198,14 +222,16 @@
 
     .logo span {
 
-      color: #1976d2;
+      color:
+        var(--blue);
 
     }
 
 
     .header-subtitle {
 
-      color: #667085;
+      color:
+        var(--muted);
 
       font-size: 12px;
 
@@ -249,6 +275,15 @@
 
       background: #20a464;
 
+      box-shadow:
+        0 0 0 3px
+        rgba(
+          32,
+          164,
+          100,
+          0.10
+        );
+
     }
 
 
@@ -282,6 +317,7 @@
       position: relative;
 
       min-width: 0;
+
       min-height: 0;
 
       background: #e9eef4;
@@ -292,6 +328,7 @@
     #map {
 
       width: 100%;
+
       height: 100%;
 
     }
@@ -302,6 +339,7 @@
       position: absolute;
 
       top: 18px;
+
       left: 18px;
 
       z-index: 5;
@@ -355,6 +393,7 @@
       position: absolute;
 
       left: 18px;
+
       bottom: 18px;
 
       z-index: 5;
@@ -372,7 +411,8 @@
       padding:
         9px 12px;
 
-      color: #667085;
+      color:
+        var(--muted);
 
       font-size: 11px;
 
@@ -395,6 +435,7 @@
     .assistant-panel {
 
       min-width: 0;
+
       min-height: 0;
 
       background: #ffffff;
@@ -404,7 +445,7 @@
       flex-direction: column;
 
       border-left:
-        1px solid #e5e7eb;
+        1px solid var(--border);
 
       overflow: hidden;
 
@@ -442,9 +483,15 @@
 
       border-radius: 12px;
 
-      background: #eaf3ff;
+      background:
+        linear-gradient(
+          135deg,
+          #eaf3ff,
+          #f3f7ff
+        );
 
-      color: #1976d2;
+      color:
+        var(--blue);
 
       display: flex;
 
@@ -470,7 +517,8 @@
 
     .assistant-subtitle {
 
-      color: #667085;
+      color:
+        var(--muted);
 
       font-size: 12px;
 
@@ -492,6 +540,7 @@
       min-height: 0;
 
       overflow-y: auto;
+
       overflow-x: hidden;
 
       padding: 20px;
@@ -500,8 +549,7 @@
 
       overscroll-behavior: contain;
 
-      -webkit-overflow-scrolling:
-        touch;
+      -webkit-overflow-scrolling: touch;
 
     }
 
@@ -512,7 +560,7 @@
 
       flex-direction: column;
 
-      margin-bottom: 17px;
+      margin-bottom: 20px;
 
       animation:
         messageAppear
@@ -560,36 +608,101 @@
 
 
     /* =========================================================
+       MESSAGE META
+    ========================================================== */
+
+    .message-meta {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 7px;
+
+      margin-bottom: 6px;
+
+      font-size: 10px;
+
+      font-weight: 700;
+
+      color: #98a2b3;
+
+    }
+
+
+    .message-meta-icon {
+
+      width: 24px;
+
+      height: 24px;
+
+      border-radius: 8px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      background: #eaf3ff;
+
+      color: var(--blue);
+
+      font-size: 12px;
+
+    }
+
+
+    .message.user .message-meta {
+
+      display: none;
+
+    }
+
+
+    /* =========================================================
        BUBBLE
     ========================================================== */
 
     .bubble {
 
-      max-width: 90%;
+      max-width: 92%;
 
       padding:
-        13px 15px;
+        13px 16px;
 
-      border-radius: 16px;
+      border-radius: 17px;
 
-      line-height: 1.58;
+      line-height: 1.62;
 
       font-size: 13px;
-
-      white-space: normal;
 
       word-break: break-word;
 
       overflow-wrap: anywhere;
+
+      box-shadow:
+        0 1px 2px
+        rgba(
+          16,
+          24,
+          40,
+          0.03
+        );
 
     }
 
 
     .message.ai .bubble {
 
-      background: #f3f6fa;
+      background:
+        var(--ai-bg);
 
-      color: #172033;
+      color:
+        var(--text);
+
+      border:
+        1px solid #edf0f4;
 
       border-bottom-left-radius: 5px;
 
@@ -598,7 +711,12 @@
 
     .message.user .bubble {
 
-      background: #1976d2;
+      background:
+        linear-gradient(
+          135deg,
+          #1976d2,
+          #2584df
+        );
 
       color: #ffffff;
 
@@ -606,42 +724,68 @@
 
       white-space: pre-wrap;
 
+      box-shadow:
+        0 3px 8px
+        rgba(
+          25,
+          118,
+          210,
+          0.16
+        );
+
     }
 
 
     /* =========================================================
-       AI MARKDOWN
+       MARKDOWN
     ========================================================== */
 
+    .bubble h1,
     .bubble h2,
     .bubble h3,
     .bubble h4 {
 
       margin:
-        3px 0 9px;
+        2px 0 10px;
 
       line-height: 1.3;
 
+      color: inherit;
+
+    }
+
+
+    .bubble h1 {
+      font-size: 20px;
     }
 
 
     .bubble h2 {
-
       font-size: 18px;
-
     }
 
 
     .bubble h3 {
-
       font-size: 16px;
-
     }
 
 
     .bubble h4 {
-
       font-size: 14px;
+    }
+
+
+    .bubble p {
+
+      margin:
+        0 0 9px;
+
+    }
+
+
+    .bubble p:last-child {
+
+      margin-bottom: 0;
 
     }
 
@@ -660,20 +804,47 @@
     }
 
 
-    .bubble ul {
+    .bubble ul,
+    .bubble ol {
 
       margin:
-        7px 0 9px;
+        8px 0 10px;
 
-      padding-left: 21px;
+      padding-left: 22px;
 
     }
 
 
     .bubble li {
 
+      margin: 5px 0;
+
+    }
+
+
+    .bubble blockquote {
+
       margin:
-        4px 0;
+        10px 0;
+
+      padding:
+        8px 12px;
+
+      border-left:
+        3px solid #b8c7dc;
+
+      background:
+        rgba(
+          25,
+          118,
+          210,
+          0.04
+        );
+
+      color: #475467;
+
+      border-radius:
+        0 8px 8px 0;
 
     }
 
@@ -685,7 +856,7 @@
           0,
           0,
           0,
-          0.06
+          0.055
         );
 
       padding:
@@ -709,15 +880,13 @@
 
       color: #ffffff;
 
-      padding:
-        11px;
+      padding: 12px;
 
-      border-radius: 9px;
+      border-radius: 10px;
 
       overflow-x: auto;
 
-      margin:
-        9px 0;
+      margin: 10px 0;
 
     }
 
@@ -735,12 +904,228 @@
 
     .bubble a {
 
-      color: #1976d2;
+      color:
+        var(--blue);
 
       font-weight: 700;
 
       text-decoration:
         underline;
+
+      text-underline-offset: 2px;
+
+    }
+
+
+    .message.user .bubble a {
+
+      color: #ffffff;
+
+    }
+
+
+    /* =========================================================
+       TABLE
+    ========================================================== */
+
+    .markdown-table-wrap {
+
+      width: 100%;
+
+      overflow-x: auto;
+
+      margin: 10px 0;
+
+      border-radius: 10px;
+
+      border:
+        1px solid #e1e6ee;
+
+      background: #ffffff;
+
+    }
+
+
+    .markdown-table {
+
+      width: 100%;
+
+      border-collapse: collapse;
+
+      min-width: 420px;
+
+      font-size: 12px;
+
+    }
+
+
+    .markdown-table th,
+    .markdown-table td {
+
+      padding:
+        8px 10px;
+
+      border-bottom:
+        1px solid #e8ecf2;
+
+      text-align: left;
+
+      vertical-align: top;
+
+    }
+
+
+    .markdown-table th {
+
+      background: #f4f7fb;
+
+      font-weight: 800;
+
+    }
+
+
+    .markdown-table tr:last-child td {
+
+      border-bottom: none;
+
+    }
+
+
+    /* =========================================================
+       MERMAID
+    ========================================================== */
+
+    .mermaid-wrap {
+
+      width: 100%;
+
+      overflow-x: auto;
+
+      margin: 10px 0;
+
+      padding: 10px;
+
+      border-radius: 11px;
+
+      background: #ffffff;
+
+      border:
+        1px solid #e5eaf1;
+
+    }
+
+
+    .mermaid {
+
+      min-width: 320px;
+
+    }
+
+
+    /* =========================================================
+       EXTERNAL INFO
+    ========================================================== */
+
+    .external-card {
+
+      margin-top: 9px;
+
+      max-width: 92%;
+
+      background: #ffffff;
+
+      border:
+        1px solid #e2e8f0;
+
+      border-radius: 13px;
+
+      overflow: hidden;
+
+      box-shadow:
+        0 2px 9px
+        rgba(
+          16,
+          24,
+          40,
+          0.05
+        );
+
+    }
+
+
+    .external-image {
+
+      width: 100%;
+
+      max-height: 190px;
+
+      object-fit: cover;
+
+      display: block;
+
+    }
+
+
+    .external-body {
+
+      padding:
+        11px 12px;
+
+    }
+
+
+    .external-label {
+
+      font-size: 10px;
+
+      font-weight: 800;
+
+      text-transform: uppercase;
+
+      letter-spacing: .04em;
+
+      color: #7a8699;
+
+      margin-bottom: 4px;
+
+    }
+
+
+    .external-title {
+
+      font-size: 13px;
+
+      font-weight: 800;
+
+      margin-bottom: 5px;
+
+    }
+
+
+    .external-description {
+
+      font-size: 12px;
+
+      color: #667085;
+
+      line-height: 1.5;
+
+    }
+
+
+    .external-link {
+
+      display: inline-block;
+
+      margin-top: 8px;
+
+      font-size: 11px;
+
+      color: var(--blue);
+
+      font-weight: 700;
+
+      text-decoration: none;
 
     }
 
@@ -776,7 +1161,7 @@
       padding:
         8px 11px;
 
-      border-radius: 9px;
+      border-radius: 10px;
 
       font-size: 11px;
 
@@ -784,20 +1169,20 @@
 
       cursor: pointer;
 
-      transition:
-        0.15s;
+      transition: .15s;
 
-      touch-action:
-        manipulation;
+      touch-action: manipulation;
 
     }
 
 
     .chat-action:hover {
 
-      border-color: #1976d2;
+      border-color:
+        var(--blue);
 
-      color: #1976d2;
+      color:
+        var(--blue);
 
       background: #f7fbff;
 
@@ -806,18 +1191,30 @@
 
     .chat-action.primary {
 
-      background: #1976d2;
+      background:
+        var(--blue);
 
       color: #ffffff;
 
-      border-color: #1976d2;
+      border-color:
+        var(--blue);
+
+      box-shadow:
+        0 2px 5px
+        rgba(
+          25,
+          118,
+          210,
+          0.15
+        );
 
     }
 
 
     .chat-action.primary:hover {
 
-      background: #125ea7;
+      background:
+        var(--blue-dark);
 
     }
 
@@ -825,7 +1222,7 @@
     .chat-action:active {
 
       transform:
-        scale(0.97);
+        scale(.97);
 
     }
 
@@ -870,20 +1267,20 @@
 
       cursor: pointer;
 
-      transition:
-        0.15s;
+      transition: .15s;
 
-      touch-action:
-        manipulation;
+      touch-action: manipulation;
 
     }
 
 
     .quick-button:hover {
 
-      border-color: #1976d2;
+      border-color:
+        var(--blue);
 
-      color: #1976d2;
+      color:
+        var(--blue);
 
       background: #f7fbff;
 
@@ -893,7 +1290,7 @@
     .quick-button:active {
 
       transform:
-        scale(0.97);
+        scale(.97);
 
     }
 
@@ -901,6 +1298,39 @@
     /* =========================================================
        LOADING
     ========================================================== */
+
+    .loading-bubble {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 7px;
+
+    }
+
+
+    .loading-icon {
+
+      width: 22px;
+
+      height: 22px;
+
+      border-radius: 7px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      background: #eaf3ff;
+
+      color:
+        var(--blue);
+
+    }
+
 
     .loading-dots span {
 
@@ -937,7 +1367,7 @@
       100% {
 
         opacity:
-          0.25;
+          .25;
 
       }
 
@@ -958,10 +1388,9 @@
     .input-area {
 
       border-top:
-        1px solid #e5e7eb;
+        1px solid var(--border);
 
-      padding:
-        11px;
+      padding: 11px;
 
       display: flex;
 
@@ -1001,10 +1430,9 @@
       border:
         1px solid #d0d5dd;
 
-      border-radius: 11px;
+      border-radius: 13px;
 
-      padding:
-        12px;
+      padding: 12px;
 
       font-size: 13px;
 
@@ -1016,12 +1444,15 @@
 
       overflow-y: auto;
 
+      transition: .15s;
+
     }
 
 
     textarea:focus {
 
-      border-color: #1976d2;
+      border-color:
+        var(--blue);
 
       box-shadow:
         0 0 0 3px
@@ -1042,14 +1473,13 @@
 
       cursor: pointer;
 
-      border-radius: 11px;
+      border-radius: 12px;
 
       font-weight: 700;
 
       height: 45px;
 
-      touch-action:
-        manipulation;
+      touch-action: manipulation;
 
     }
 
@@ -1137,18 +1567,29 @@
       padding:
         0 15px;
 
-      background: #1976d2;
+      background:
+        var(--blue);
 
       color: #ffffff;
 
       flex-shrink: 0;
+
+      box-shadow:
+        0 2px 5px
+        rgba(
+          25,
+          118,
+          210,
+          0.17
+        );
 
     }
 
 
     .send-button:hover {
 
-      background: #125ea7;
+      background:
+        var(--blue-dark);
 
     }
 
@@ -1158,7 +1599,7 @@
     textarea:disabled {
 
       opacity:
-        0.55;
+        .55;
 
       cursor:
         not-allowed;
@@ -1167,7 +1608,7 @@
 
 
     /* =========================================================
-       MAP POPUP
+       ARCGIS POPUP
     ========================================================== */
 
     .esri-popup__main-container {
@@ -1188,17 +1629,6 @@
 
         --header-height:
           56px;
-
-      }
-
-
-      .app {
-
-        height:
-          var(--app-height);
-
-        min-height:
-          0;
 
       }
 
@@ -1257,15 +1687,6 @@
 
       .main {
 
-        height:
-          auto;
-
-        min-height:
-          0;
-
-        display:
-          grid;
-
         grid-template-columns:
           1fr;
 
@@ -1278,9 +1699,6 @@
             0,
             58%
           );
-
-        overflow:
-          hidden;
 
       }
 
@@ -1303,9 +1721,6 @@
 
         border-left:
           none;
-
-        overflow:
-          hidden;
 
       }
 
@@ -1387,7 +1802,7 @@
       .message {
 
         margin-bottom:
-          12px;
+          14px;
 
       }
 
@@ -1395,7 +1810,7 @@
       .bubble {
 
         max-width:
-          94%;
+          95%;
 
         padding:
           10px 12px;
@@ -1404,7 +1819,15 @@
           12px;
 
         line-height:
-          1.5;
+          1.55;
+
+      }
+
+
+      .external-card {
+
+        max-width:
+          95%;
 
       }
 
@@ -1412,7 +1835,7 @@
       .message-actions {
 
         max-width:
-          94%;
+          95%;
 
       }
 
@@ -1585,7 +2008,15 @@
       .bubble {
 
         max-width:
-          96%;
+          97%;
+
+      }
+
+
+      .external-card {
+
+        max-width:
+          97%;
 
       }
 
@@ -1593,7 +2024,7 @@
       .message-actions {
 
         max-width:
-          96%;
+          97%;
 
       }
 
@@ -1700,240 +2131,253 @@
 
 </head>
 
-
 <body>
-
 
   <div class="app">
 
+```
+<!-- =======================================================
+     HEADER
+======================================================== -->
 
-    <!-- =======================================================
-         HEADER
-    ======================================================== -->
+<header class="header">
 
-    <header class="header">
+  <div class="brand">
 
-      <div class="brand">
+    <div class="brand-icon">
+      City4All
+    </div>
 
-        <div class="brand-icon">
-          City4All
+
+    <div>
+
+      <div class="logo">
+        City4<span>All</span> AI
+      </div>
+
+
+      <div class="header-subtitle">
+        Accessibility intelligence for everyone
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="status">
+
+    <span class="status-dot"></span>
+
+    AI Online
+
+  </div>
+
+</header>
+
+
+<!-- =======================================================
+     MAIN
+======================================================== -->
+
+<main class="main">
+
+
+  <!-- =====================================================
+       MAP
+  ====================================================== -->
+
+  <section class="map-panel">
+
+    <div
+      id="map"
+      aria-label="City4All Web Map"
+    ></div>
+
+
+    <div class="map-label">
+      🗺️ City4All Map
+    </div>
+
+
+    <div class="map-info">
+      Ο AI εμφανίζει εδώ τα σημεία που βρίσκει.
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       ASSISTANT
+  ====================================================== -->
+
+  <section class="assistant-panel">
+
+
+    <div class="assistant-header">
+
+      <div class="assistant-heading">
+
+        <div class="ai-icon">
+          ✦
         </div>
 
 
         <div>
 
-          <div class="logo">
-            City4<span>All</span> AI
+          <div class="assistant-title">
+            City4All Assistant
           </div>
 
 
-          <div class="header-subtitle">
-            Accessibility intelligence for everyone
+          <div class="assistant-subtitle">
+            Βρες προσβάσιμα σημεία και πληροφορίες προσβασιμότητας.
           </div>
 
         </div>
 
       </div>
 
+    </div>
 
-      <div class="status">
 
-        <span class="status-dot"></span>
+    <!-- ===================================================
+         MESSAGES
+    ==================================================== -->
 
-        AI Online
+    <div
+      id="messages"
+      class="messages"
+    >
+
+      <div class="message ai">
+
+        <div class="message-meta">
+
+          <div class="message-meta-icon">
+            ✦
+          </div>
+
+          City4All AI
+
+        </div>
+
+
+        <div class="bubble">
+
+          <strong>👋 Γεια σου!</strong>
+
+          <p>
+            Είμαι ο
+            <strong>City4All AI Assistant</strong>.
+            Μπορώ να σε βοηθήσω να βρεις προσβάσιμα σημεία,
+            να εξερευνήσεις τον χάρτη και να μάθεις περισσότερα
+            για τα μέρη που βρίσκεις.
+          </p>
+
+          <p>
+            Μπορείς να μου μιλήσεις φυσικά,
+            όπως θα μιλούσες σε έναν άνθρωπο.
+          </p>
+
+          <p>
+            💡 Για παράδειγμα:
+            <strong>«Βρες μου προσβάσιμα στάδια στην Αθήνα»</strong>
+          </p>
+
+        </div>
 
       </div>
 
-    </header>
+    </div>
 
 
-    <!-- =======================================================
-         MAIN
-    ======================================================== -->
+    <!-- ===================================================
+         QUICK ACTIONS
+    ==================================================== -->
 
-    <main class="main">
+    <div class="quick-actions">
 
+      <button
+        class="quick-button"
+        type="button"
+        data-question="Βρες μου προσβάσιμα στάδια"
+      >
+        📍 Αθλητικά κέντρα
+      </button>
 
-      <!-- =====================================================
-           MAP
-      ====================================================== -->
 
-      <section class="map-panel">
+      <button
+        class="quick-button"
+        type="button"
+        data-question="Ποια σημεία έχουν ράμπα;"
+      >
+        ♿ Με ράμπα
+      </button>
 
-        <div
-          id="map"
-          aria-label="City4All Web Map"
-        ></div>
 
+      <button
+        class="quick-button"
+        type="button"
+        data-question="Ποια σημεία έχουν προσβάσιμο WC;"
+      >
+        🚻 Προσβάσιμο WC
+      </button>
 
-        <div class="map-label">
-          🗺️ City4All Map
-        </div>
 
+      <button
+        class="quick-button"
+        type="button"
+        data-question="Ποια σημεία έχουν parking ΑμεΑ;"
+      >
+        🅿️ Parking ΑμεΑ
+      </button>
 
-        <div class="map-info">
-          Ο AI εμφανίζει εδώ τα σημεία που βρίσκει.
-        </div>
+    </div>
 
-      </section>
 
+    <!-- ===================================================
+         INPUT
+    ==================================================== -->
 
-      <!-- =====================================================
-           ASSISTANT
-      ====================================================== -->
+    <div class="input-area">
 
-      <section class="assistant-panel">
+      <button
+        id="voiceButton"
+        class="voice-button"
+        type="button"
+        title="Έναρξη φωνητικής συνομιλίας"
+        aria-label="Έναρξη φωνητικής συνομιλίας"
+      >
+        🎤
+      </button>
 
 
-        <div class="assistant-header">
+      <textarea
+        id="messageInput"
+        placeholder="Ρώτησε τον City4All Assistant..."
+        aria-label="Μήνυμα"
+        rows="1"
+      ></textarea>
 
-          <div class="assistant-heading">
 
-            <div class="ai-icon">
-              ✦
-            </div>
+      <button
+        id="sendButton"
+        class="send-button"
+        type="button"
+      >
+        Αποστολή
+      </button>
 
+    </div>
 
-            <div>
 
-              <div class="assistant-title">
-                City4All Assistant
-              </div>
+  </section>
 
-
-              <div class="assistant-subtitle">
-                Βρες προσβάσιμα σημεία και πληροφορίες προσβασιμότητας.
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- ===================================================
-             MESSAGES
-        ==================================================== -->
-
-        <div
-          id="messages"
-          class="messages"
-        >
-
-          <div class="message ai">
-
-            <div class="bubble">
-
-              👋 Γεια σου! Είμαι ο
-              <strong>City4All AI Assistant</strong>.
-
-              <br><br>
-
-              Μπορώ να σε βοηθήσω να βρεις πραγματικά σημεία και πληροφορίες προσβασιμότητας από τα δεδομένα του City4All.
-
-              <br><br>
-
-              Για παράδειγμα:
-
-              <br>
-
-              <strong>«Βρες μου καφετέριες με ράμπα»</strong>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- ===================================================
-             QUICK ACTIONS
-        ==================================================== -->
-
-        <div class="quick-actions">
-
-          <button
-            class="quick-button"
-            type="button"
-            data-question="Βρες μου προσβάσιμα στάδια"
-          >
-            📍 Αθλητικά κέντρα
-          </button>
-
-
-          <button
-            class="quick-button"
-            type="button"
-            data-question="Ποια σημεία έχουν ράμπα;"
-          >
-            ♿ Με ράμπα
-          </button>
-
-
-          <button
-            class="quick-button"
-            type="button"
-            data-question="Ποια σημεία έχουν προσβάσιμο WC;"
-          >
-            🚻 Προσβάσιμο WC
-          </button>
-
-
-          <button
-            class="quick-button"
-            type="button"
-            data-question="Ποια σημεία έχουν parking ΑμεΑ;"
-          >
-            🅿️ Parking ΑμεΑ
-          </button>
-
-        </div>
-
-
-        <!-- ===================================================
-             INPUT
-        ==================================================== -->
-
-        <div class="input-area">
-
-
-          <button
-            id="voiceButton"
-            class="voice-button"
-            type="button"
-            title="Έναρξη φωνητικής συνομιλίας"
-            aria-label="Έναρξη φωνητικής συνομιλίας"
-          >
-            🎤
-          </button>
-
-
-          <textarea
-            id="messageInput"
-            placeholder="Ρώτησε τον City4All Assistant..."
-            aria-label="Μήνυμα"
-            rows="1"
-          ></textarea>
-
-
-          <button
-            id="sendButton"
-            class="send-button"
-            type="button"
-          >
-            Αποστολή
-          </button>
-
-        </div>
-
-
-      </section>
-
-    </main>
+</main>
+```
 
   </div>
-
 
   <!-- =========================================================
        APP
@@ -1941,150 +2385,141 @@
 
   <script src="app.js"></script>
 
-
   <!-- =========================================================
        ARCGIS MAP
   ========================================================== -->
 
- <script>
+  <script>
 
-  require(
-    [
-      "esri/WebMap",
-      "esri/views/MapView",
-      "esri/Graphic",
-      "esri/layers/GraphicsLayer"
-    ],
+    require(
+      [
+        "esri/WebMap",
+        "esri/views/MapView",
+        "esri/Graphic",
+        "esri/layers/GraphicsLayer"
+      ],
 
-    function(
-      WebMap,
-      MapView,
-      Graphic,
-      GraphicsLayer
-    ) {
+      function(
+        WebMap,
+        MapView,
+        Graphic,
+        GraphicsLayer
+      ) {
 
-      /* =====================================================
-         WEBMAP
-      ====================================================== */
+        /* =====================================================
+           WEBMAP
+        ====================================================== */
 
-      const webmap =
-        new WebMap({
+        const webmap =
+          new WebMap({
 
-          portalItem: {
-            id:
-              "969e9e5433dd4b968cf06793dc7b7aca"
+            portalItem: {
+              id:
+                "969e9e5433dd4b968cf06793dc7b7aca"
+            }
+
+          });
+
+
+        /* =====================================================
+           MAP VIEW
+        ====================================================== */
+
+        const view =
+          new MapView({
+
+            container:
+              "map",
+
+            map:
+              webmap,
+
+            center: [
+              15.0,
+              50.0
+            ],
+
+            zoom:
+              4.3
+
+          });
+
+
+        /* =====================================================
+           RESULTS LAYER
+        ====================================================== */
+
+        const resultsLayer =
+          new GraphicsLayer({
+
+            title:
+              "City4All AI Results"
+
+          });
+
+
+        webmap.add(
+          resultsLayer
+        );
+
+
+        /* =====================================================
+           GLOBAL MAP OBJECT
+        ====================================================== */
+
+        window.city4allMap = {
+
+          view,
+
+          resultsLayer,
+
+          Graphic
+
+        };
+
+
+        /* =====================================================
+           MAP READY
+        ====================================================== */
+
+        view.when(
+
+          function() {
+
+            console.log(
+              "City4All map loaded."
+            );
+
+
+            window.dispatchEvent(
+              new Event(
+                "city4all-map-ready"
+              )
+            );
+
           }
 
-        });
+        )
 
+        .catch(
 
-      /* =====================================================
-         MAP VIEW
-      ====================================================== */
+          function(error) {
 
-      const view =
-        new MapView({
+            console.error(
+              "City4All map loading error:",
+              error
+            );
 
-          container:
-            "map",
+          }
 
-          map:
-            webmap,
+        );
 
-          center: [
-            15.0,
-            50.0
-          ],
+      }
 
-          zoom:
-            4.3
+    );
 
-        });
+  </script>
 
-
-      /* =====================================================
-         RESULTS LAYER
-      ====================================================== */
-
-      const resultsLayer =
-        new GraphicsLayer({
-
-          title:
-            "City4All AI Results"
-
-        });
-
-
-      webmap.add(
-        resultsLayer
-      );
-
-
-      /* =====================================================
-         GLOBAL CITY4ALL MAP OBJECT
-      ====================================================== */
-
-      window.city4allMap = {
-
-        view,
-
-        resultsLayer,
-
-        Graphic
-
-      };
-
-
-      /* =====================================================
-         MAP READY
-      ====================================================== */
-
-      view.when(
-
-        function() {
-
-          console.log(
-            "City4All map loaded."
-          );
-
-
-          /*
-           * Ο Agent ενημερώνεται ότι:
-           *
-           * 1. το ArcGIS View υπάρχει
-           * 2. το Results Layer υπάρχει
-           * 3. τα Graphics μπορούν να προστεθούν
-           * 4. τα popups μπορούν να ανοίξουν
-           */
-
-          window.dispatchEvent(
-            new Event(
-              "city4all-map-ready"
-            )
-          );
-
-        }
-
-      )
-
-      .catch(
-
-        function(error) {
-
-          console.error(
-            "City4All map loading error:",
-            error
-          );
-
-        }
-
-      );
-
-    }
-
-  );
-
-</script>
 </body>
 
 </html>
