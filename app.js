@@ -6,7 +6,7 @@ const API_BASE =
 "https://city4allfinalai.ilias-pap-net.workers.dev";
 
 const CHAT_URL =
-`${API_BASE}/chat`;
+'${API_BASE}/chat';
 
 /* ============================================================
 STATE
