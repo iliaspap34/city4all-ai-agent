@@ -1946,131 +1946,145 @@
        ARCGIS MAP
   ========================================================== -->
 
-  <script>
+ <script>
 
-    require(
-      [
-        "esri/WebMap",
-        "esri/views/MapView",
-        "esri/Graphic",
-        "esri/layers/GraphicsLayer"
-      ],
+  require(
+    [
+      "esri/WebMap",
+      "esri/views/MapView",
+      "esri/Graphic",
+      "esri/layers/GraphicsLayer"
+    ],
 
-      function(
-        WebMap,
-        MapView,
-        Graphic,
-        GraphicsLayer
-      ) {
+    function(
+      WebMap,
+      MapView,
+      Graphic,
+      GraphicsLayer
+    ) {
 
+      /* =====================================================
+         WEBMAP
+      ====================================================== */
 
-        /* =====================================================
-           WEBMAP
-        ====================================================== */
+      const webmap =
+        new WebMap({
 
-        const webmap =
-          new WebMap({
-
-            portalItem: {
-
-              id:
-                "969e9e5433dd4b968cf06793dc7b7aca"
-
-            }
-
-          });
-
-
-        /* =====================================================
-           MAP VIEW
-        ====================================================== */
-
-        const view =
-          new MapView({
-
-            container:
-              "map",
-
-            map:
-              webmap,
-
-            center: [
-              15.0,
-              50.0
-            ],
-
-            zoom:
-              4.3
-
-          });
-
-
-        /* =====================================================
-           RESULTS LAYER
-        ====================================================== */
-
-        const resultsLayer =
-          new GraphicsLayer();
-
-
-        webmap.add(
-          resultsLayer
-        );
-
-
-        /* =====================================================
-           GLOBAL CITY4ALL MAP OBJECT
-        ====================================================== */
-
-        window.city4allMap = {
-
-          view,
-
-          resultsLayer,
-
-          Graphic
-
-        };
-
-
-        /* =====================================================
-           MAP READY
-        ====================================================== */
-
-        view.when(
-          function() {
-
-            console.log(
-              "City4All map loaded."
-            );
-
-
-            window.dispatchEvent(
-              new Event(
-                "city4all-map-ready"
-              )
-            );
-
+          portalItem: {
+            id:
+              "969e9e5433dd4b968cf06793dc7b7aca"
           }
 
-        ).catch(
-          function(error) {
-
-            console.error(
-              "City4All map loading error:",
-              error
-            );
-
-          }
-        );
-
-      }
-
-    );
-
-  </script>
+        });
 
 
+      /* =====================================================
+         MAP VIEW
+      ====================================================== */
+
+      const view =
+        new MapView({
+
+          container:
+            "map",
+
+          map:
+            webmap,
+
+          center: [
+            15.0,
+            50.0
+          ],
+
+          zoom:
+            4.3
+
+        });
+
+
+      /* =====================================================
+         RESULTS LAYER
+      ====================================================== */
+
+      const resultsLayer =
+        new GraphicsLayer({
+
+          title:
+            "City4All AI Results"
+
+        });
+
+
+      webmap.add(
+        resultsLayer
+      );
+
+
+      /* =====================================================
+         GLOBAL CITY4ALL MAP OBJECT
+      ====================================================== */
+
+      window.city4allMap = {
+
+        view,
+
+        resultsLayer,
+
+        Graphic
+
+      };
+
+
+      /* =====================================================
+         MAP READY
+      ====================================================== */
+
+      view.when(
+
+        function() {
+
+          console.log(
+            "City4All map loaded."
+          );
+
+
+          /*
+           * Ο Agent ενημερώνεται ότι:
+           *
+           * 1. το ArcGIS View υπάρχει
+           * 2. το Results Layer υπάρχει
+           * 3. τα Graphics μπορούν να προστεθούν
+           * 4. τα popups μπορούν να ανοίξουν
+           */
+
+          window.dispatchEvent(
+            new Event(
+              "city4all-map-ready"
+            )
+          );
+
+        }
+
+      )
+
+      .catch(
+
+        function(error) {
+
+          console.error(
+            "City4All map loading error:",
+            error
+          );
+
+        }
+
+      );
+
+    }
+
+  );
+
+</script>
 </body>
 
 </html>
