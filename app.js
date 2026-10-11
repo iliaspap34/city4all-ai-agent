@@ -46,6 +46,8 @@ const state = {
   nearbyCategory: "",
   conversation: [],
   previousFeatures: [],
+  chatEnabled: false,
+  ttsEnabled: true,
   recognition: null,
   listening: false
 };
@@ -56,12 +58,12 @@ const I18N = {
   el: {
     tagline: "Ψηφιακός οδηγός προσβασιμότητας",
     home: "Αρχική",
-    homeTitle: "Πώς μπορώ να σε βοηθήσω;",
+    homeTitle: "Βρες προσβάσιμα σημεία",
     homeLead:
-      "Διάλεξε λειτουργία. Η <strong>Εύρεση σημείων</strong> ψάχνει πραγματικά σημεία προσβασιμότητας στα δεδομένα City4All. Οι <strong>Πληροφορίες</strong> απαντούν σε γενικές ερωτήσεις από αξιόπιστες διαδικτυακές πηγές.",
+      "Ψάξε πραγματικά σημεία προσβασιμότητας στα δεδομένα City4All με φίλτρα κατηγορίας, προσβασιμότητας και τοποθεσίας. Αφού βρεις σημεία, ο <strong>AI βοηθός</strong> αναλαμβάνει: σου μιλάει για τα αποτελέσματα, απαντά στις ερωτήσεις σου και ψάχνει και γενικές πληροφορίες στο διαδίκτυο.",
     modeSearch: "Εύρεση σημείων",
     modeSearchDesc:
-      "Φίλτρα κατηγορίας, προσβασιμότητας και τοποθεσίας. Κάρτες αποτελεσμάτων, λεπτομέρειες και κοντινά σημεία στον χάρτη.",
+      "Φίλτρα κατηγορίας, προσβασιμότητας και τοποθεσίας. Κάρτες αποτελεσμάτων, λεπτομέρειες, κοντινά σημεία και AI βοηθός.",
     startSearch: "Ξεκίνα αναζήτηση →",
     modeInfo: "Πληροφορίες",
     modeInfoDesc:
@@ -92,8 +94,7 @@ const I18N = {
     infoTitle: "Πληροφορίες προσβασιμότητας",
     infoLead:
       "Ρώτησε για δικαιώματα, νομοθεσία, τεχνολογίες και καλές πρακτικές. Απαντήσεις από αξιόπιστες πηγές.",
-    chatPh: "Ή ρώτησε με λόγια: «φαρμακεία με ράμπα στην Καλλιθέα»",
-    infoPh: "Γράψε την ερώτησή σου...",
+    chatPh: "Ρώτησέ με για τα σημεία ή για γενικές πληροφορίες...",
     loading: "Φόρτωση…",
     searching: "Αναζήτηση στα δεδομένα City4All…",
     noResults: "Δεν βρέθηκαν σημεία με αυτά τα κριτήρια.",
@@ -141,12 +142,12 @@ const I18N = {
   en: {
     tagline: "Accessibility digital guide",
     home: "Home",
-    homeTitle: "How can I help you?",
+    homeTitle: "Find accessible places",
     homeLead:
-      "Pick a mode. <strong>Find places</strong> searches real accessibility points in the City4All dataset. <strong>Information</strong> answers general questions from trusted web sources.",
+      "Search real accessibility points in the City4All dataset with category, accessibility and location filters. Once you find places, the <strong>AI assistant</strong> takes over: it talks about the results, answers your questions and also searches general information on the web.",
     modeSearch: "Find places",
     modeSearchDesc:
-      "Category, accessibility and location filters. Result cards, details and nearby places on the map.",
+      "Category, accessibility and location filters. Result cards, details, nearby places and AI assistant.",
     startSearch: "Start searching →",
     modeInfo: "Information",
     modeInfoDesc:
@@ -177,8 +178,7 @@ const I18N = {
     infoTitle: "Accessibility information",
     infoLead:
       "Ask about rights, legislation, technologies and good practices. Answers from trusted sources.",
-    chatPh: "Or ask in words: “pharmacies with a ramp in Kallithea”",
-    infoPh: "Type your question...",
+    chatPh: "Ask me about the places or for general information...",
     loading: "Loading…",
     searching: "Searching the City4All dataset…",
     noResults: "No places found with these criteria.",
@@ -236,8 +236,7 @@ const dom = {
   statusText: $("statusText"),
   screens: {
     home: $("screen-home"),
-    search: $("screen-search"),
-    info: $("screen-info")
+    search: $("screen-search")
   },
   mapCount: $("mapCount"),
   categoryChips: $("categoryChips"),
@@ -258,8 +257,9 @@ const dom = {
   nextPage: $("nextPage"),
   searchAiLog: $("searchAiLog"),
   chatInput: $("chatInput"),
-  infoLog: $("infoLog"),
-  infoInput: $("infoInput"),
+  chatLock: $("chatLock"),
+  chatSuggestions: $("chatSuggestions"),
+  ttsBtn: $("ttsBtn"),
   detailsModal: $("detailsModal"),
   detailName: $("detailName"),
   detailCategory: $("detailCategory"),
@@ -314,9 +314,7 @@ function showScreen(mode) {
   });
   if (mode === "search") {
     setTimeout(() => window.city4allMap?.view?.resize?.(), 60);
-  }
-  if (mode === "info") {
-    setTimeout(() => dom.infoInput?.focus?.(), 80);
+    if (state.chatEnabled) setTimeout(() => dom.chatInput?.focus?.(), 80);
   }
 }
 
@@ -693,6 +691,7 @@ async function runSearch(page = 1) {
     state.previousFeatures = data.features || [];
     renderResults(data);
     drawFeatures(data.features || []);
+    enableChat((data.total || 0) > 0);
     requestAiSummary(data);
   } catch (error) {
     console.error(error);
@@ -760,6 +759,9 @@ function showAiSummary(answer, total) {
   );
   state.conversation.push({ role: "assistant", content: answer });
   state.conversation = state.conversation.slice(-12);
+
+  renderSuggestions(searchSuggestions(total));
+  speak(answer);
 }
 
 function showFiltersView() {
@@ -1095,6 +1097,8 @@ async function sendSearchChat() {
     state.conversation = state.conversation.slice(-12);
 
     appendBubble(dom.searchAiLog, "ai", renderAnswerWithSources(data));
+    renderSuggestions(chatSuggestionsFor(data));
+    speak(data.answer || "");
 
     if (data.mode === "search" || data.mode === "followup") {
       const features = data.features || [];
@@ -1115,48 +1119,99 @@ async function sendSearchChat() {
   }
 }
 
-/* ============================ INFO MODE ============================ */
+/* ============================ CHAT GATING & SUGGESTIONS ============================ */
 
-async function sendInfo(question) {
-  const text = String(question || dom.infoInput.value || "").trim();
-  if (!text) return;
-  dom.infoInput.value = "";
-  appendBubble(dom.infoLog, "user", escapeHtml(text));
-  const typing = appendTyping(dom.infoLog);
-  let data = null;
+/**
+ * Το chat χρησιμοποιείται ΜΟΝΟ αφού έχουν βρεθεί σημεία (απαίτηση χρήστη).
+ * Εκτός αυτού, απενεργοποιείται και δείχνουμε το σχετικό μήνυμα.
+ */
+function enableChat(on) {
+  state.chatEnabled = !!on;
+  if (dom.chatInput) {
+    dom.chatInput.disabled = !on;
+    dom.chatInput.placeholder = on ? t("chatPh") : "Κάνε πρώτα αναζήτηση για να μιλήσουμε...";
+  }
+  const sendBtn = $("chatSendBtn");
+  if (sendBtn) sendBtn.disabled = !on;
+  if (dom.chatLock) dom.chatLock.hidden = !!on;
+  if (!on && dom.chatSuggestions) dom.chatSuggestions.innerHTML = "";
+}
+
+function renderSuggestions(list) {
+  if (!dom.chatSuggestions) return;
+  const items = (list || []).filter(Boolean).slice(0, 5);
+  dom.chatSuggestions.innerHTML = "";
+  items.forEach(text => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "suggestion-chip";
+    btn.textContent = text;
+    btn.addEventListener("click", () => {
+      dom.chatInput.value = text;
+      sendSearchChat();
+    });
+    dom.chatSuggestions.appendChild(btn);
+  });
+}
+
+function searchSuggestions(total) {
+  if (state.lang === "en") {
+    return total > 0
+      ? ["Show me the nearby ones", "Which one has a ramp?", "Compare the first two", "More information"]
+      : ["Change category", "Widen the area"];
+  }
+  return total > 0
+    ? ["Δείξε μου τα κοντινά", "Ποιο έχει ράμπα;", "Σύγκρινε τα δύο πρώτα", "Περισσότερες πληροφορίες"]
+    : ["Άλλαξε κατηγορία", "Διεύρυνε την περιοχή"];
+}
+
+function chatSuggestionsFor(data) {
+  if (Array.isArray(data?.suggestions) && data.suggestions.length) return data.suggestions;
+  if (data?.mode === "info") {
+    return state.lang === "en"
+      ? ["Give me an example", "Does this apply in Greece?", "Which law covers this?"]
+      : ["Δώσε μου ένα παράδειγμα", "Ισχύει στην Ελλάδα;", "Ποιος νόμος το προβλέπει;"];
+  }
+  return searchSuggestions(state.results.length || data?.total || 0);
+}
+
+/* ============================ TEXT TO SPEECH (ο AI μιλάει) ============================ */
+
+function stripForSpeech(text) {
+  return String(text || "")
+    .replace(/\[\d+\]/g, "")
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/[*_`#>|]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function speak(text) {
+  if (!state.ttsEnabled || !("speechSynthesis" in window)) return;
+  const clean = stripForSpeech(text);
+  if (!clean) return;
   try {
-    data = await fetchJson(
-      ENDPOINTS.info,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text })
-      },
-      35000
-    );
-  } catch (error) {
-    // Fallback: το /chat δρομολογεί σε πληροφορίες αν λείπει το /info (παλιό worker).
-    console.warn("Info endpoint failed, trying /chat:", error.message);
-    try {
-      data = await fetchJson(
-        ENDPOINTS.chat,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: text, conversation: [], previousFeatures: [] })
-        },
-        35000
-      );
-    } catch (error2) {
-      data = null;
-    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(clean);
+    utterance.lang = state.lang === "el" ? "el-GR" : "en-US";
+    utterance.rate = 1.03;
+    window.speechSynthesis.speak(utterance);
+  } catch {
+    /* αγνοούμε σφάλματα ομιλίας */
   }
-  typing.remove();
-  if (data && data.answer) {
-    appendBubble(dom.infoLog, "ai", renderAnswerWithSources(data));
-  } else {
-    appendBubble(dom.infoLog, "ai", escapeHtml(t("errorGeneric")));
-  }
+}
+
+function initTts() {
+  const btn = dom.ttsBtn;
+  if (!btn) return;
+  btn.classList.toggle("on", state.ttsEnabled);
+  btn.title = state.ttsEnabled ? "Αφήγηση AI: ενεργή" : "Αφήγηση AI: ανενεργή";
+  btn.addEventListener("click", () => {
+    state.ttsEnabled = !state.ttsEnabled;
+    btn.classList.toggle("on", state.ttsEnabled);
+    btn.title = state.ttsEnabled ? "Αφήγηση AI: ενεργή" : "Αφήγηση AI: ανενεργή";
+    if (!state.ttsEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
+  });
 }
 
 /* ============================ VOICE ============================ */
@@ -1257,7 +1312,6 @@ function toggleLanguage() {
 
 function bindEvents() {
   $("modeSearch").addEventListener("click", () => showScreen("search"));
-  $("modeInfo").addEventListener("click", () => showScreen("info"));
   $("homeBtn").addEventListener("click", () => showScreen("home"));
   $("langBtn").addEventListener("click", toggleLanguage);
 
@@ -1293,17 +1347,6 @@ function bindEvents() {
     }
   });
 
-  $("infoSendBtn").addEventListener("click", () => sendInfo());
-  dom.infoInput.addEventListener("keydown", event => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      sendInfo();
-    }
-  });
-  document.querySelectorAll("#infoSuggestions .chip").forEach(btn => {
-    btn.addEventListener("click", () => sendInfo(btn.dataset.q));
-  });
-
   $("closeDetails").addEventListener("click", closeDetails);
   dom.detailsModal.addEventListener("click", event => {
     if (event.target === dom.detailsModal) closeDetails();
@@ -1312,8 +1355,8 @@ function bindEvents() {
     if (event.key === "Escape" && !dom.detailsModal.hidden) closeDetails();
   });
 
+  initTts();
   setupVoice("searchVoiceBtn", dom.chatInput, () => sendSearchChat());
-  setupVoice("infoVoiceBtn", dom.infoInput, () => sendInfo());
 }
 
 /* ============================ INIT ============================ */
