@@ -47,7 +47,7 @@ const state = {
   conversation: [],
   previousFeatures: [],
   chatEnabled: false,
-  ttsEnabled: true,
+  ttsEnabled: false,
   recognition: null,
   listening: false
 };
@@ -235,7 +235,6 @@ const $ = id => document.getElementById(id);
 const dom = {
   statusText: $("statusText"),
   screens: {
-    home: $("screen-home"),
     search: $("screen-search")
   },
   mapCount: $("mapCount"),
@@ -308,14 +307,12 @@ function locationLabelOf(feature) {
 /* ============================ SCREENS ============================ */
 
 function showScreen(mode) {
-  state.mode = mode;
+  state.mode = mode || "search";
   Object.entries(dom.screens).forEach(([key, el]) => {
-    el.hidden = key !== mode;
+    if (el) el.hidden = key !== state.mode;
   });
-  if (mode === "search") {
-    setTimeout(() => window.city4allMap?.view?.resize?.(), 60);
-    if (state.chatEnabled) setTimeout(() => dom.chatInput?.focus?.(), 80);
-  }
+  setTimeout(() => window.city4allMap?.view?.resize?.(), 60);
+  if (state.chatEnabled) setTimeout(() => dom.chatInput?.focus?.(), 80);
 }
 
 /* ============================ MAP ============================ */
@@ -1019,22 +1016,39 @@ async function askWebForFeature(feature) {
   const box = $("webInfoBox");
   if (!box) return;
   box.innerHTML = `<div class="loading-line">${escapeHtml(t("webLoading"))}</div>`;
+  const question = `${feature.name} ${feature.category} προσβασιμότητα ${locationLabelOf(feature)}`.trim();
+  let data = null;
+  // 1) Δοκίμασε το /info. 2) Αν λείπει/αποτύχει, πέσε στο /chat (info mode).
   try {
-    const data = await fetchJson(
+    data = await fetchJson(
       ENDPOINTS.info,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question: `${feature.name} ${feature.category} προσβασιμότητα ${locationLabelOf(feature)}`
-        })
+        body: JSON.stringify({ question })
       },
       30000
     );
+  } catch (error) {
+    try {
+      data = await fetchJson(
+        ENDPOINTS.chat,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: question, conversation: [], previousFeatures: [] })
+        },
+        30000
+      );
+    } catch (error2) {
+      data = null;
+    }
+  }
+  if (data && data.answer) {
     box.innerHTML = `<div class="bubble ai" style="max-width:100%;margin-top:10px">${renderAnswerWithSources(
       data
     )}</div>`;
-  } catch (error) {
+  } else {
     box.innerHTML = `<div class="notice" style="margin-top:10px">${escapeHtml(t("errorGeneric"))}</div>`;
   }
 }
@@ -1311,8 +1325,6 @@ function toggleLanguage() {
 /* ============================ EVENT BINDING ============================ */
 
 function bindEvents() {
-  $("modeSearch").addEventListener("click", () => showScreen("search"));
-  $("homeBtn").addEventListener("click", () => showScreen("home"));
   $("langBtn").addEventListener("click", toggleLanguage);
 
   $("searchBtn").addEventListener("click", () => runSearch(1));
@@ -1364,7 +1376,7 @@ function bindEvents() {
 async function init() {
   applyLanguage();
   bindEvents();
-  showScreen("home");
+  showScreen("search");
   tryResolveExistingMap();
 
   await loadFields();
