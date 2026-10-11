@@ -20,7 +20,8 @@ const ENDPOINTS = {
   search: `${API_BASE}/search`,
   nearby: `${API_BASE}/nearby`,
   chat: `${API_BASE}/chat`,
-  info: `${API_BASE}/info`
+  info: `${API_BASE}/info`,
+  summarize: `${API_BASE}/summarize`
 };
 
 /* ============================ STATE ============================ */
@@ -313,6 +314,9 @@ function showScreen(mode) {
   });
   if (mode === "search") {
     setTimeout(() => window.city4allMap?.view?.resize?.(), 60);
+  }
+  if (mode === "info") {
+    setTimeout(() => dom.infoInput?.focus?.(), 80);
   }
 }
 
@@ -689,6 +693,7 @@ async function runSearch(page = 1) {
     state.previousFeatures = data.features || [];
     renderResults(data);
     drawFeatures(data.features || []);
+    requestAiSummary(data);
   } catch (error) {
     console.error(error);
     dom.resultsList.innerHTML = `<div class="empty">${escapeHtml(t("errorGeneric"))}<br><small>${escapeHtml(
@@ -702,6 +707,59 @@ async function runSearch(page = 1) {
 function showResultsView() {
   dom.filtersView.hidden = true;
   dom.resultsView.hidden = false;
+}
+
+/**
+ * Μετά την καθοδηγούμενη αναζήτηση, ζητάμε από το AI μια φιλική σύνοψη των
+ * αποτελεσμάτων και την εμφανίζουμε ΠΑΝΩ από τις κάρτες + στο log του βοηθού.
+ */
+async function requestAiSummary(data) {
+  const payload = {
+    filters: {
+      category: state.filters.category,
+      accessibility: state.filters.accessibility,
+      location: { ...state.filters.location },
+      keyword: state.filters.keyword
+    },
+    total: data.total,
+    features: (data.features || []).slice(0, 10)
+  };
+  try {
+    const res = await fetchJson(
+      ENDPOINTS.summarize,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      },
+      30000
+    );
+    showAiSummary(res.answer || "", res.total);
+  } catch (error) {
+    // Αν το /summarize δεν είναι διαθέσιμο (παλιό worker), δεν σπάμε τίποτα.
+    console.warn("AI summary unavailable:", error.message);
+  }
+}
+
+function showAiSummary(answer, total) {
+  if (!answer) return;
+  const html = escapeHtml(answer).replace(/\n/g, "<br>");
+
+  const box = document.createElement("div");
+  box.className = "ai-summary";
+  box.innerHTML =
+    `<div class="ai-summary-head">✦ City4All AI</div>` +
+    `<div class="ai-summary-body">${html}</div>`;
+  dom.resultsList.prepend(box);
+
+  // Και στο log του βοηθού, ώστε να υπάρχει ιστορικό συνομιλίας.
+  appendBubble(
+    dom.searchAiLog,
+    "ai",
+    html
+  );
+  state.conversation.push({ role: "assistant", content: answer });
+  state.conversation = state.conversation.slice(-12);
 }
 
 function showFiltersView() {
@@ -1065,8 +1123,9 @@ async function sendInfo(question) {
   dom.infoInput.value = "";
   appendBubble(dom.infoLog, "user", escapeHtml(text));
   const typing = appendTyping(dom.infoLog);
+  let data = null;
   try {
-    const data = await fetchJson(
+    data = await fetchJson(
       ENDPOINTS.info,
       {
         method: "POST",
@@ -1075,23 +1134,49 @@ async function sendInfo(question) {
       },
       35000
     );
-    typing.remove();
-    appendBubble(dom.infoLog, "ai", renderAnswerWithSources(data));
   } catch (error) {
-    typing.remove();
+    // Fallback: το /chat δρομολογεί σε πληροφορίες αν λείπει το /info (παλιό worker).
+    console.warn("Info endpoint failed, trying /chat:", error.message);
+    try {
+      data = await fetchJson(
+        ENDPOINTS.chat,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, conversation: [], previousFeatures: [] })
+        },
+        35000
+      );
+    } catch (error2) {
+      data = null;
+    }
+  }
+  typing.remove();
+  if (data && data.answer) {
+    appendBubble(dom.infoLog, "ai", renderAnswerWithSources(data));
+  } else {
     appendBubble(dom.infoLog, "ai", escapeHtml(t("errorGeneric")));
   }
 }
 
 /* ============================ VOICE ============================ */
 
-function setupVoice(buttonId, textarea, onResult) {
+function setupVoice(buttonId, textarea, onFinal) {
   const button = $(buttonId);
-  if (!button || !("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
-    if (button) button.hidden = true;
+  if (!button) return;
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    // ΔΕΝ κρύβουμε το κουμπί — ενημερώνουμε τον χρήστη τι συμβαίνει.
+    button.title = "Ο browser δεν υποστηρίζει φωνητική εισαγωγή";
+    button.addEventListener("click", () => {
+      alert(
+        "Η φωνητική εισαγωγή δεν υποστηρίζεται σε αυτόν τον browser.\n\nΔοκίμασε Google Chrome σε ασφαλή σύνδεση (https) και επίτρεψε την πρόσβαση στο μικρόφωνο."
+      );
+    });
     return;
   }
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
   const recognition = new SpeechRecognition();
   recognition.lang = state.lang === "el" ? "el-GR" : "en-US";
   recognition.interimResults = false;
@@ -1100,15 +1185,27 @@ function setupVoice(buttonId, textarea, onResult) {
   recognition.onresult = event => {
     const transcript = event.results[0][0].transcript;
     textarea.value = transcript;
-    onResult?.(transcript);
+    textarea.dispatchEvent(new Event("input"));
+    // Αυτόματη αποστολή μετά την αναγνώριση.
+    if (onFinal) onFinal(transcript);
   };
   recognition.onend = () => {
     state.listening = false;
     button.classList.remove("active");
   };
-  recognition.onerror = () => {
+  recognition.onerror = event => {
     state.listening = false;
     button.classList.remove("active");
+    const code = event?.error;
+    if (code === "not-allowed" || code === "service-not-allowed") {
+      alert(
+        "Δεν δόθηκε άδεια μικροφώνου. Επίτρεψε την πρόσβαση στο μικρόφωνο από τις ρυθμίσεις του browser και δοκίμασε ξανά."
+      );
+    } else if (code === "no-speech") {
+      // σιωπή — αγνοούμε
+    } else if (code === "network") {
+      alert("Η φωνητική αναγνώριση απαιτεί σύνδεση στο διαδίκτυο.");
+    }
   };
 
   button.addEventListener("click", () => {
@@ -1215,8 +1312,8 @@ function bindEvents() {
     if (event.key === "Escape" && !dom.detailsModal.hidden) closeDetails();
   });
 
-  setupVoice("searchVoiceBtn", dom.chatInput);
-  setupVoice("infoVoiceBtn", dom.infoInput);
+  setupVoice("searchVoiceBtn", dom.chatInput, () => sendSearchChat());
+  setupVoice("infoVoiceBtn", dom.infoInput, () => sendInfo());
 }
 
 /* ============================ INIT ============================ */
