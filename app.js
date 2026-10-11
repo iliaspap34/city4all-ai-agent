@@ -744,7 +744,7 @@ function showAiSummary(answer, total) {
   const box = document.createElement("div");
   box.className = "ai-summary";
   box.innerHTML =
-    `<div class="ai-summary-head">✦ City4All AI</div>` +
+    `<div class="ai-summary-head">City4All AI</div>` +
     `<div class="ai-summary-body">${html}</div>`;
   dom.resultsList.prepend(box);
 
@@ -811,7 +811,7 @@ function cardHtml(feature) {
         <div>
           <h4>${escapeHtml(feature.name)}</h4>
           <div class="cat">${escapeHtml(feature.category)}</div>
-          <div class="loc">📍 ${escapeHtml(locationLabelOf(feature) || "—")}</div>
+          <div class="loc"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg> ${escapeHtml(locationLabelOf(feature) || "—")}</div>
         </div>
       </div>
       <div class="tag-row">${tags}</div>
@@ -821,7 +821,7 @@ function cardHtml(feature) {
         )}">${escapeHtml(t("details"))}</button>
         <button class="mini-btn" data-action="map" data-id="${escapeHtml(
           feature.id
-        )}">🗺️ ${escapeHtml(t("viewOnMap"))}</button>
+        )}">${escapeHtml(t("viewOnMap"))}</button>
       </div>
     </article>`;
 }
@@ -845,7 +845,7 @@ function openDetails(feature) {
     : `<div class="notice">${escapeHtml(t("noAccessData"))}</div>`;
 
   const mapLinks = feature.hasCoordinates
-    ? `<a class="mini-btn" href="${feature.googleMapsUrl}" target="_blank" rel="noopener">📍 ${escapeHtml(
+    ? `<a class="mini-btn" href="${feature.googleMapsUrl}" target="_blank" rel="noopener">${escapeHtml(
         t("openMaps")
       )}</a>`
     : `<span class="notice">${escapeHtml("—")}</span>`;
@@ -870,25 +870,25 @@ function openDetails(feature) {
       <dt>${escapeHtml(t("recordId"))}</dt><dd>#${escapeHtml(feature.id)}</dd>
     </dl>
 
-    <div class="section-title">♿ ${escapeHtml(t("recordedAccess"))}</div>
+    <div class="section-title">${escapeHtml(t("recordedAccess"))}</div>
     ${accessSection}
 
     ${
       feature.entrance
-        ? `<div class="section-title">🚪 ${escapeHtml(t("entrance"))}</div><div>${escapeHtml(
+        ? `<div class="section-title">${escapeHtml(t("entrance"))}</div><div>${escapeHtml(
             feature.entrance
           )}</div>`
         : ""
     }
     ${
       feature.comments
-        ? `<div class="section-title">💬 ${escapeHtml(t("comments"))}</div><div>${escapeHtml(
+        ? `<div class="section-title">${escapeHtml(t("comments"))}</div><div>${escapeHtml(
             feature.comments
           )}</div>`
         : ""
     }
 
-    <div class="section-title">🗺️ ${escapeHtml(t("viewOnMap"))}</div>
+    <div class="section-title">${escapeHtml(t("viewOnMap"))}</div>
     <div class="card-actions">
       <button class="mini-btn primary" id="detailMapBtn" type="button">${escapeHtml(
         t("viewOnMap")
@@ -896,11 +896,11 @@ function openDetails(feature) {
       ${mapLinks}
     </div>
 
-    <div class="section-title">📌 ${escapeHtml(t("nearby"))}</div>
+    <div class="section-title">${escapeHtml(t("nearby"))}</div>
     <div class="radius-row" id="radiusRow"></div>
     <div class="nearby-list" id="nearbyList"></div>
 
-    <div class="section-title">🔎 ${escapeHtml(t("moreInfo"))}</div>
+    <div class="section-title">${escapeHtml(t("moreInfo"))}</div>
     <div class="notice" style="margin-bottom:10px">${escapeHtml(t("moreInfoHint"))}</div>
     <div class="card-actions">
       <button class="mini-btn" id="askWebBtn" type="button">${escapeHtml(t("askWeb"))}</button>
