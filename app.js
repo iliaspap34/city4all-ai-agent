@@ -1,3703 +1,1239 @@
-/* ============================================================
-   CITY4ALL AI APP
-============================================================ */
+/* ============================================================================
+   CITY4ALL AI — FRONTEND (app.js)
+   ----------------------------------------------------------------------------
+   - Καθοδηγούμενη αναζήτηση σημείων (φίλτρα + cascade τοποθεσίας)
+   - Κάρτες αποτελεσμάτων, σελίδα λεπτομερειών, κοντινά σημεία
+   - Ξεχωριστή λειτουργία «Πληροφορίες» με διαδικτυακές πηγές
+   - Χάρτης ArcGIS, φωνητική εισαγωγή, AI βοηθός
+   - Καμία πλασματική βαθμολογία/φωτογραφία/απόσταση/ώρα λειτουργίας
+   ============================================================================ */
+
+/* ============================ CONFIG ============================ */
 
 const API_BASE =
+  window.CITY4ALL_API_BASE ||
   "https://city4allfinalai.ilias-pap-net.workers.dev";
 
-const CHAT_URL =
-  `${API_BASE}/chat`;
+const ENDPOINTS = {
+  fields: `${API_BASE}/fields`,
+  locations: `${API_BASE}/locations`,
+  search: `${API_BASE}/search`,
+  nearby: `${API_BASE}/nearby`,
+  chat: `${API_BASE}/chat`,
+  info: `${API_BASE}/info`
+};
 
+/* ============================ STATE ============================ */
 
-/* ============================================================
-   STATE
-============================================================ */
+const state = {
+  lang: localStorage.getItem("city4all_lang") || "el",
+  mode: "home",
+  fields: null,
+  filters: {
+    category: [],
+    accessibility: [],
+    location: { perifereia: "", nomoi: "", dimos: "", area: "", text: "" },
+    keyword: ""
+  },
+  page: 1,
+  pageSize: 10,
+  lastSearch: null,
+  results: [],
+  mapFeatures: [],
+  selected: null,
+  nearbyRadius: 500,
+  nearbyCategory: "",
+  conversation: [],
+  previousFeatures: [],
+  recognition: null,
+  listening: false
+};
 
-let conversation = [];
+/* ============================ i18n ============================ */
 
-let previousFeatures = [];
+const I18N = {
+  el: {
+    tagline: "Ψηφιακός οδηγός προσβασιμότητας",
+    home: "Αρχική",
+    homeTitle: "Πώς μπορώ να σε βοηθήσω;",
+    homeLead:
+      "Διάλεξε λειτουργία. Η <strong>Εύρεση σημείων</strong> ψάχνει πραγματικά σημεία προσβασιμότητας στα δεδομένα City4All. Οι <strong>Πληροφορίες</strong> απαντούν σε γενικές ερωτήσεις από αξιόπιστες διαδικτυακές πηγές.",
+    modeSearch: "Εύρεση σημείων",
+    modeSearchDesc:
+      "Φίλτρα κατηγορίας, προσβασιμότητας και τοποθεσίας. Κάρτες αποτελεσμάτων, λεπτομέρειες και κοντινά σημεία στον χάρτη.",
+    startSearch: "Ξεκίνα αναζήτηση →",
+    modeInfo: "Πληροφορίες",
+    modeInfoDesc:
+      "Ρώτησε για προσβασιμότητα, δικαιώματα, νομοθεσία και τεχνολογίες. Απαντήσεις από αξιόπιστες πηγές με παραπομπές.",
+    askInfo: "Κάνε μια ερώτηση →",
+    mapLabel: "Χάρτης City4All",
+    filtersTitle: "Αναζήτηση σημείων",
+    filtersHint: "Επίλεξε τι ψάχνεις και πού.",
+    categoryLabel: "Τύπος σημείου",
+    accessLabel: "Μέσα προσβασιμότητας (προαιρετικά)",
+    optional: "(προαιρετικά)",
+    locationLabel: "Τοποθεσία",
+    anyRegion: "Όλες οι περιφέρειες",
+    anyPrefecture: "Όλοι οι νομοί",
+    anyDimos: "Όλοι οι δήμοι",
+    anyArea: "Όλες οι περιοχές",
+    locTextPh: "Ή γράψε περιοχή/πόλη (π.χ. Καλλιθέα, London)",
+    clearLocation: "Καθαρισμός τοποθεσίας",
+    keywordLabel: "Λέξη-κλειδί (προαιρετικά)",
+    keywordPh: "π.χ. ράμπα, βιβλιοθήκη",
+    searchBtn: "Αναζήτηση",
+    resetBtn: "Καθαρισμός",
+    resultsTitle: "Αποτελέσματα",
+    prev: "← Προηγούμενη",
+    next: "Επόμενη →",
+    backToFilters: "← Αλλαγή φίλτρων",
+    send: "Αποστολή",
+    infoTitle: "Πληροφορίες προσβασιμότητας",
+    infoLead:
+      "Ρώτησε για δικαιώματα, νομοθεσία, τεχνολογίες και καλές πρακτικές. Απαντήσεις από αξιόπιστες πηγές.",
+    chatPh: "Ή ρώτησε με λόγια: «φαρμακεία με ράμπα στην Καλλιθέα»",
+    infoPh: "Γράψε την ερώτησή σου...",
+    loading: "Φόρτωση…",
+    searching: "Αναζήτηση στα δεδομένα City4All…",
+    noResults: "Δεν βρέθηκαν σημεία με αυτά τα κριτήρια.",
+    noResultsHint: "Δοκίμασε να αλλάξεις κατηγορία ή να διευρύνεις την περιοχή.",
+    found: "Βρέθηκαν",
+    resultsWord: "αποτελέσματα",
+    page: "Σελίδα",
+    of: "από",
+    details: "Προβολή λεπτομερειών",
+    viewOnMap: "Στον χάρτη",
+    openMaps: "Άνοιγμα στους Χάρτες",
+    nearby: "Κοντινά σημεία",
+    nearbyAll: "Όλες οι κατηγορίες",
+    nearbyEmpty: "Δεν βρέθηκαν κοντινά σημεία σε αυτή την ακτίνα.",
+    nearbyLoading: "Φόρτωση κοντινών σημείων…",
+    radius: "Ακτίνα",
+    meters: "μ.",
+    km: "χλμ.",
+    recordedAccess: "Καταγεγραμμένα μέσα προσβασιμότητας",
+    noAccessData:
+      "Δεν υπάρχουν καταγεγραμμένα στοιχεία προσβασιμότητας για αυτό το σημείο. Η έλλειψη καταγραφής δεν σημαίνει έλλειψη υποδομής.",
+    comments: "Σχόλια / Παρατηρήσεις",
+    entrance: "Περιγραφή εισόδου",
+    dataSource: "Προέλευση δεδομένων",
+    category: "Κατηγορία",
+    location: "Τοποθεσία",
+    area: "Περιοχή",
+    dimos: "Δήμος",
+    nomoi: "Νομός",
+    perifereia: "Περιφέρεια",
+    recordId: "Αναγνωριστικό εγγραφής",
+    moreInfo: "Περισσότερες πληροφορίες",
+    moreInfoHint: "Γενικές πληροφορίες από το διαδίκτυο (όχι δεδομένα City4All).",
+    askWeb: "Αναζήτηση στο διαδίκτυο",
+    webLoading: "Αναζήτηση στο διαδίκτυο…",
+    sources: "Πηγές",
+    clarification: "Διευκρίνιση",
+    errorGeneric: "Κάτι πήγε λάθος. Δοκίμασε ξανά.",
+    clearAll: "Καθαρισμός όλων",
+    selectCategories: "Επιλογή κατηγοριών",
+    allCategories: "Όλες",
+    disclaimer:
+      "Η απόσταση είναι ευθεία γραμμή και δεν αποτελεί απόσταση πεζής διαδρομής."
+  },
+  en: {
+    tagline: "Accessibility digital guide",
+    home: "Home",
+    homeTitle: "How can I help you?",
+    homeLead:
+      "Pick a mode. <strong>Find places</strong> searches real accessibility points in the City4All dataset. <strong>Information</strong> answers general questions from trusted web sources.",
+    modeSearch: "Find places",
+    modeSearchDesc:
+      "Category, accessibility and location filters. Result cards, details and nearby places on the map.",
+    startSearch: "Start searching →",
+    modeInfo: "Information",
+    modeInfoDesc:
+      "Ask about accessibility, rights, legislation and technologies. Answers from trusted sources with citations.",
+    askInfo: "Ask a question →",
+    mapLabel: "City4All Map",
+    filtersTitle: "Find places",
+    filtersHint: "Choose what and where.",
+    categoryLabel: "Place type",
+    accessLabel: "Accessibility features (optional)",
+    optional: "(optional)",
+    locationLabel: "Location",
+    anyRegion: "All regions",
+    anyPrefecture: "All prefectures",
+    anyDimos: "All municipalities",
+    anyArea: "All areas",
+    locTextPh: "Or type an area/city (e.g. Kallithea, London)",
+    clearLocation: "Clear location",
+    keywordLabel: "Keyword (optional)",
+    keywordPh: "e.g. ramp, library",
+    searchBtn: "Search",
+    resetBtn: "Reset",
+    resultsTitle: "Results",
+    prev: "← Previous",
+    next: "Next →",
+    backToFilters: "← Change filters",
+    send: "Send",
+    infoTitle: "Accessibility information",
+    infoLead:
+      "Ask about rights, legislation, technologies and good practices. Answers from trusted sources.",
+    chatPh: "Or ask in words: “pharmacies with a ramp in Kallithea”",
+    infoPh: "Type your question...",
+    loading: "Loading…",
+    searching: "Searching the City4All dataset…",
+    noResults: "No places found with these criteria.",
+    noResultsHint: "Try changing the category or widening the area.",
+    found: "Found",
+    resultsWord: "results",
+    page: "Page",
+    of: "of",
+    details: "View details",
+    viewOnMap: "On map",
+    openMaps: "Open in Maps",
+    nearby: "Nearby places",
+    nearbyAll: "All categories",
+    nearbyEmpty: "No nearby places within this radius.",
+    nearbyLoading: "Loading nearby places…",
+    radius: "Radius",
+    meters: "m",
+    km: "km",
+    recordedAccess: "Recorded accessibility features",
+    noAccessData:
+      "No accessibility data is recorded for this place. Missing data does not mean missing infrastructure.",
+    comments: "Comments / Notes",
+    entrance: "Entrance description",
+    dataSource: "Data source",
+    category: "Category",
+    location: "Location",
+    area: "Area",
+    dimos: "Municipality",
+    nomoi: "Prefecture",
+    perifereia: "Region",
+    recordId: "Record ID",
+    moreInfo: "More information",
+    moreInfoHint: "General information from the web (not City4All data).",
+    askWeb: "Search the web",
+    webLoading: "Searching the web…",
+    sources: "Sources",
+    clarification: "Clarification",
+    errorGeneric: "Something went wrong. Please try again.",
+    clearAll: "Clear all",
+    selectCategories: "Select categories",
+    allCategories: "All",
+    disclaimer: "Distance is a straight line and is not a walking route distance."
+  }
+};
 
-let isLoading = false;
+function t(key) {
+  return I18N[state.lang][key] || I18N.el[key] || key;
+}
 
-let recognition = null;
+/* ============================ DOM ============================ */
 
-let voiceMode = false;
+const $ = id => document.getElementById(id);
 
-let listening = false;
+const dom = {
+  statusText: $("statusText"),
+  screens: {
+    home: $("screen-home"),
+    search: $("screen-search"),
+    info: $("screen-info")
+  },
+  mapCount: $("mapCount"),
+  categoryChips: $("categoryChips"),
+  accessChips: $("accessChips"),
+  locPerifereia: $("locPerifereia"),
+  locNomoi: $("locNomoi"),
+  locDimos: $("locDimos"),
+  locArea: $("locArea"),
+  locText: $("locText"),
+  keywordInput: $("keywordInput"),
+  filtersView: $("filtersView"),
+  resultsView: $("resultsView"),
+  resultsList: $("resultsList"),
+  resultsCount: $("resultsCount"),
+  pager: $("pager"),
+  pageInfo: $("pageInfo"),
+  prevPage: $("prevPage"),
+  nextPage: $("nextPage"),
+  searchAiLog: $("searchAiLog"),
+  chatInput: $("chatInput"),
+  infoLog: $("infoLog"),
+  infoInput: $("infoInput"),
+  detailsModal: $("detailsModal"),
+  detailName: $("detailName"),
+  detailCategory: $("detailCategory"),
+  detailBody: $("detailBody")
+};
 
-let voiceRestartTimer = null;
+/* ============================ UTIL ============================ */
 
-let isSpeaking = false;
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
+async function fetchJson(url, options = {}, timeoutMs = 25000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(data?.error || `HTTP ${response.status}`);
+    }
+    return data;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
-/* ============================================================
-   MAP READY
-============================================================ */
+function formatDistance(meters) {
+  if (meters == null) return "";
+  if (meters < 1000) return `${meters} ${t("meters")}`;
+  return `${(meters / 1000).toFixed(1)} ${t("km")}`;
+}
 
-/*
- * Πολύ σημαντικό:
- *
- * Μπορεί το ArcGIS map να έχει φορτώσει ΠΡΙΝ
- * φορτωθεί/εκτελεστεί το app.js.
- *
- * Γι' αυτό ελέγχουμε και το
- * window.city4allMap
- * άμεσα και το custom event.
- */
+function locationLabelOf(feature) {
+  const parts = [feature.area, feature.dimos, feature.nomoi, feature.perifereia]
+    .filter(Boolean)
+    .filter((v, i, arr) => arr.indexOf(v) === i);
+  return parts.join(", ");
+}
 
-let resolveMapReady;
+/* ============================ SCREENS ============================ */
+
+function showScreen(mode) {
+  state.mode = mode;
+  Object.entries(dom.screens).forEach(([key, el]) => {
+    el.hidden = key !== mode;
+  });
+  if (mode === "search") {
+    setTimeout(() => window.city4allMap?.view?.resize?.(), 60);
+  }
+}
+
+/* ============================ MAP ============================ */
 
 let mapReadyResolved = false;
-
-const mapReadyPromise =
-  new Promise(resolve => {
-
-    resolveMapReady =
-      () => {
-
-        if (
-          mapReadyResolved
-        ) {
-
-          return;
-
-        }
-
-        mapReadyResolved =
-          true;
-
-        resolve();
-
-      };
-
-  });
-
+let resolveMapReady;
+const mapReadyPromise = new Promise(resolve => {
+  resolveMapReady = () => {
+    if (mapReadyResolved) return;
+    mapReadyResolved = true;
+    resolve();
+  };
+});
 
 function tryResolveExistingMap() {
-
-  if (
-    window.city4allMap?.view
-  ) {
-
-    try {
-
-      if (
-        window.city4allMap.view.when
-      ) {
-
-        window.city4allMap
-          .view
-          .when()
-          .then(
-            () => {
-
-              resolveMapReady();
-
-            }
-          )
-          .catch(
-            () => {
-
-              resolveMapReady();
-
-            }
-          );
-
-      }
-
-      else {
-
-        resolveMapReady();
-
-      }
-
-    }
-
-    catch {
-
+  const map = window.city4allMap;
+  if (map?.view) {
+    if (map.view.when) {
+      map.view.when(() => resolveMapReady()).catch(() => resolveMapReady());
+    } else {
       resolveMapReady();
-
     }
-
   }
-
 }
 
-
-/*
- * Κάνουμε τον έλεγχο αμέσως.
- */
+window.addEventListener("city4all-map-ready", () => resolveMapReady());
 tryResolveExistingMap();
 
-
-/* ============================================================
-   DOM
-============================================================ */
-
-const messagesEl =
-  document.getElementById(
-    "messages"
-  );
-
-const inputEl =
-  document.getElementById(
-    "messageInput"
-  );
-
-const sendButton =
-  document.getElementById(
-    "sendButton"
-  );
-
-const voiceButton =
-  document.getElementById(
-    "voiceButton"
-  );
-
-
-/* ============================================================
-   INITIALIZATION
-============================================================ */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    setupQuickActions();
-
-    setupInput();
-
-    setupVoice();
-
-    setupMobileViewport();
-
-    tryResolveExistingMap();
-
-    console.log(
-      "City4All AI frontend loaded."
-    );
-
-  }
-);
-
-
-/* ============================================================
-   QUICK ACTIONS
-============================================================ */
-
-function setupQuickActions() {
-
-  document
-    .querySelectorAll(
-      ".quick-button"
-    )
-    .forEach(
-      button => {
-
-        button.addEventListener(
-          "click",
-          () => {
-
-            const question =
-              button.dataset.question;
-
-
-            if (
-              !question ||
-              isLoading
-            ) {
-
-              return;
-
-            }
-
-
-            inputEl.value =
-              question;
-
-
-            inputEl.dispatchEvent(
-              new Event("input")
-            );
-
-
-            sendMessage();
-
-          }
-        );
-
-      }
-    );
-
+async function waitForMapReady() {
+  if (mapReadyResolved) return true;
+  const timeout = new Promise(resolve => setTimeout(() => resolve(false), 8000));
+  await Promise.race([mapReadyPromise, timeout]);
+  return mapReadyResolved;
 }
 
+const ACCESS_COLORS = {
+  ramp: "#1d6fe0",
+  elevator: "#7c3aed",
+  signage: "#0891b2",
+  stepfree: "#16a34a",
+  autodoor: "#0d9488",
+  parking: "#2563eb",
+  tactile: "#d97706",
+  handrail: "#64748b",
+  doorbutton: "#9333ea",
+  wc: "#dc2626"
+};
 
-/* ============================================================
-   INPUT
-============================================================ */
-
-function setupInput() {
-
-  if (!inputEl) {
-    return;
-  }
-
-
-  inputEl.addEventListener(
-    "keydown",
-    event => {
-
-      if (
-        event.key === "Enter" &&
-        !event.shiftKey
-      ) {
-
-        event.preventDefault();
-
-        sendMessage();
-
-      }
-
-    }
-  );
-
-
-  inputEl.addEventListener(
-    "input",
-    resizeInput
-  );
-
-
-  sendButton?.addEventListener(
-    "click",
-    sendMessage
-  );
-
-
-  resizeInput();
-
+function popupHtml(feature) {
+  const access = feature.accessibility?.length
+    ? feature.accessibility.map(a => `<li>${escapeHtml(a.label)}</li>`).join("")
+    : `<li>${escapeHtml(t("noAccessData"))}</li>`;
+  return `
+    <div style="font-family:inherit;max-width:260px">
+      <strong>${escapeHtml(feature.name)}</strong>
+      <div style="color:#1d6fe0;font-size:11px;font-weight:700;margin:2px 0 6px">${escapeHtml(
+        feature.category
+      )}</div>
+      <div style="color:#64748b;font-size:11px;margin-bottom:6px">${escapeHtml(
+        locationLabelOf(feature)
+      )}</div>
+      <ul style="margin:0;padding-left:16px;font-size:11px">${access}</ul>
+    </div>`;
 }
 
+async function drawFeatures(features) {
+  state.mapFeatures = features || [];
+  const ready = await waitForMapReady();
+  const map = window.city4allMap;
+  if (!ready || !map) return;
 
-function resizeInput() {
+  map.resultsLayer.removeAll();
 
-  if (!inputEl) {
-    return;
-  }
-
-
-  inputEl.style.height =
-    "43px";
-
-
-  const newHeight =
-    Math.min(
-      inputEl.scrollHeight,
-      100
-    );
-
-
-  inputEl.style.height =
-    `${Math.max(
-      43,
-      newHeight
-    )}px`;
-
-}
-
-
-/* ============================================================
-   SEND MESSAGE
-============================================================ */
-
-async function sendMessage(
-  options = {}
-) {
-
-  const {
-    fromVoice = false
-  } = options;
-
-
-  if (
-    isLoading
-  ) {
-
-    return;
-
-  }
-
-
-  const message =
-    inputEl?.value
-      ?.trim() ||
-    "";
-
-
-  if (
-    !message
-  ) {
-
-    return;
-
-  }
-
-
-  stopSpeaking();
-
-
-  addMessage(
-    "user",
-    message
-  );
-
-
-  inputEl.value =
-    "";
-
-  inputEl.style.height =
-    "43px";
-
-
-  setLoading(
-    true
-  );
-
-
-  const loadingMessage =
-    addLoadingMessage();
-
-
-  const controller =
-    new AbortController();
-
-
-  /*
-   * Ο Worker είναι πλέον
-   * αρκετά γρήγορος.
-   *
-   * 20 sec αρκούν ως browser safety timeout.
-   */
-  const timeoutId =
-    setTimeout(
-      () => {
-
-        controller.abort();
-
+  const points = (features || []).filter(f => f.latitude != null && f.longitude != null);
+  points.forEach(feature => {
+    const graphic = new map.Graphic({
+      geometry: { type: "point", longitude: feature.longitude, latitude: feature.latitude },
+      attributes: { id: feature.id, name: feature.name },
+      symbol: {
+        type: "simple-marker",
+        style: "circle",
+        size: 11,
+        color: ACCESS_COLORS[feature.accessibility?.[0]?.id] || "#1d6fe0",
+        outline: { color: "#ffffff", width: 1.5 }
       },
-      20000
-    );
+      popupTemplate: {
+        title: feature.name,
+        content: popupHtml(feature)
+      }
+    });
+    map.resultsLayer.add(graphic);
+  });
 
+  dom.mapCount.hidden = points.length === 0;
+  dom.mapCount.textContent = `${points.length} ${t("resultsWord")}`;
+
+  if (points.length === 1) {
+    await focusMapPoint(points[0], 16);
+  } else if (points.length > 1) {
+    try {
+      await map.view.goTo(points.map(p => [p.longitude, p.latitude]), { padding: 60 });
+    } catch (e) {
+      console.warn("goTo failed", e);
+    }
+  }
+}
+
+async function focusMapPoint(feature, zoom = 17) {
+  const ready = await waitForMapReady();
+  const map = window.city4allMap;
+  if (!ready || !map || feature.latitude == null) return;
+  try {
+    await map.view.goTo({ center: [feature.longitude, feature.latitude], zoom });
+    const graphic = map.resultsLayer.graphics.find(
+      g => String(g.attributes?.id) === String(feature.id)
+    );
+    if (graphic && map.view.openPopup) {
+      map.view.openPopup({ location: graphic.geometry, features: [graphic] });
+    }
+  } catch (e) {
+    console.warn("focus failed", e);
+  }
+}
+
+/* ============================ FIELDS ============================ */
+
+async function loadFields() {
+  try {
+    state.fields = await fetchJson(ENDPOINTS.fields, {}, 15000);
+    renderCategoryChips();
+    renderAccessChips();
+  } catch (error) {
+    console.warn("Fields load failed:", error.message);
+    dom.statusText.textContent = "Offline";
+  }
+}
+
+function renderCategoryChips() {
+  const cats = state.fields?.categories || [];
+  dom.categoryChips.innerHTML = "";
+
+  const allBtn = document.createElement("button");
+  allBtn.type = "button";
+  allBtn.className = "chip" + (state.filters.category.length === 0 ? " active" : "");
+  allBtn.textContent = t("allCategories");
+  allBtn.addEventListener("click", () => {
+    state.filters.category = [];
+    renderCategoryChips();
+  });
+  dom.categoryChips.appendChild(allBtn);
+
+  cats.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "chip";
+    btn.textContent = cat.label;
+    btn.dataset.id = cat.id;
+    if (state.filters.category.includes(cat.id)) btn.classList.add("active");
+    btn.addEventListener("click", () => {
+      toggleArray(state.filters.category, cat.id);
+      btn.classList.toggle("active");
+    });
+    dom.categoryChips.appendChild(btn);
+  });
+}
+
+function renderAccessChips() {
+  const list = state.fields?.accessibility || [];
+  dom.accessChips.innerHTML = "";
+
+  const allBtn = document.createElement("button");
+  allBtn.type = "button";
+  allBtn.className = "chip chip-access" + (state.filters.accessibility.length === 0 ? " active" : "");
+  allBtn.textContent = t("allCategories");
+  allBtn.addEventListener("click", () => {
+    state.filters.accessibility = [];
+    renderAccessChips();
+  });
+  dom.accessChips.appendChild(allBtn);
+
+  list.forEach(item => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "chip chip-access";
+    btn.textContent = item.label;
+    if (state.filters.accessibility.includes(item.id)) btn.classList.add("active");
+    btn.addEventListener("click", () => {
+      toggleArray(state.filters.accessibility, item.id);
+      btn.classList.toggle("active");
+    });
+    dom.accessChips.appendChild(btn);
+  });
+}
+
+function toggleArray(arr, value) {
+  const idx = arr.indexOf(value);
+  if (idx === -1) arr.push(value);
+  else arr.splice(idx, 1);
+}
+
+/* ============================ LOCATION CASCADE ============================ */
+
+function setSelectOptions(select, values, placeholderKey) {
+  select.innerHTML = "";
+  const first = document.createElement("option");
+  first.value = "";
+  first.textContent = t(placeholderKey);
+  select.appendChild(first);
+  values.forEach(value => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    select.appendChild(option);
+  });
+}
+
+async function loadLocations(level, parent = {}) {
+  const params = new URLSearchParams({ level });
+  if (parent.perifereia) params.set("perifereia", parent.perifereia);
+  if (parent.nomoi) params.set("nomoi", parent.nomoi);
+  if (parent.dimos) params.set("dimos", parent.dimos);
+  try {
+    const data = await fetchJson(`${ENDPOINTS.locations}?${params.toString()}`, {}, 20000);
+    return data.values || [];
+  } catch (error) {
+    console.warn(`Locations ${level} failed:`, error.message);
+    return [];
+  }
+}
+
+async function initLocationCascade() {
+  const regions = await loadLocations("perifereia");
+  setSelectOptions(dom.locPerifereia, regions, "anyRegion");
+}
+
+async function onPerifereiaChange() {
+  state.filters.location.perifereia = dom.locPerifereia.value;
+  state.filters.location.nomoi = "";
+  state.filters.location.dimos = "";
+  state.filters.location.area = "";
+  dom.locNomoi.value = "";
+  dom.locDimos.value = "";
+  dom.locArea.value = "";
+  const nomoi = state.filters.location.perifereia
+    ? await loadLocations("nomoi", { perifereia: state.filters.location.perifereia })
+    : [];
+  setSelectOptions(dom.locNomoi, nomoi, "anyPrefecture");
+  const dimos = state.filters.location.perifereia
+    ? await loadLocations("dimos", { perifereia: state.filters.location.perifereia })
+    : await loadLocations("dimos");
+  setSelectOptions(dom.locDimos, dimos, "anyDimos");
+  const areas = state.filters.location.perifereia
+    ? await loadLocations("area", { perifereia: state.filters.location.perifereia })
+    : await loadLocations("area");
+  setSelectOptions(dom.locArea, areas, "anyArea");
+}
+
+async function onNomoiChange() {
+  state.filters.location.nomoi = dom.locNomoi.value;
+  state.filters.location.dimos = "";
+  state.filters.location.area = "";
+  dom.locDimos.value = "";
+  dom.locArea.value = "";
+  const parent = {
+    perifereia: state.filters.location.perifereia,
+    nomoi: state.filters.location.nomoi
+  };
+  const dimos = await loadLocations("dimos", parent);
+  setSelectOptions(dom.locDimos, dimos, "anyDimos");
+  const areas = await loadLocations("area", parent);
+  setSelectOptions(dom.locArea, areas, "anyArea");
+}
+
+async function onDimosChange() {
+  state.filters.location.dimos = dom.locDimos.value;
+  state.filters.location.area = "";
+  dom.locArea.value = "";
+  const parent = {
+    perifereia: state.filters.location.perifereia,
+    nomoi: state.filters.location.nomoi,
+    dimos: state.filters.location.dimos
+  };
+  const areas = state.filters.location.dimos
+    ? await loadLocations("area", parent)
+    : await loadLocations("area", { perifereia: parent.perifereia });
+  setSelectOptions(dom.locArea, areas, "anyArea");
+}
+
+function onAreaChange() {
+  state.filters.location.area = dom.locArea.value;
+}
+
+function clearLocation() {
+  state.filters.location = { perifereia: "", nomoi: "", dimos: "", area: "", text: "" };
+  dom.locPerifereia.value = "";
+  dom.locNomoi.innerHTML = `<option value="">${escapeHtml(t("anyPrefecture"))}</option>`;
+  dom.locDimos.innerHTML = `<option value="">${escapeHtml(t("anyDimos"))}</option>`;
+  dom.locArea.innerHTML = `<option value="">${escapeHtml(t("anyArea"))}</option>`;
+  dom.locText.value = "";
+}
+
+/* ============================ SEARCH ============================ */
+
+function setLoadingButton(button, loading, label) {
+  button.disabled = loading;
+  if (loading) {
+    button.dataset.original = button.textContent;
+    button.innerHTML = `<span class="spinner"></span>`;
+  } else {
+    button.textContent = label || button.dataset.original || t("searchBtn");
+  }
+}
+
+async function runSearch(page = 1) {
+  state.filters.location.text = dom.locText.value.trim();
+  state.filters.keyword = dom.keywordInput.value.trim();
+  state.page = page;
+
+  if (
+    !state.filters.category.length &&
+    !state.filters.accessibility.length &&
+    !state.filters.location.text &&
+    !state.filters.location.perifereia &&
+    !state.filters.location.dimos &&
+    !state.filters.location.area &&
+    !state.filters.keyword
+  ) {
+    // Καμία επιλογή: ζητάμε από τον χρήστη να επιλέξει τουλάχιστον ένα κριτήριο.
+    showResultsView();
+    dom.resultsCount.textContent = "";
+    dom.resultsList.innerHTML = `<div class="empty">${escapeHtml(
+      t("noResultsHint")
+    )}</div>`;
+    dom.pager.hidden = true;
+    return;
+  }
+
+  dom.filtersView.hidden = true;
+  showResultsView();
+  dom.resultsList.innerHTML = `<div class="loading-line"><span class="spinner" style="border-color:rgba(29,111,224,.3);border-top-color:#1d6fe0"></span>${escapeHtml(
+    t("searching")
+  )}</div>`;
+  dom.resultsCount.textContent = "";
+  dom.pager.hidden = true;
+
+  const button = $("searchBtn");
+  setLoadingButton(button, true);
 
   try {
-
-    const response =
-      await fetch(
-        CHAT_URL,
-        {
-
-          method:
-            "POST",
-
-          headers: {
-
-            "Content-Type":
-              "application/json"
-
-          },
-
-          body:
-            JSON.stringify({
-
-              message,
-
-              conversation,
-
-              previousFeatures
-
-            }),
-
-          signal:
-            controller.signal
-
-        }
-      );
-
-
-    clearTimeout(
-      timeoutId
+    const data = await fetchJson(
+      ENDPOINTS.search,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category: state.filters.category,
+          accessibility: state.filters.accessibility,
+          perifereia: state.filters.location.perifereia,
+          nomoi: state.filters.location.nomoi,
+          dimos: state.filters.location.dimos,
+          area: state.filters.location.area,
+          locationText: state.filters.location.text,
+          keyword: state.filters.keyword,
+          page: state.page,
+          pageSize: state.pageSize
+        })
+      },
+      30000
     );
 
-
-    let data;
-
-
-    try {
-
-      data =
-        await response.json();
-
-    }
-
-    catch {
-
-      throw new Error(
-        "Ο Worker επέστρεψε μη έγκυρη απάντηση."
-      );
-
-    }
-
-
-    removeLoadingMessage(
-      loadingMessage
-    );
-
-
-    if (
-      !response.ok ||
-      !data.success
-    ) {
-
-      throw new Error(
-        data?.error ||
-        "Η αναζήτηση απέτυχε."
-      );
-
-    }
-
-
-    console.log(
-      "City4All response:",
-      data
-    );
-
-
-    /* ======================================================
-       ANSWER
-    ====================================================== */
-
-    const answer =
-      data.answer ||
-      "Δεν μπόρεσα να δημιουργήσω απάντηση.";
-
-
-    const messageElement =
-      addMessage(
-        "ai",
-        answer
-      );
-
-
-    updateConversation(
-      message,
-      answer
-    );
-
-
-    /* ======================================================
-       CHAT RESULTS
-    ====================================================== */
-
-    const features =
-      Array.isArray(
-        data.features
-      )
-        ? data.features
-        : [];
-
-
-    /*
-     * ΜΟΝΟ τα chat-visible
-     * results κρατάμε εδώ.
-     */
-    previousFeatures =
-      features;
-
-
-    /* ======================================================
-       MAP RESULTS
-    ====================================================== */
-
-    const mapFeatures =
-      Array.isArray(
-        data.mapFeatures
-      )
-        ? data.mapFeatures
-        : features;
-
-
-    const mapCommand =
-      data.mapCommand ||
-      null;
-
-
-    console.log(
-      "Map features:",
-      mapFeatures.length
-    );
-
-
-    console.log(
-      "Map command:",
-      mapCommand
-    );
-
-
-    /* ======================================================
-       ACTION BUTTONS
-    ====================================================== */
-
-    addChatActions(
-      messageElement,
-      features,
-      mapFeatures,
-      mapCommand,
-      data.totalMatches
-    );
-
-
-    /* ======================================================
-       MAP CONTROL
-    ====================================================== */
-
-    await updateMap(
-      mapFeatures,
-      mapCommand
-    );
-
-
-    /* ======================================================
-       VOICE
-    ====================================================== */
-
-    if (
-      voiceMode &&
-      fromVoice
-    ) {
-
-      speakAnswer(
-        answer
-      );
-
-    }
-
+    state.lastSearch = data;
+    state.results = data.features || [];
+    state.previousFeatures = data.features || [];
+    renderResults(data);
+    drawFeatures(data.features || []);
+  } catch (error) {
+    console.error(error);
+    dom.resultsList.innerHTML = `<div class="empty">${escapeHtml(t("errorGeneric"))}<br><small>${escapeHtml(
+      error.message
+    )}</small></div>`;
+  } finally {
+    setLoadingButton(button, false, t("searchBtn"));
   }
-
-  catch (error) {
-
-    clearTimeout(
-      timeoutId
-    );
-
-
-    console.error(
-      "City4All AI error:",
-      error
-    );
-
-
-    removeLoadingMessage(
-      loadingMessage
-    );
-
-
-    let errorMessage =
-      "⚠️ Κάτι πήγε στραβά. Δεν μπόρεσα να επικοινωνήσω με το City4All AI.";
-
-
-    if (
-      error?.name ===
-      "AbortError"
-    ) {
-
-      errorMessage =
-        "⚠️ Η αναζήτηση άργησε υπερβολικά. Δοκίμασε ξανά.";
-
-    }
-
-
-    addMessage(
-      "ai",
-      errorMessage
-    );
-
-
-    if (
-      voiceMode
-    ) {
-
-      stopVoiceMode();
-
-    }
-
-  }
-
-  finally {
-
-    setLoading(
-      false
-    );
-
-  }
-
 }
 
+function showResultsView() {
+  dom.filtersView.hidden = true;
+  dom.resultsView.hidden = false;
+}
 
-/* ============================================================
-   CONVERSATION
-============================================================ */
+function showFiltersView() {
+  dom.resultsView.hidden = true;
+  dom.filtersView.hidden = false;
+}
 
-function updateConversation(
-  userMessage,
-  assistantMessage
-) {
+function renderResults(data) {
+  const features = data.features || [];
+  dom.resultsCount.textContent = `${t("found")} ${data.total} ${t("resultsWord")}`;
 
-  conversation.push({
+  if (!features.length) {
+    dom.resultsList.innerHTML = `<div class="empty"><strong>${escapeHtml(
+      t("noResults")
+    )}</strong><br>${escapeHtml(t("noResultsHint"))}</div>`;
+    dom.pager.hidden = true;
+    return;
+  }
 
-    role:
-      "user",
+  dom.resultsList.innerHTML = features.map(cardHtml).join("");
 
-    content:
-      userMessage
-
+  dom.resultsList.querySelectorAll("[data-action]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      const feature = state.results.find(f => String(f.id) === String(id));
+      if (!feature) return;
+      const action = btn.dataset.action;
+      if (action === "details") openDetails(feature);
+      else if (action === "map") {
+        focusMapPoint(feature);
+        if (window.innerWidth <= 940) window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
   });
 
-
-  conversation.push({
-
-    role:
-      "assistant",
-
-    content:
-      assistantMessage
-
-  });
-
-
-  if (
-    conversation.length >
-    20
-  ) {
-
-    conversation =
-      conversation.slice(
-        -20
-      );
-
-  }
-
+  const pageCount = data.pageCount || 1;
+  dom.pager.hidden = pageCount <= 1;
+  dom.pageInfo.textContent = `${t("page")} ${data.page} ${t("of")} ${pageCount}`;
+  dom.prevPage.disabled = data.page <= 1;
+  dom.nextPage.disabled = data.page >= pageCount;
 }
 
-
-/* ============================================================
-   ADD MESSAGE
-============================================================ */
-
-function addMessage(
-  role,
-  text
-) {
-
-  const wrapper =
-    document.createElement(
-      "div"
-    );
-
-
-  wrapper.className =
-    `message ${role}`;
-
-
-  const bubble =
-    document.createElement(
-      "div"
-    );
-
-
-  bubble.className =
-    "bubble";
-
-
-  bubble.textContent =
-    text;
-
-
-  wrapper.appendChild(
-    bubble
-  );
-
-
-  messagesEl.appendChild(
-    wrapper
-  );
-
-
-  scrollMessages();
-
-
-  return wrapper;
-
+function cardHtml(feature) {
+  const tags = feature.accessibility?.length
+    ? feature.accessibility.map(a => `<span class="tag">${escapeHtml(a.label)}</span>`).join("")
+    : `<span class="tag none">${escapeHtml(t("noAccessData").split(".")[0])}</span>`;
+  return `
+    <article class="card">
+      <div class="card-top">
+        <div>
+          <h4>${escapeHtml(feature.name)}</h4>
+          <div class="cat">${escapeHtml(feature.category)}</div>
+          <div class="loc">📍 ${escapeHtml(locationLabelOf(feature) || "—")}</div>
+        </div>
+      </div>
+      <div class="tag-row">${tags}</div>
+      <div class="card-actions">
+        <button class="mini-btn primary" data-action="details" data-id="${escapeHtml(
+          feature.id
+        )}">${escapeHtml(t("details"))}</button>
+        <button class="mini-btn" data-action="map" data-id="${escapeHtml(
+          feature.id
+        )}">🗺️ ${escapeHtml(t("viewOnMap"))}</button>
+      </div>
+    </article>`;
 }
 
+/* ============================ DETAILS ============================ */
 
-/* ============================================================
-   LOADING
-============================================================ */
+function openDetails(feature) {
+  state.selected = feature;
+  state.nearbyRadius = 500;
+  state.nearbyCategory = "";
 
-function addLoadingMessage() {
+  dom.detailName.textContent = feature.name;
+  dom.detailCategory.textContent = feature.category;
 
-  const wrapper =
-    document.createElement(
-      "div"
-    );
+  const accessTags = feature.accessibility?.length
+    ? feature.accessibility.map(a => `<span class="tag">${escapeHtml(a.label)}</span>`).join("")
+    : "";
 
+  const accessSection = accessTags
+    ? `<div class="access-list">${accessTags}</div>`
+    : `<div class="notice">${escapeHtml(t("noAccessData"))}</div>`;
 
-  wrapper.className =
-    "message ai";
+  const mapLinks = feature.hasCoordinates
+    ? `<a class="mini-btn" href="${feature.googleMapsUrl}" target="_blank" rel="noopener">📍 ${escapeHtml(
+        t("openMaps")
+      )}</a>`
+    : `<span class="notice">${escapeHtml("—")}</span>`;
 
+  dom.detailBody.innerHTML = `
+    <dl class="kv">
+      <dt>${escapeHtml(t("category"))}</dt><dd>${escapeHtml(feature.category)}</dd>
+      <dt>${escapeHtml(t("location"))}</dt><dd>${escapeHtml(locationLabelOf(feature) || "—")}</dd>
+      ${feature.area ? `<dt>${escapeHtml(t("area"))}</dt><dd>${escapeHtml(feature.area)}</dd>` : ""}
+      ${feature.dimos ? `<dt>${escapeHtml(t("dimos"))}</dt><dd>${escapeHtml(feature.dimos)}</dd>` : ""}
+      ${feature.nomoi ? `<dt>${escapeHtml(t("nomoi"))}</dt><dd>${escapeHtml(feature.nomoi)}</dd>` : ""}
+      ${
+        feature.perifereia
+          ? `<dt>${escapeHtml(t("perifereia"))}</dt><dd>${escapeHtml(feature.perifereia)}</dd>`
+          : ""
+      }
+      ${
+        feature.source
+          ? `<dt>${escapeHtml(t("dataSource"))}</dt><dd>${escapeHtml(feature.source)}</dd>`
+          : ""
+      }
+      <dt>${escapeHtml(t("recordId"))}</dt><dd>#${escapeHtml(feature.id)}</dd>
+    </dl>
 
-  wrapper.dataset.loading =
-    "true";
+    <div class="section-title">♿ ${escapeHtml(t("recordedAccess"))}</div>
+    ${accessSection}
 
+    ${
+      feature.entrance
+        ? `<div class="section-title">🚪 ${escapeHtml(t("entrance"))}</div><div>${escapeHtml(
+            feature.entrance
+          )}</div>`
+        : ""
+    }
+    ${
+      feature.comments
+        ? `<div class="section-title">💬 ${escapeHtml(t("comments"))}</div><div>${escapeHtml(
+            feature.comments
+          )}</div>`
+        : ""
+    }
 
-  const bubble =
-    document.createElement(
-      "div"
-    );
+    <div class="section-title">🗺️ ${escapeHtml(t("viewOnMap"))}</div>
+    <div class="card-actions">
+      <button class="mini-btn primary" id="detailMapBtn" type="button">${escapeHtml(
+        t("viewOnMap")
+      )}</button>
+      ${mapLinks}
+    </div>
 
+    <div class="section-title">📌 ${escapeHtml(t("nearby"))}</div>
+    <div class="radius-row" id="radiusRow"></div>
+    <div class="nearby-list" id="nearbyList"></div>
 
-  bubble.className =
-    "bubble";
-
-
-  bubble.innerHTML = `
-    <span class="loading-dots">
-      Αναζητώ<span>.</span><span>.</span><span>.</span>
-    </span>
+    <div class="section-title">🔎 ${escapeHtml(t("moreInfo"))}</div>
+    <div class="notice" style="margin-bottom:10px">${escapeHtml(t("moreInfoHint"))}</div>
+    <div class="card-actions">
+      <button class="mini-btn" id="askWebBtn" type="button">${escapeHtml(t("askWeb"))}</button>
+    </div>
+    <div id="webInfoBox"></div>
   `;
 
+  renderRadiusButtons();
+  loadNearby(feature);
 
-  wrapper.appendChild(
-    bubble
-  );
-
-
-  messagesEl.appendChild(
-    wrapper
-  );
-
-
-  scrollMessages();
-
-
-  return wrapper;
-
-}
-
-
-function removeLoadingMessage(
-  element
-) {
-
-  if (
-    element
-  ) {
-
-    element.remove();
-
-  }
-
-}
-
-
-/* ============================================================
-   SCROLL
-============================================================ */
-
-function scrollMessages() {
-
-  requestAnimationFrame(
-    () => {
-
-      messagesEl.scrollTop =
-        messagesEl.scrollHeight;
-
+  $("detailMapBtn").addEventListener("click", () => {
+    focusMapPoint(feature);
+    if (window.innerWidth <= 940) {
+      closeDetails();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  );
+  });
+  $("askWebBtn").addEventListener("click", () => askWebForFeature(feature));
 
+  dom.detailsModal.hidden = false;
 }
 
-
-/* ============================================================
-   LOADING
-============================================================ */
-
-function setLoading(
-  loading
-) {
-
-  isLoading =
-    loading;
-
-
-  if (
-    sendButton
-  ) {
-
-    sendButton.disabled =
-      loading;
-
-    sendButton.textContent =
-      loading
-        ? "..."
-        : "Αποστολή";
-
-  }
-
-
-  if (
-    inputEl
-  ) {
-
-    inputEl.disabled =
-      loading ||
-      voiceMode;
-
-  }
-
-
-  if (
-    voiceButton
-  ) {
-
-    voiceButton.disabled =
-      false;
-
-  }
-
+function closeDetails() {
+  dom.detailsModal.hidden = true;
+  state.selected = null;
 }
 
+function renderRadiusButtons() {
+  const row = $("radiusRow");
+  if (!row) return;
+  row.innerHTML = "";
+  [250, 500, 1000, 2000].forEach(radius => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "mini-btn" + (state.nearbyRadius === radius ? " primary" : "");
+    btn.textContent = radius < 1000 ? `${radius} ${t("meters")}` : `${radius / 1000} ${t("km")}`;
+    btn.addEventListener("click", () => {
+      state.nearbyRadius = radius;
+      renderRadiusButtons();
+      if (state.selected) loadNearby(state.selected);
+    });
+    row.appendChild(btn);
+  });
+}
 
-/* ============================================================
-   CHAT ACTIONS
-============================================================ */
-
-function addChatActions(
-  messageElement,
-  features,
-  mapFeatures = features,
-  mapCommand = null,
-  totalMatches = null
-) {
-
-  if (
-    !Array.isArray(features) ||
-    !features.length
-  ) {
-
+async function loadNearby(feature) {
+  const list = $("nearbyList");
+  if (!list) return;
+  if (!feature.hasCoordinates) {
+    list.innerHTML = `<div class="notice">${escapeHtml(t("noAccessData"))}</div>`;
     return;
-
   }
-
-
-  const actions =
-    document.createElement(
-      "div"
+  list.innerHTML = `<div class="loading-line">${escapeHtml(t("nearbyLoading"))}</div>`;
+  try {
+    const data = await fetchJson(
+      ENDPOINTS.nearby,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          latitude: feature.latitude,
+          longitude: feature.longitude,
+          radius: state.nearbyRadius,
+          excludeId: feature.id,
+          category: state.nearbyCategory ? [state.nearbyCategory] : []
+        })
+      },
+      25000
     );
 
-
-  actions.className =
-    "message-actions";
-
-
-  /* ==========================================================
-     ONE RESULT
-  ========================================================== */
-
-  if (
-    features.length === 1
-  ) {
-
-    const feature =
-      features[0];
-
-
-    const mapButton =
-      createMapActionButton(
-        feature,
-        "🗺️ Προβολή στον χάρτη",
-        true
-      );
-
-
-    if (
-      mapButton
-    ) {
-
-      actions.appendChild(
-        mapButton
-      );
-
+    const items = data.features || [];
+    if (!items.length) {
+      list.innerHTML = `<div class="notice">${escapeHtml(t("nearbyEmpty"))}</div>`;
+      return;
     }
-
-
-    const routeButton =
-      createRouteButton(
-        feature
-      );
-
-
-    if (
-      routeButton
-    ) {
-
-      actions.appendChild(
-        routeButton
-      );
-
-    }
-
-  }
-
-
-  /* ==========================================================
-     MANY RESULTS
-  ========================================================== */
-
-  else {
-
-    const allButton =
-      document.createElement(
-        "button"
-      );
-
-
-    allButton.type =
-      "button";
-
-
-    allButton.className =
-      "chat-action primary";
-
-
-    const mapCount =
-      Array.isArray(mapFeatures)
-        ? mapFeatures.length
-        : features.length;
-
-
-    const totalLabel =
-      Number.isFinite(
-        Number(totalMatches)
-      ) &&
-      Number(totalMatches) >
-      mapCount
-
-        ? ` από ${totalMatches}`
-
-        : "";
-
-
-    allButton.textContent =
-      `🗺️ Προβολή ${mapCount} σημείων${totalLabel}`;
-
-
-    allButton.addEventListener(
-      "click",
-      async () => {
-
-        allButton.disabled =
-          true;
-
-
-        const originalText =
-          allButton.textContent;
-
-
-        allButton.textContent =
-          "🗺️ Φόρτωση στον χάρτη...";
-
-
-        try {
-
-          await updateMap(
-
-            mapFeatures,
-
-            {
-
-              mode:
-                "all",
-
-              autoZoom:
-                true,
-
-              autoOpenPopup:
-                false,
-
-              targetCount:
-                mapCount
-
-            }
-
-          );
-
-        }
-
-        finally {
-
-          allButton.disabled =
-            false;
-
-          allButton.textContent =
-            originalText;
-
-        }
-
-      }
-    );
-
-
-    actions.appendChild(
-      allButton
-    );
-
-
-    /*
-     * ΠΡΩΤΟ ΣΗΜΕΙΟ
-     */
-
-    const firstMapButton =
-      createMapActionButton(
-        features[0],
-        "📍 Πρώτο σημείο",
-        false
-      );
-
-
-    if (
-      firstMapButton
-    ) {
-
-      actions.appendChild(
-        firstMapButton
-      );
-
-    }
-
-
-    /*
-     * ROUTE
-     */
-
-    const routeButton =
-      createRouteButton(
-        features[0],
-        "🧭 Οδηγίες για το πρώτο"
-      );
-
-
-    if (
-      routeButton
-    ) {
-
-      actions.appendChild(
-        routeButton
-      );
-
-    }
-
-  }
-
-
-  if (
-    actions.children.length
-  ) {
-
-    messageElement.appendChild(
-      actions
-    );
-
-
-    scrollMessages();
-
-  }
-
-}
-
-
-/* ============================================================
-   MAP ACTION BUTTON
-============================================================ */
-
-function createMapActionButton(
-  feature,
-  label,
-  primary = false
-) {
-
-  if (
-    !hasCoordinates(
-      feature
-    )
-  ) {
-
-    return null;
-
-  }
-
-
-  const button =
-    document.createElement(
-      "button"
-    );
-
-
-  button.type =
-    "button";
-
-
-  button.className =
-    primary
-      ? "chat-action primary"
-      : "chat-action";
-
-
-  button.textContent =
-    label;
-
-
-  button.addEventListener(
-    "click",
-    async () => {
-
-      button.disabled =
-        true;
-
-
-      try {
-
-        await ensureFeatureOnMap(
-          feature
-        );
-
-
-        await focusMapFeature(
-          feature,
-          {
-            openPopup:
-              true
-          }
-        );
-
-      }
-
-      finally {
-
-        button.disabled =
-          false;
-
-      }
-
-    }
-  );
-
-
-  return button;
-
-}
-
-
-/* ============================================================
-   GOOGLE MAPS ROUTE
-============================================================ */
-
-function createRouteButton(
-  feature,
-  label = "🧭 Οδηγίες"
-) {
-
-  const url =
-    feature?.googleMapsUrl ||
-    createGoogleMapsUrl(
-      feature
-    );
-
-
-  if (
-    !url
-  ) {
-
-    return null;
-
-  }
-
-
-  const button =
-    document.createElement(
-      "button"
-    );
-
-
-  button.type =
-    "button";
-
-
-  button.className =
-    "chat-action primary";
-
-
-  button.textContent =
-    label;
-
-
-  button.addEventListener(
-    "click",
-    event => {
-
-      event.preventDefault();
-
-
-      window.open(
-        url,
-        "_blank",
-        "noopener,noreferrer"
-      );
-
-    }
-  );
-
-
-  return button;
-
-}
-
-
-/* ============================================================
-   WAIT FOR MAP
-============================================================ */
-
-async function waitForMapReady(
-  timeoutMs = 8000
-) {
-
-  /*
-   * 1. Αν υπάρχει ήδη,
-   * δεν περιμένουμε event.
-   */
-  if (
-    window.city4allMap?.view
-  ) {
-
-    try {
-
-      if (
-        window.city4allMap.view.when
-      ) {
-
-        await window.city4allMap
-          .view
-          .when();
-
-      }
-
-
-      return true;
-
-    }
-
-    catch (
-      error
-    ) {
-
-      console.warn(
-        "Existing map is not ready:",
-        error
-      );
-
-    }
-
-  }
-
-
-  /*
-   * 2. Περιμένουμε το event.
-   */
-
-  await Promise.race([
-
-    mapReadyPromise,
-
-    new Promise(
-      resolve =>
-        setTimeout(
-          resolve,
-          timeoutMs
+    list.innerHTML =
+      items
+        .map(
+          item => `
+        <div class="nearby-item">
+          <div>
+            <strong style="font-size:13px">${escapeHtml(item.name)}</strong>
+            <div style="color:var(--brand);font-size:11px;font-weight:700">${escapeHtml(
+              item.category
+            )}</div>
+            <div style="color:var(--muted);font-size:11px">${escapeHtml(
+              locationLabelOf(item) || "—"
+            )}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="dist">${escapeHtml(formatDistance(item.distanceMeters))}</div>
+            <button class="mini-btn" data-nearby-id="${escapeHtml(item.id)}" type="button" style="margin-top:6px">${escapeHtml(
+              t("details")
+            )}</button>
+          </div>
+        </div>`
         )
-    )
+        .join("") +
+      `<div class="notice" style="margin-top:8px">${escapeHtml(data.disclaimer || t("disclaimer"))}</div>`;
 
-  ]);
-
-
-  return Boolean(
-    window.city4allMap?.view
-  );
-
+    list.querySelectorAll("[data-nearby-id]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const item = items.find(i => String(i.id) === String(btn.dataset.nearbyId));
+        if (item) openDetails(item);
+      });
+    });
+  } catch (error) {
+    list.innerHTML = `<div class="notice">${escapeHtml(t("errorGeneric"))}</div>`;
+  }
 }
 
+async function askWebForFeature(feature) {
+  const box = $("webInfoBox");
+  if (!box) return;
+  box.innerHTML = `<div class="loading-line">${escapeHtml(t("webLoading"))}</div>`;
+  try {
+    const data = await fetchJson(
+      ENDPOINTS.info,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: `${feature.name} ${feature.category} προσβασιμότητα ${locationLabelOf(feature)}`
+        })
+      },
+      30000
+    );
+    box.innerHTML = `<div class="bubble ai" style="max-width:100%;margin-top:10px">${renderAnswerWithSources(
+      data
+    )}</div>`;
+  } catch (error) {
+    box.innerHTML = `<div class="notice" style="margin-top:10px">${escapeHtml(t("errorGeneric"))}</div>`;
+  }
+}
 
-/* ============================================================
-   MAP DIAGNOSTICS
-============================================================ */
+/* ============================ AI ANSWER RENDERING ============================ */
 
-function getMapDiagnostics() {
+function renderAnswerWithSources(data) {
+  let html = escapeHtml(data.answer || "").replace(/\n/g, "<br>");
+  if (Array.isArray(data.sources) && data.sources.length) {
+    html += `<span class="src"><strong>${escapeHtml(t("sources"))}:</strong>`;
+    data.sources.forEach(source => {
+      html += `<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener">[${source.index}] ${escapeHtml(
+        source.title || source.url
+      )}</a>`;
+    });
+    html += `</span>`;
+  }
+  return html;
+}
 
-  const map =
-    window.city4allMap;
+/* ============================ SEARCH AI CHAT ============================ */
 
+function appendBubble(log, role, html) {
+  const bubble = document.createElement("div");
+  bubble.className = `bubble ${role}`;
+  bubble.innerHTML = html;
+  log.appendChild(bubble);
+  log.scrollTop = log.scrollHeight;
+  return bubble;
+}
 
-  return {
+function appendTyping(log) {
+  return appendBubble(log, "ai", `<span class="typing"><span>•</span><span>•</span><span>•</span></span>`);
+}
 
-    exists:
-      Boolean(map),
+async function sendSearchChat() {
+  const message = dom.chatInput.value.trim();
+  if (!message) return;
+  dom.chatInput.value = "";
+  appendBubble(dom.searchAiLog, "user", escapeHtml(message));
+  const typing = appendTyping(dom.searchAiLog);
 
-    view:
-      Boolean(
-        map?.view
-      ),
+  try {
+    const data = await fetchJson(
+      ENDPOINTS.chat,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message,
+          conversation: state.conversation,
+          previousFeatures: state.previousFeatures
+        })
+      },
+      35000
+    );
+    typing.remove();
+    state.conversation.push({ role: "user", content: message });
+    state.conversation.push({ role: "assistant", content: data.answer || "" });
+    state.conversation = state.conversation.slice(-12);
 
-    resultsLayer:
-      Boolean(
-        map?.resultsLayer
-      ),
+    appendBubble(dom.searchAiLog, "ai", renderAnswerWithSources(data));
 
-    Graphic:
-      Boolean(
-        map?.Graphic
-      ),
+    if (data.mode === "search" || data.mode === "followup") {
+      const features = data.features || [];
+      state.results = features;
+      state.previousFeatures = features;
+      renderResults({
+        features,
+        total: data.total ?? features.length,
+        page: 1,
+        pageCount: 1
+      });
+      showResultsView();
+      drawFeatures(features);
+    }
+  } catch (error) {
+    typing.remove();
+    appendBubble(dom.searchAiLog, "ai", escapeHtml(t("errorGeneric")));
+  }
+}
 
-    graphicsCount:
+/* ============================ INFO MODE ============================ */
 
-      map?.resultsLayer
-        ?.graphics
-        ?.length ?? 0
+async function sendInfo(question) {
+  const text = String(question || dom.infoInput.value || "").trim();
+  if (!text) return;
+  dom.infoInput.value = "";
+  appendBubble(dom.infoLog, "user", escapeHtml(text));
+  const typing = appendTyping(dom.infoLog);
+  try {
+    const data = await fetchJson(
+      ENDPOINTS.info,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: text })
+      },
+      35000
+    );
+    typing.remove();
+    appendBubble(dom.infoLog, "ai", renderAnswerWithSources(data));
+  } catch (error) {
+    typing.remove();
+    appendBubble(dom.infoLog, "ai", escapeHtml(t("errorGeneric")));
+  }
+}
 
+/* ============================ VOICE ============================ */
+
+function setupVoice(buttonId, textarea, onResult) {
+  const button = $(buttonId);
+  if (!button || !("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
+    if (button) button.hidden = true;
+    return;
+  }
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = new SpeechRecognition();
+  recognition.lang = state.lang === "el" ? "el-GR" : "en-US";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onresult = event => {
+    const transcript = event.results[0][0].transcript;
+    textarea.value = transcript;
+    onResult?.(transcript);
+  };
+  recognition.onend = () => {
+    state.listening = false;
+    button.classList.remove("active");
+  };
+  recognition.onerror = () => {
+    state.listening = false;
+    button.classList.remove("active");
   };
 
-}
-
-
-/* ============================================================
-   ENSURE FEATURE ON MAP
-============================================================ */
-
-async function ensureFeatureOnMap(
-  feature
-) {
-
-  if (
-    !hasCoordinates(
-      feature
-    )
-  ) {
-
-    return false;
-
-  }
-
-
-  const ready =
-    await waitForMapReady();
-
-
-  if (
-    !ready
-  ) {
-
-    console.warn(
-      "ensureFeatureOnMap: map not ready"
-    );
-
-    return false;
-
-  }
-
-
-  const map =
-    window.city4allMap;
-
-
-  if (
-    !map?.resultsLayer ||
-    !map?.Graphic
-  ) {
-
-    console.warn(
-      "ensureFeatureOnMap: incomplete map object",
-      getMapDiagnostics()
-    );
-
-    return false;
-
-  }
-
-
-  const existing =
-    findGraphicForFeature(
-      feature
-    );
-
-
-  if (
-    existing
-  ) {
-
-    return true;
-
-  }
-
-
-  try {
-
-    const graphic =
-      createGraphicForFeature(
-        feature,
-        0,
-        getFeatureKey(feature, 0),
-        map.Graphic
-      );
-
-
-    map.resultsLayer.add(
-      graphic
-    );
-
-
-    await new Promise(
-      resolve =>
-        requestAnimationFrame(
-          resolve
-        )
-    );
-
-
-    map.lastGraphics =
-      map.resultsLayer
-        ?.graphics
-        ?.toArray?.() || [];
-
-
-    map.lastFeatures =
-      [
-        feature
-      ];
-
-
-    return true;
-
-  }
-
-  catch (error) {
-
-    console.warn(
-      "Could not ensure feature on map:",
-      error
-    );
-
-
-    return false;
-
-  }
-
-}
-
-
-/* ============================================================
-   UPDATE MAP
-============================================================ */
-
-async function updateMap(
-  features,
-  mapCommand = null
-) {
-
-  const started =
-    performance.now();
-
-
-  try {
-
-    const ready =
-      await waitForMapReady(
-        8000
-      );
-
-
-    if (
-      !ready
-    ) {
-
-      console.warn(
-        "City4All map is not ready."
-      );
-
-      console.warn(
-        "Map diagnostics:",
-        getMapDiagnostics()
-      );
-
-      return false;
-
-    }
-
-
-    const map =
-      window.city4allMap;
-
-
-    if (
-      !map?.view ||
-      !map?.resultsLayer ||
-      !map?.Graphic
-    ) {
-
-      console.warn(
-        "City4All map object is incomplete.",
-        getMapDiagnostics()
-      );
-
-      return false;
-
-    }
-
-
-    const {
-      view,
-      resultsLayer,
-      Graphic
-    } = map;
-
-
-    /*
-     * Κλείσιμο popup.
-     */
-    try {
-
-      view.closePopup();
-
-    }
-
-    catch {
-      /* ignore */
-    }
-
-
-    /*
-     * Καθαρίζουμε ΜΟΝΟ το AI result layer.
-     */
-    resultsLayer.removeAll();
-
-
-    const validFeatures =
-      Array.isArray(features)
-
-        ? features
-            .filter(
-              hasCoordinates
-            )
-
-        : [];
-
-
-    map.lastFeatures =
-      validFeatures;
-
-
-    map.lastGraphics =
-      [];
-
-
-    if (
-      !validFeatures.length
-    ) {
-
-      console.log(
-        "No valid map coordinates."
-      );
-
-      return false;
-
-    }
-
-
-    /* ========================================================
-       CREATE GRAPHICS
-    ======================================================== */
-
-    const graphics =
-      validFeatures.map(
-        (
-          feature,
-          index
-        ) => {
-
-          return createGraphicForFeature(
-
-            feature,
-
-            index,
-
-            getFeatureKey(
-              feature,
-              index
-            ),
-
-            Graphic
-
-          );
-
-        }
-      );
-
-
-    /*
-     * Μαζική προσθήκη.
-     */
-    resultsLayer.addMany(
-      graphics
-    );
-
-
-    /*
-     * Κρατάμε references.
-     */
-    map.lastGraphics =
-      graphics;
-
-
-    /*
-     * Δίνουμε ένα animation frame
-     * στο ArcGIS.
-     */
-    await new Promise(
-      resolve =>
-        requestAnimationFrame(
-          resolve
-        )
-    );
-
-
-    console.log(
-      `City4All map updated: ${validFeatures.length} graphics in ${Math.round(performance.now() - started)}ms`
-    );
-
-
-    /* ========================================================
-       SINGLE
-    ======================================================== */
-
-    if (
-      validFeatures.length ===
-      1
-    ) {
-
-      return await focusMapFeature(
-        validFeatures[0],
-        {
-          openPopup:
-            true
-        }
-      );
-
-    }
-
-
-    /* ========================================================
-       MANY
-    ======================================================== */
-
-    if (
-      mapCommand?.autoZoom !== false
-    ) {
-
-      await focusAllFeatures(
-        validFeatures
-      );
-
-    }
-
-
-    /*
-     * Προαιρετικό πρώτο popup.
-     */
-    if (
-      mapCommand?.autoOpenPopup ===
-      true
-    ) {
-
-      await focusMapFeature(
-
-        validFeatures[0],
-
-        {
-          openPopup:
-            true
-        }
-
-      );
-
-    }
-
-
-    return true;
-
-  }
-
-  catch (
-    error
-  ) {
-
-    console.warn(
-      "Map update failed:",
-      error
-    );
-
-
-    console.warn(
-      "Map diagnostics:",
-      getMapDiagnostics()
-    );
-
-
-    return false;
-
-  }
-
-}
-
-
-/* ============================================================
-   CREATE GRAPHIC
-============================================================ */
-
-function createGraphicForFeature(
-  feature,
-  index,
-  key,
-  Graphic
-) {
-
-  const latitude =
-    Number(
-      feature.latitude
-    );
-
-
-  const longitude =
-    Number(
-      feature.longitude
-    );
-
-
-  const area =
-    feature.area ||
-    feature.municipality ||
-    feature.region ||
-    feature.country ||
-    "";
-
-
-  const source =
-    feature.external
-      ? "Internet / OpenStreetMap"
-      : "City4All";
-
-
-  const accessibility =
-    feature.accessibility ||
-    "Δεν έχει καταχωρηθεί πληροφορία";
-
-
-  const website =
-    feature.website
-      ? escapePopupText(
-          feature.website
-        )
-      : "";
-
-
-  const phone =
-    feature.phone
-      ? escapePopupText(
-          feature.phone
-        )
-      : "";
-
-
-  const comments =
-    feature.comments
-      ? escapePopupText(
-          feature.comments
-        )
-      : "";
-
-
-  const websiteHtml =
-    website
-      ? `
-        <br><br>
-        <strong>Website:</strong>
-        ${website}
-      `
-      : "";
-
-
-  const phoneHtml =
-    phone
-      ? `
-        <br><br>
-        <strong>Τηλέφωνο:</strong>
-        ${phone}
-      `
-      : "";
-
-
-  const commentsHtml =
-    comments
-      ? `
-        <br><br>
-        <strong>Σχόλια:</strong>
-        ${comments}
-      `
-      : "";
-
-
-  const graphic =
-    new Graphic({
-
-      geometry: {
-
-        type:
-          "point",
-
-        longitude,
-
-        latitude
-
-      },
-
-
-      symbol: {
-
-        type:
-          "simple-marker",
-
-        size:
-          feature.external
-            ? 12
-            : 15,
-
-        color:
-          feature.external
-            ? "#f59e0b"
-            : "#1976d2",
-
-        outline: {
-
-          color:
-            "#ffffff",
-
-          width:
-            2
-
-        }
-
-      },
-
-
-      attributes: {
-
-        city4allKey:
-          key,
-
-        name:
-          feature.name ||
-          "Σημείο",
-
-        type:
-          feature.type ||
-          "Σημείο",
-
-        accessibility,
-
-        area,
-
-        municipality:
-          feature.municipality ||
-          "",
-
-        prefecture:
-          feature.prefecture ||
-          "",
-
-        region:
-          feature.region ||
-          "",
-
-        country:
-          feature.country ||
-          "",
-
-        source,
-
-        website:
-          feature.website ||
-          "",
-
-        phone:
-          feature.phone ||
-          "",
-
-        index:
-          index + 1
-
-      },
-
-
-      popupTemplate: {
-
-        title:
-          "{index}. {name}",
-
-        content: [
-
-          {
-
-            type:
-              "text",
-
-            text: `
-
-              <strong>Πηγή:</strong>
-              {source}
-
-              <br><br>
-
-              <strong>Κατηγορία:</strong>
-              {type}
-
-              <br><br>
-
-              <strong>Περιοχή:</strong>
-              {area}
-
-              <br><br>
-
-              <strong>Δήμος:</strong>
-              {municipality}
-
-              <br><br>
-
-              <strong>Περιφέρεια:</strong>
-              {region}
-
-              <br><br>
-
-              <strong>Χώρα:</strong>
-              {country}
-
-              <br><br>
-
-              <strong>Προσβασιμότητα:</strong>
-              {accessibility}
-
-              ${commentsHtml}
-
-              ${websiteHtml}
-
-              ${phoneHtml}
-
-            `
-
-          }
-
-        ]
-
-      }
-
-    });
-
-
-  graphic.__city4allFeature =
-    feature;
-
-
-  return graphic;
-
-}
-
-
-/* ============================================================
-   FEATURE KEY
-============================================================ */
-
-function getFeatureKey(
-  feature,
-  fallbackIndex = 0
-) {
-
-  if (
-    feature?.objectId !== undefined &&
-    feature?.objectId !== null &&
-    String(
-      feature.objectId
-    ).trim() !== ""
-  ) {
-
-    return String(
-      feature.objectId
-    );
-
-  }
-
-
-  if (
-    feature?.objectid !== undefined &&
-    feature?.objectid !== null &&
-    String(
-      feature.objectid
-    ).trim() !== ""
-  ) {
-
-    return String(
-      feature.objectid
-    );
-
-  }
-
-
-  return (
-    `${Number(
-      feature?.latitude
-    )}:${Number(
-      feature?.longitude
-    )}:${fallbackIndex}`
-  );
-
-}
-
-
-/* ============================================================
-   FIND GRAPHIC
-============================================================ */
-
-function findGraphicForFeature(
-  feature
-) {
-
-  const map =
-    window.city4allMap;
-
-
-  const graphics =
-    map?.resultsLayer
-      ?.graphics
-      ?.toArray?.() ||
-    [];
-
-
-  if (
-    !graphics.length
-  ) {
-
-    return null;
-
-  }
-
-
-  /*
-   * 1. Exact reference.
-   */
-  const byReference =
-    graphics.find(
-      graphic =>
-        graphic.__city4allFeature ===
-        feature
-    );
-
-
-  if (
-    byReference
-  ) {
-
-    return byReference;
-
-  }
-
-
-  /*
-   * 2. ObjectId.
-   */
-  const objectId =
-    feature?.objectId ??
-    feature?.objectid ??
-    null;
-
-
-  if (
-    objectId !== null &&
-    objectId !== undefined
-  ) {
-
-    const wanted =
-      String(
-        objectId
-      );
-
-
-    const byId =
-      graphics.find(
-        graphic =>
-          String(
-            graphic.attributes
-              ?.city4allKey ??
-              ""
-          ) ===
-          wanted
-      );
-
-
-    if (
-      byId
-    ) {
-
-      return byId;
-
-    }
-
-  }
-
-
-  /*
-   * 3. Coordinates.
-   */
-  const latitude =
-    Number(
-      feature?.latitude
-    );
-
-
-  const longitude =
-    Number(
-      feature?.longitude
-    );
-
-
-  return (
-    graphics.find(
-      graphic => {
-
-        const gLat =
-          Number(
-            graphic.geometry
-              ?.latitude
-          );
-
-
-        const gLon =
-          Number(
-            graphic.geometry
-              ?.longitude
-          );
-
-
-        return (
-
-          Number.isFinite(
-            gLat
-          ) &&
-
-          Number.isFinite(
-            gLon
-          ) &&
-
-          Math.abs(
-            gLat -
-            latitude
-          ) <
-          0.000001 &&
-
-          Math.abs(
-            gLon -
-            longitude
-          ) <
-          0.000001
-
-        );
-
-      }
-    ) ||
-    null
-  );
-
-}
-
-
-/* ============================================================
-   FOCUS SINGLE
-============================================================ */
-
-async function focusMapFeature(
-  feature,
-  options = {}
-) {
-
-  if (
-    !hasCoordinates(
-      feature
-    )
-  ) {
-
-    return false;
-
-  }
-
-
-  const {
-    openPopup =
-      true
-  } =
-    options;
-
-
-  try {
-
-    const ready =
-      await waitForMapReady(
-        8000
-      );
-
-
-    if (
-      !ready
-    ) {
-
-      return false;
-
-    }
-
-
-    const map =
-      window.city4allMap;
-
-
-    const view =
-      map?.view;
-
-
-    if (
-      !view
-    ) {
-
-      return false;
-
-    }
-
-
-    const latitude =
-      Number(
-        feature.latitude
-      );
-
-
-    const longitude =
-      Number(
-        feature.longitude
-      );
-
-
-    /*
-     * Βεβαιωνόμαστε ότι υπάρχει Graphic.
-     */
-    let graphic =
-      findGraphicForFeature(
-        feature
-      );
-
-
-    if (
-      !graphic
-    ) {
-
-      await ensureFeatureOnMap(
-        feature
-      );
-
-
-      graphic =
-        findGraphicForFeature(
-          feature
-        );
-
-    }
-
-
-    /*
-     * Zoom.
-     */
-    await view.goTo(
-
-      {
-
-        center: [
-          longitude,
-          latitude
-        ],
-
-        zoom:
-          17
-
-      },
-
-      {
-
-        duration:
-          850
-
-      }
-
-    );
-
-
-    /*
-     * Popup.
-     */
-    if (
-      openPopup &&
-      graphic
-    ) {
-
-      await new Promise(
-        resolve =>
-          setTimeout(
-            resolve,
-            100
-          )
-      );
-
-
-      await view.openPopup({
-
-        features: [
-          graphic
-        ],
-
-        location:
-          graphic.geometry
-
-      });
-
-    }
-
-
-    return true;
-
-  }
-
-  catch (
-    error
-  ) {
-
-    console.warn(
-      "Could not focus feature:",
-      error
-    );
-
-
-    return false;
-
-  }
-
-}
-
-
-/* ============================================================
-   FOCUS ALL
-============================================================ */
-
-async function focusAllFeatures(
-  features
-) {
-
-  const validFeatures =
-    Array.isArray(features)
-
-      ? features.filter(
-          hasCoordinates
-        )
-
-      : [];
-
-
-  if (
-    !validFeatures.length
-  ) {
-
-    return false;
-
-  }
-
-
-  if (
-    validFeatures.length ===
-    1
-  ) {
-
-    return focusMapFeature(
-
-      validFeatures[0],
-
-      {
-        openPopup:
-          true
-      }
-
-    );
-
-  }
-
-
-  try {
-
-    const ready =
-      await waitForMapReady(
-        8000
-      );
-
-
-    if (
-      !ready
-    ) {
-
-      return false;
-
-    }
-
-
-    const view =
-      window.city4allMap?.view;
-
-
-    if (
-      !view
-    ) {
-
-      return false;
-
-    }
-
-
-    /*
-     * Προσπαθούμε πρώτα
-     * με τα πραγματικά points.
-     */
-    const points =
-      validFeatures.map(
-        feature => ({
-
-          type:
-            "point",
-
-          longitude:
-            Number(
-              feature.longitude
-            ),
-
-          latitude:
-            Number(
-              feature.latitude
-            )
-
-        })
-      );
-
-
-    try {
-
-      await view.goTo(
-
-        points,
-
-        {
-
-          padding: {
-
-            top:
-              80,
-
-            right:
-              80,
-
-            bottom:
-              80,
-
-            left:
-              80
-
-          },
-
-          duration:
-            900
-
-        }
-
-      );
-
-
-      return true;
-
-    }
-
-    catch (
-      goToError
-    ) {
-
-      console.warn(
-        "goTo(points) failed:",
-        goToError
-      );
-
-    }
-
-
-    /*
-     * Fallback bounding box.
-     */
-    return fallbackFitMap(
-      validFeatures
-    );
-
-  }
-
-  catch (
-    error
-  ) {
-
-    console.warn(
-      "Could not zoom to all features:",
-      error
-    );
-
-
-    return false;
-
-  }
-
-}
-
-
-/* ============================================================
-   FALLBACK FIT MAP
-============================================================ */
-
-async function fallbackFitMap(
-  features
-) {
-
-  const view =
-    window.city4allMap?.view;
-
-
-  if (
-    !view ||
-    !features.length
-  ) {
-
-    return false;
-
-  }
-
-
-  const longitudes =
-    features.map(
-      feature =>
-        Number(
-          feature.longitude
-        )
-    );
-
-
-  const latitudes =
-    features.map(
-      feature =>
-        Number(
-          feature.latitude
-        )
-    );
-
-
-  const minLon =
-    Math.min(
-      ...longitudes
-    );
-
-
-  const maxLon =
-    Math.max(
-      ...longitudes
-    );
-
-
-  const minLat =
-    Math.min(
-      ...latitudes
-    );
-
-
-  const maxLat =
-    Math.max(
-      ...latitudes
-    );
-
-
-  const centerLon =
-    (
-      minLon +
-      maxLon
-    ) / 2;
-
-
-  const centerLat =
-    (
-      minLat +
-      maxLat
-    ) / 2;
-
-
-  const span =
-    Math.max(
-
-      maxLon -
-      minLon,
-
-      maxLat -
-      minLat
-
-    );
-
-
-  let zoom =
-    12;
-
-
-  if (
-    span <
-    0.01
-  ) {
-
-    zoom =
-      16;
-
-  }
-
-  else if (
-    span <
-    0.03
-  ) {
-
-    zoom =
-      14;
-
-  }
-
-  else if (
-    span <
-    0.08
-  ) {
-
-    zoom =
-      12;
-
-  }
-
-  else if (
-    span <
-    0.2
-  ) {
-
-    zoom =
-      10;
-
-  }
-
-  else if (
-    span <
-    0.5
-  ) {
-
-    zoom =
-      8;
-
-  }
-
-  else if (
-    span <
-    1
-  ) {
-
-    zoom =
-      7;
-
-  }
-
-  else {
-
-    zoom =
-      5;
-
-  }
-
-
-  await view.goTo(
-
-    {
-
-      center: [
-        centerLon,
-        centerLat
-      ],
-
-      zoom
-
-    },
-
-    {
-
-      duration:
-        900
-
-    }
-
-  );
-
-
-  return true;
-
-}
-
-
-/* ============================================================
-   COORDINATES
-============================================================ */
-
-function hasCoordinates(
-  feature
-) {
-
-  if (
-    !feature
-  ) {
-
-    return false;
-
-  }
-
-
-  const latitude =
-    Number(
-      feature.latitude
-    );
-
-
-  const longitude =
-    Number(
-      feature.longitude
-    );
-
-
-  return (
-
-    Number.isFinite(
-      latitude
-    ) &&
-
-    Number.isFinite(
-      longitude
-    ) &&
-
-    latitude >= -90 &&
-
-    latitude <= 90 &&
-
-    longitude >= -180 &&
-
-    longitude <= 180
-
-  );
-
-}
-
-
-/* ============================================================
-   GOOGLE MAPS
-============================================================ */
-
-function createGoogleMapsUrl(
-  feature
-) {
-
-  if (
-    !hasCoordinates(
-      feature
-    )
-  ) {
-
-    return null;
-
-  }
-
-
-  const latitude =
-    Number(
-      feature.latitude
-    );
-
-
-  const longitude =
-    Number(
-      feature.longitude
-    );
-
-
-  return (
-
-    "https://www.google.com/maps/dir/?api=1" +
-
-    "&destination=" +
-
-    encodeURIComponent(
-      `${latitude},${longitude}`
-    ) +
-
-    "&travelmode=walking"
-
-  );
-
-}
-
-
-/* ============================================================
-   VOICE
-============================================================ */
-
-function setupVoice() {
-
-  if (
-    !voiceButton
-  ) {
-
-    return;
-
-  }
-
-
-  const SpeechRecognition =
-    window.SpeechRecognition ||
-    window.webkitSpeechRecognition;
-
-
-  if (
-    !SpeechRecognition
-  ) {
-
-    voiceButton.title =
-      "Η φωνητική συνομιλία δεν υποστηρίζεται σε αυτόν τον browser.";
-
-
-    voiceButton.style.opacity =
-      "0.45";
-
-
-    voiceButton.addEventListener(
-      "click",
-      () => {
-
-        addMessage(
-          "ai",
-          "🎤 Η φωνητική συνομιλία δεν υποστηρίζεται από τον συγκεκριμένο browser."
-        );
-
-      }
-    );
-
-
-    return;
-
-  }
-
-
-  recognition =
-    new SpeechRecognition();
-
-
-  recognition.lang =
-    "el-GR";
-
-
-  recognition.continuous =
-    false;
-
-
-  recognition.interimResults =
-    false;
-
-
-  recognition.maxAlternatives =
-    1;
-
-
-  recognition.onstart =
-    () => {
-
-      listening =
-        true;
-
-
-      voiceButton.classList.add(
-        "active"
-      );
-
-
-      voiceButton.textContent =
-        "⏹️";
-
-
-      voiceButton.title =
-        "Έξοδος από φωνητική συνομιλία";
-
-
-      voiceButton.setAttribute(
-        "aria-label",
-        "Έξοδος από φωνητική συνομιλία"
-      );
-
-
-      inputEl.placeholder =
-        "Μίλησε στον City4All Assistant...";
-
-    };
-
-
-  recognition.onend =
-    () => {
-
-      listening =
-        false;
-
-
-      if (
-        !voiceMode
-      ) {
-
-        resetVoiceButton();
-
-        return;
-
-      }
-
-
-      if (
-        !isLoading
-      ) {
-
-        clearTimeout(
-          voiceRestartTimer
-        );
-
-
-        voiceRestartTimer =
-          setTimeout(
-            () => {
-
-              if (
-                voiceMode &&
-                !listening &&
-                !isLoading
-              ) {
-
-                startRecognition();
-
-              }
-
-            },
-            250
-          );
-
-      }
-
-    };
-
-
-  recognition.onresult =
-    event => {
-
-      const transcript =
-        event.results
-          ?.[0]
-          ?.[0]
-          ?.transcript
-          ?.trim() ||
-        "";
-
-
-      if (
-        !transcript ||
-        isLoading ||
-        !voiceMode
-      ) {
-
-        return;
-
-      }
-
-
-      inputEl.value =
-        transcript;
-
-
-      inputEl.dispatchEvent(
-        new Event("input")
-      );
-
-
-      sendMessage({
-
-        fromVoice:
-          true
-
-      });
-
-    };
-
-
-  recognition.onerror =
-    event => {
-
-      console.warn(
-        "Speech recognition error:",
-        event.error
-      );
-
-
-      if (
-        event.error ===
-        "not-allowed"
-      ) {
-
-        addMessage(
-          "ai",
-          "🎤 Χρειάζεται να επιτρέψεις πρόσβαση στο μικρόφωνο από τον browser."
-        );
-
-
-        stopVoiceMode();
-
-        return;
-
-      }
-
-    };
-
-
-  voiceButton.addEventListener(
-    "click",
-    toggleVoiceMode
-  );
-
-}
-
-
-function toggleVoiceMode() {
-
-  if (
-    !recognition
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    voiceMode
-  ) {
-
-    stopVoiceMode();
-
-  }
-
-  else {
-
-    startVoiceMode();
-
-  }
-
-}
-
-
-function startVoiceMode() {
-
-  if (
-    !recognition ||
-    voiceMode
-  ) {
-
-    return;
-
-  }
-
-
-  voiceMode =
-    true;
-
-
-  stopSpeaking();
-
-
-  voiceButton.classList.add(
-    "active"
-  );
-
-
-  voiceButton.textContent =
-    "⏹️";
-
-
-  voiceButton.title =
-    "Έξοδος από φωνητική συνομιλία";
-
-
-  voiceButton.setAttribute(
-    "aria-label",
-    "Έξοδος από φωνητική συνομιλία"
-  );
-
-
-  inputEl.placeholder =
-    "Μίλησε στον City4All Assistant...";
-
-
-  inputEl.disabled =
-    true;
-
-
-  startRecognition();
-
-}
-
-
-function startRecognition() {
-
-  if (
-    !recognition ||
-    !voiceMode ||
-    listening ||
-    isLoading
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    recognition.start();
-
-  }
-
-  catch (
-    error
-  ) {
-
-    console.warn(
-      "Could not start speech recognition:",
-      error
-    );
-
-  }
-
-}
-
-
-function stopVoiceMode() {
-
-  voiceMode =
-    false;
-
-
-  clearTimeout(
-    voiceRestartTimer
-  );
-
-
-  stopSpeaking();
-
-
-  if (
-    recognition &&
-    listening
-  ) {
-
-    try {
-
+  button.addEventListener("click", () => {
+    if (state.listening) {
       recognition.stop();
-
+      return;
     }
-
-    catch (
-      error
-    ) {
-
-      console.warn(
-        "Could not stop speech recognition:",
-        error
-      );
-
-    }
-
-  }
-
-
-  listening =
-    false;
-
-
-  inputEl.disabled =
-    false;
-
-
-  resetVoiceButton();
-
-
-  inputEl.placeholder =
-    "Ρώτησε τον City4All Assistant...";
-
-}
-
-
-function resetVoiceButton() {
-
-  if (
-    !voiceButton
-  ) {
-
-    return;
-
-  }
-
-
-  voiceButton.classList.remove(
-    "active"
-  );
-
-
-  voiceButton.textContent =
-    "🎤";
-
-
-  voiceButton.title =
-    "Έναρξη φωνητικής συνομιλίας";
-
-
-  voiceButton.setAttribute(
-    "aria-label",
-    "Έναρξη φωνητικής συνομιλίας"
-  );
-
-}
-
-
-/* ============================================================
-   TEXT TO SPEECH
-============================================================ */
-
-function speakAnswer(
-  text
-) {
-
-  if (
-    !("speechSynthesis" in window)
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    !text ||
-    !text.trim()
-  ) {
-
-    return;
-
-  }
-
-
-  stopSpeaking();
-
-
-  const cleanText =
-    text
-
-      .replace(
-        /https?:\/\/\S+/g,
-        ""
-      )
-
-      .replace(
-        /[*_#`]/g,
-        ""
-      )
-
-      .trim();
-
-
-  if (
-    !cleanText
-  ) {
-
-    return;
-
-  }
-
-
-  const utterance =
-    new SpeechSynthesisUtterance(
-      cleanText
-    );
-
-
-  utterance.lang =
-    "el-GR";
-
-
-  utterance.rate =
-    1.0;
-
-
-  utterance.pitch =
-    1.0;
-
-
-  utterance.volume =
-    1.0;
-
-
-  utterance.onstart =
-    () => {
-
-      isSpeaking =
-        true;
-
-    };
-
-
-  utterance.onend =
-    () => {
-
-      isSpeaking =
-        false;
-
-
-      if (
-        voiceMode &&
-        !listening &&
-        !isLoading
-      ) {
-
-        clearTimeout(
-          voiceRestartTimer
-        );
-
-
-        voiceRestartTimer =
-          setTimeout(
-            () => {
-
-              if (
-                voiceMode &&
-                !listening &&
-                !isLoading
-              ) {
-
-                startRecognition();
-
-              }
-
-            },
-            300
-          );
-
-      }
-
-    };
-
-
-  utterance.onerror =
-    () => {
-
-      isSpeaking =
-        false;
-
-    };
-
-
-  window.speechSynthesis.speak(
-    utterance
-  );
-
-}
-
-
-/* ============================================================
-   STOP SPEAKING
-============================================================ */
-
-function stopSpeaking() {
-
-  if (
-    "speechSynthesis" in window
-  ) {
-
-    window.speechSynthesis.cancel();
-
-  }
-
-
-  isSpeaking =
-    false;
-
-}
-
-
-/* ============================================================
-   MOBILE VIEWPORT
-============================================================ */
-
-function setupMobileViewport() {
-
-  const setViewportHeight =
-    () => {
-
-      const height =
-        window.visualViewport?.height ||
-        window.innerHeight;
-
-
-      document.documentElement
-        .style
-        .setProperty(
-          "--app-height",
-          `${height}px`
-        );
-
-
-      requestAnimationFrame(
-        () => {
-
-          try {
-
-            window.city4allMap
-              ?.view
-              ?.resize();
-
-          }
-
-          catch {
-            /* ignore */
-          }
-
-        }
-      );
-
-    };
-
-
-  setViewportHeight();
-
-
-  window.addEventListener(
-    "resize",
-    setViewportHeight
-  );
-
-
-  if (
-    window.visualViewport
-  ) {
-
-    window.visualViewport.addEventListener(
-      "resize",
-      setViewportHeight
-    );
-
-
-    window.visualViewport.addEventListener(
-      "scroll",
-      setViewportHeight
-    );
-
-  }
-
-}
-
-
-/* ============================================================
-   POPUP SECURITY
-============================================================ */
-
-function escapePopupText(
-  value
-) {
-
-  return String(
-    value ?? ""
-  )
-
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
-
-}
-
-
-/* ============================================================
-   SECURITY
-============================================================ */
-
-function escapeHTML(
-  value
-) {
-
-  return String(
-    value ?? ""
-  )
-
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
-
-}
-
-
-/* ============================================================
-   MAP READY EVENT
-============================================================ */
-
-window.addEventListener(
-  "city4all-map-ready",
-  async () => {
-
-    console.log(
-      "City4All map-ready event received."
-    );
-
-
+    recognition.lang = state.lang === "el" ? "el-GR" : "en-US";
+    state.listening = true;
+    button.classList.add("active");
     try {
-
-      const map =
-        window.city4allMap;
-
-
-      if (
-        !map
-      ) {
-
-        console.warn(
-          "Map-ready event fired but window.city4allMap is missing."
-        );
-
-        return;
-
-      }
-
-
-      if (
-        map?.view?.when
-      ) {
-
-        await map.view.when();
-
-      }
-
-
-      console.log(
-        "City4All map is ready for AI results.",
-        getMapDiagnostics()
-      );
-
-
-      resolveMapReady();
-
+      recognition.start();
+    } catch {
+      state.listening = false;
+      button.classList.remove("active");
     }
+  });
+}
 
-    catch (
-      error
-    ) {
+/* ============================ i18n APPLY ============================ */
 
-      console.warn(
-        "City4All map ready error:",
-        error
-      );
+function applyLanguage() {
+  document.documentElement.lang = state.lang;
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.dataset.i18n;
+    el.textContent = t(key);
+  });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => {
+    const key = el.dataset.i18nPh;
+    el.placeholder = t(key);
+  });
+  const homeLead = document.querySelector('[data-i18n="homeLead"]');
+  if (homeLead) homeLead.innerHTML = t("homeLead");
+  $("langBtn").textContent = state.lang === "el" ? "EN" : "EL";
+}
 
-
-      resolveMapReady();
-
-    }
-
+function toggleLanguage() {
+  state.lang = state.lang === "el" ? "en" : "el";
+  localStorage.setItem("city4all_lang", state.lang);
+  applyLanguage();
+  if (state.fields) {
+    renderCategoryChips();
+    renderAccessChips();
   }
-);
+  if (state.results.length) renderResults(state.lastSearch || { features: state.results, total: state.results.length, page: 1, pageCount: 1 });
+}
+
+/* ============================ EVENT BINDING ============================ */
+
+function bindEvents() {
+  $("modeSearch").addEventListener("click", () => showScreen("search"));
+  $("modeInfo").addEventListener("click", () => showScreen("info"));
+  $("homeBtn").addEventListener("click", () => showScreen("home"));
+  $("langBtn").addEventListener("click", toggleLanguage);
+
+  $("searchBtn").addEventListener("click", () => runSearch(1));
+  $("resetBtn").addEventListener("click", () => {
+    state.filters = {
+      category: [],
+      accessibility: [],
+      location: { perifereia: "", nomoi: "", dimos: "", area: "", text: "" },
+      keyword: ""
+    };
+    document.querySelectorAll(".chip.active").forEach(c => c.classList.remove("active"));
+    dom.keywordInput.value = "";
+    clearLocation();
+    showFiltersView();
+  });
+  $("backToFilters").addEventListener("click", showFiltersView);
+  $("clearLocation").addEventListener("click", clearLocation);
+
+  dom.locPerifereia.addEventListener("change", onPerifereiaChange);
+  dom.locNomoi.addEventListener("change", onNomoiChange);
+  dom.locDimos.addEventListener("change", onDimosChange);
+  dom.locArea.addEventListener("change", onAreaChange);
+
+  $("prevPage").addEventListener("click", () => runSearch(state.page - 1));
+  $("nextPage").addEventListener("click", () => runSearch(state.page + 1));
+
+  $("chatSendBtn").addEventListener("click", sendSearchChat);
+  dom.chatInput.addEventListener("keydown", event => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      sendSearchChat();
+    }
+  });
+
+  $("infoSendBtn").addEventListener("click", () => sendInfo());
+  dom.infoInput.addEventListener("keydown", event => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      sendInfo();
+    }
+  });
+  document.querySelectorAll("#infoSuggestions .chip").forEach(btn => {
+    btn.addEventListener("click", () => sendInfo(btn.dataset.q));
+  });
+
+  $("closeDetails").addEventListener("click", closeDetails);
+  dom.detailsModal.addEventListener("click", event => {
+    if (event.target === dom.detailsModal) closeDetails();
+  });
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && !dom.detailsModal.hidden) closeDetails();
+  });
+
+  setupVoice("searchVoiceBtn", dom.chatInput);
+  setupVoice("infoVoiceBtn", dom.infoInput);
+}
+
+/* ============================ INIT ============================ */
+
+async function init() {
+  applyLanguage();
+  bindEvents();
+  showScreen("home");
+  tryResolveExistingMap();
+
+  await loadFields();
+  await initLocationCascade();
+}
+
+document.addEventListener("DOMContentLoaded", init);
+
+/* ============================ EXPORTS FOR TESTING ============================ */
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { escapeHtml, formatDistance, locationLabelOf };
+}
