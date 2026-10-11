@@ -388,16 +388,11 @@ async function drawFeatures(features) {
 
   const points = (features || []).filter(f => f.latitude != null && f.longitude != null);
   points.forEach(feature => {
+    const color = ACCESS_COLORS[feature.accessibility?.[0]?.id] || "#3b82f6";
     const graphic = new map.Graphic({
       geometry: { type: "point", longitude: feature.longitude, latitude: feature.latitude },
-      attributes: { id: feature.id, name: feature.name },
-      symbol: {
-        type: "simple-marker",
-        style: "circle",
-        size: 11,
-        color: ACCESS_COLORS[feature.accessibility?.[0]?.id] || "#1d6fe0",
-        outline: { color: "#ffffff", width: 1.5 }
-      },
+      attributes: { id: feature.id, name: feature.name, __color: color },
+      symbol: markerSymbol(color, 11, "#ffffff", 1.5),
       popupTemplate: {
         title: feature.name,
         content: popupHtml(feature)
@@ -405,6 +400,12 @@ async function drawFeatures(features) {
     });
     map.resultsLayer.add(graphic);
   });
+
+  // Όταν βρεθούν σημεία, θαμπώνουμε/γκριζάρουμε όλα τα υπόλοιπα σημεία του
+  // υποβάθρου ώστε να ξεχωρίζουν μόνο τα αποτελέσματα.
+  dimBackgroundLayers(points.length > 0);
+  resetMarkers();
+  bindMarkerClick(map);
 
   dom.mapCount.hidden = points.length === 0;
   dom.mapCount.textContent = `${points.length} ${t("resultsWord")}`;
@@ -420,11 +421,93 @@ async function drawFeatures(features) {
   }
 }
 
+/* ---------- Έμφαση στον χάρτη: γκριζάρουμε όλα τα άλλα εκτός από το επιλεγμένο ---------- */
+
+function markerSymbol(color, size, outlineColor, outlineWidth) {
+  return {
+    type: "simple-marker",
+    style: "circle",
+    size,
+    color,
+    outline: { color: outlineColor, width: outlineWidth }
+  };
+}
+
+/** Θαμπώνει (γκριζάρει) όλα τα layers του υποβάθρου εκτός από τα αποτελέσματα. */
+function dimBackgroundLayers(on) {
+  const map = window.city4allMap;
+  if (!map) return;
+  let layers = [];
+  try {
+    layers = map.view?.map?.allLayers?.toArray?.() || [];
+  } catch {
+    layers = [];
+  }
+  layers.forEach(layer => {
+    if (!layer || layer === map.resultsLayer) return;
+    try {
+      layer.opacity = on ? 0.18 : 1;
+      if ("effect" in layer) layer.effect = on ? "grayscale(1)" : null;
+    } catch {
+      /* αγνοούμε layers που δεν το υποστηρίζουν */
+    }
+  });
+}
+
+/** Επαναφέρει όλα τα markers στα κανονικά τους χρώματα. */
+function resetMarkers() {
+  const map = window.city4allMap;
+  if (!map) return;
+  map.resultsLayer.graphics.forEach(g => {
+    const color = g.attributes?.__color || "#3b82f6";
+    g.symbol = markerSymbol(color, 11, "#ffffff", 1.5);
+  });
+}
+
+/** Τονίζει το επιλεγμένο σημείο και γκριζάρει όλα τα υπόλοιπα markers. */
+function highlightFeature(feature) {
+  const map = window.city4allMap;
+  if (!map || !feature) return;
+  map.resultsLayer.graphics.forEach(g => {
+    const isSelected = String(g.attributes?.id) === String(feature.id);
+    const color = g.attributes?.__color || "#3b82f6";
+    g.symbol = isSelected
+      ? markerSymbol(color, 16, "#ffffff", 2.5)
+      : markerSymbol("#46536a", 9, "#2a3547", 1);
+  });
+}
+
+/** Κλικ σε marker του χάρτη → τονίζεται και ανοίγουν οι λεπτομέρειες. */
+function bindMarkerClick(map) {
+  if (!map || map.__c4aClickBound) return;
+  map.__c4aClickBound = true;
+  try {
+    if (map.view?.popup) map.view.popup.autoOpenEnabled = false;
+    map.view.on("click", event => {
+      map.view
+        .hitTest(event)
+        .then(res => {
+          const hit = (res.results || []).find(
+            r => r.graphic && map.resultsLayer.graphics.includes(r.graphic)
+          );
+          if (!hit) return;
+          const id = hit.graphic.attributes?.id;
+          const feat = state.results.find(f => String(f.id) === String(id));
+          if (feat) openDetails(feat);
+        })
+        .catch(() => {});
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
 async function focusMapPoint(feature, zoom = 17) {
   const ready = await waitForMapReady();
   const map = window.city4allMap;
   if (!ready || !map || feature.latitude == null) return;
   try {
+    highlightFeature(feature);
     await map.view.goTo({ center: [feature.longitude, feature.latitude], zoom });
     const graphic = map.resultsLayer.graphics.find(
       g => String(g.attributes?.id) === String(feature.id)
@@ -835,6 +918,7 @@ function openDetails(feature) {
 
   dom.detailName.textContent = feature.name;
   dom.detailCategory.textContent = feature.category;
+  highlightFeature(feature);
 
   const accessTags = feature.accessibility?.length
     ? feature.accessibility.map(a => `<span class="tag">${escapeHtml(a.label)}</span>`).join("")
@@ -926,6 +1010,7 @@ function openDetails(feature) {
 function closeDetails() {
   dom.detailsModal.hidden = true;
   state.selected = null;
+  resetMarkers();
 }
 
 function renderRadiusButtons() {
@@ -1016,7 +1101,8 @@ async function askWebForFeature(feature) {
   const box = $("webInfoBox");
   if (!box) return;
   box.innerHTML = `<div class="loading-line">${escapeHtml(t("webLoading"))}</div>`;
-  const question = `${feature.name} ${feature.category} προσβασιμότητα ${locationLabelOf(feature)}`.trim();
+  const area = feature.area || feature.dimos || feature.perifereia || locationLabelOf(feature) || "";
+  const question = `προσβασιμότητα ${feature.category} ${area}`.trim();
   let data = null;
   // 1) Δοκίμασε το /info. 2) Αν λείπει/αποτύχει, πέσε στο /chat (info mode).
   try {
@@ -1338,6 +1424,7 @@ function bindEvents() {
     document.querySelectorAll(".chip.active").forEach(c => c.classList.remove("active"));
     dom.keywordInput.value = "";
     clearLocation();
+    dimBackgroundLayers(false);
     showFiltersView();
   });
   $("backToFilters").addEventListener("click", showFiltersView);
