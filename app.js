@@ -811,7 +811,7 @@ async function requestAiSummary(data) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       },
-      30000
+      90000
     );
     showAiSummary(res.answer || "", res.total);
   } catch (error) {
@@ -1113,7 +1113,7 @@ async function askWebForFeature(feature) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question })
       },
-      30000
+      90000
     );
   } catch (error) {
     try {
@@ -1124,7 +1124,7 @@ async function askWebForFeature(feature) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: question, conversation: [], previousFeatures: [] })
         },
-        30000
+        90000
       );
     } catch (error2) {
       data = null;
@@ -1189,7 +1189,7 @@ async function sendSearchChat() {
           previousFeatures: state.previousFeatures
         })
       },
-      35000
+      90000
     );
     typing.remove();
     state.conversation.push({ role: "user", content: message });
