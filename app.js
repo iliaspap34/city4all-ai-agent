@@ -348,18 +348,25 @@ async function waitForMapReady() {
   return mapReadyResolved;
 }
 
+/* Χρώματα δεικτών — επιλεγμένα για φωτεινό υπόβαθρο (City4All palette).
+   Ποτέ μόνο το χρώμα: κάθε δείκτης έχει ετικέτα/κείμενο στο popup και στις κάρτες. */
 const ACCESS_COLORS = {
-  ramp: "#1d6fe0",
-  elevator: "#7c3aed",
-  signage: "#0891b2",
-  stepfree: "#16a34a",
-  autodoor: "#0d9488",
-  parking: "#2563eb",
-  tactile: "#d97706",
-  handrail: "#64748b",
-  doorbutton: "#9333ea",
-  wc: "#dc2626"
+  ramp: "#1256d6",
+  elevator: "#6d28d9",
+  signage: "#0b7285",
+  stepfree: "#0f7b4f",
+  autodoor: "#0d7d6b",
+  parking: "#1d4ed8",
+  tactile: "#8a5a00",
+  handrail: "#475569",
+  doorbutton: "#7e22ce",
+  wc: "#c62828"
 };
+
+/* Απόχρωση μη-επιλεγμένων δεικτών σε φωτεινό χάρτη. */
+const MARKER_DIM_COLOR = "#9aa8bb";
+const MARKER_DIM_OUTLINE = "#ffffff";
+const MARKER_DEFAULT_COLOR = "#1256d6";
 
 function popupHtml(feature) {
   const access = feature.accessibility?.length
@@ -368,10 +375,10 @@ function popupHtml(feature) {
   return `
     <div style="font-family:inherit;max-width:260px">
       <strong>${escapeHtml(feature.name)}</strong>
-      <div style="color:#1d6fe0;font-size:11px;font-weight:700;margin:2px 0 6px">${escapeHtml(
+      <div style="color:#1256d6;font-size:11px;font-weight:700;margin:2px 0 6px">${escapeHtml(
         feature.category
       )}</div>
-      <div style="color:#64748b;font-size:11px;margin-bottom:6px">${escapeHtml(
+      <div style="color:#5b6b84;font-size:11px;margin-bottom:6px">${escapeHtml(
         locationLabelOf(feature)
       )}</div>
       <ul style="margin:0;padding-left:16px;font-size:11px">${access}</ul>
@@ -388,7 +395,7 @@ async function drawFeatures(features) {
 
   const points = (features || []).filter(f => f.latitude != null && f.longitude != null);
   points.forEach(feature => {
-    const color = ACCESS_COLORS[feature.accessibility?.[0]?.id] || "#3b82f6";
+    const color = ACCESS_COLORS[feature.accessibility?.[0]?.id] || MARKER_DEFAULT_COLOR;
     const graphic = new map.Graphic({
       geometry: { type: "point", longitude: feature.longitude, latitude: feature.latitude },
       attributes: { id: feature.id, name: feature.name, __color: color },
@@ -459,7 +466,7 @@ function resetMarkers() {
   const map = window.city4allMap;
   if (!map) return;
   map.resultsLayer.graphics.forEach(g => {
-    const color = g.attributes?.__color || "#3b82f6";
+    const color = g.attributes?.__color || MARKER_DEFAULT_COLOR;
     g.symbol = markerSymbol(color, 11, "#ffffff", 1.5);
   });
 }
@@ -470,10 +477,10 @@ function highlightFeature(feature) {
   if (!map || !feature) return;
   map.resultsLayer.graphics.forEach(g => {
     const isSelected = String(g.attributes?.id) === String(feature.id);
-    const color = g.attributes?.__color || "#3b82f6";
+    const color = g.attributes?.__color || MARKER_DEFAULT_COLOR;
     g.symbol = isSelected
       ? markerSymbol(color, 16, "#ffffff", 2.5)
-      : markerSymbol("#46536a", 9, "#2a3547", 1);
+      : markerSymbol(MARKER_DIM_COLOR, 9, MARKER_DIM_OUTLINE, 1);
   });
 }
 
@@ -735,7 +742,7 @@ async function runSearch(page = 1) {
 
   dom.filtersView.hidden = true;
   showResultsView();
-  dom.resultsList.innerHTML = `<div class="loading-line"><span class="spinner" style="border-color:rgba(29,111,224,.3);border-top-color:#1d6fe0"></span>${escapeHtml(
+  dom.resultsList.innerHTML = `<div class="loading-line"><span class="spinner" aria-hidden="true"></span>${escapeHtml(
     t("searching")
   )}</div>`;
   dom.resultsCount.textContent = "";
@@ -1004,13 +1011,22 @@ function openDetails(feature) {
   });
   $("askWebBtn").addEventListener("click", () => askWebForFeature(feature));
 
+  // Διαχείριση εστίασης (προσβασιμότητα): αποθηκεύουμε το στοιχείο που είχε
+  // την εστίαση και μεταφέρουμε την εστίαση στο κουμπί κλεισίματος.
+  state.lastFocused = document.activeElement;
   dom.detailsModal.hidden = false;
+  const closeBtn = $("closeDetails");
+  if (closeBtn) closeBtn.focus();
 }
 
 function closeDetails() {
   dom.detailsModal.hidden = true;
   state.selected = null;
   resetMarkers();
+  // Επιστροφή της εστίασης στο στοιχείο από το οποίο άνοιξε το modal.
+  const back = state.lastFocused;
+  state.lastFocused = null;
+  if (back && typeof back.focus === "function" && document.contains(back)) back.focus();
 }
 
 function renderRadiusButtons() {
@@ -1317,7 +1333,7 @@ function initTts() {
 /* ============================ VOICE ============================ */
 
 /** Δείχνει ορατό μήνυμα για τη φωνητική εισαγωγή (όχι σιωπηλή αποτυχία). */
-function showVoiceNotice(message, kind = "warn") {
+function showVoiceNotice(message, kind = "warn", action = null) {
   const log = dom.searchAiLog;
   if (!log) {
     alert(message);
@@ -1326,9 +1342,28 @@ function showVoiceNotice(message, kind = "warn") {
   const el = document.createElement("div");
   el.className = "bubble ai voice-notice" + (kind === "info" ? " voice-info" : "");
   el.textContent = message;
+  if (action && action.href) {
+    const link = document.createElement("a");
+    link.className = "voice-action";
+    link.href = action.href;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.textContent = action.label;
+    el.appendChild(document.createElement("br"));
+    el.appendChild(link);
+  }
   log.appendChild(el);
   log.scrollTop = log.scrollHeight;
   return el;
+}
+
+/** Είμαστε μέσα σε iframe; */
+function isInIframe() {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
 }
 
 /** Εξηγεί το σφάλμα του getUserMedia (έλεγχος μικροφώνου). */
@@ -1344,6 +1379,53 @@ function describeMicError(error) {
     return "Το μικρόφωνο χρησιμοποιείται από άλλη εφαρμογή. Κλείσε την άλλη εφαρμογή και δοκίμασε ξανά.";
   }
   return "Δεν ήταν δυνατή η πρόσβαση στο μικρόφωνο (" + (name || "άγνωστο σφάλμα") + ").";
+}
+
+/**
+ * Εντοπίζει γιατί το μικρόφωνο δεν μπορεί να δουλέψει, ΠΡΙΝ ζητήσουμε άδεια.
+ * Καλύπτει: http (μη ασφαλές), iframe χωρίς allow="microphone", browser χωρίς mediaDevices.
+ */
+function voiceEnvironmentProblem() {
+  if (!window.isSecureContext) {
+    return "Η φωνητική εισαγωγή απαιτεί ασφαλή σύνδεση (https). Η σελίδα φορτώνεται μέσω http — γι' αυτό ο browser μπλοκάρει το μικρόφωνο ακόμη κι αν η άδεια φαίνεται χορηγημένη.";
+  }
+
+  let inIframe = false;
+  try {
+    inIframe = window.self !== window.top;
+  } catch {
+    inIframe = true; // cross-origin πρόσβαση στο top → σίγουρα iframe
+  }
+  if (inIframe) {
+    let allowed = true;
+    try {
+      const policy = document.featurePolicy || document.permissionsPolicy;
+      if (policy && policy.allowsFeature) allowed = policy.allowsFeature("microphone");
+    } catch {
+      allowed = true;
+    }
+    if (!allowed) {
+      return "Η εφαρμογή τρέχει μέσα σε iframe (π.χ. στο city4all.org) και ο γονικός ιστότοπος ΔΕΝ παραχωρεί το μικρόφωνο. Απαιτείται η προσθήκη allow=\"microphone\" στο <iframe> που φιλοξενεί την εφαρμογή.";
+    }
+  }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    return "Ο browser δεν εκθέτει πρόσβαση σε μικρόφωνο. Δοκίμασε Chrome, Edge ή Safari σε σύνδεση https.";
+  }
+  return null;
+}
+
+/** Κατάσταση άδειας μικροφώνου (για ακριβέστερα μηνύματα). */
+async function microphonePermissionState() {
+  try {
+    if (navigator.permissions && navigator.permissions.query) {
+      const status = await navigator.permissions.query({ name: "microphone" });
+      return status.state; // "granted" | "denied" | "prompt"
+    }
+  } catch {
+    /* μη υποστηριζόμενο — αγνόησε */
+  }
+  return "unknown";
 }
 
 const VOICE_ERROR_MESSAGES = {
@@ -1401,7 +1483,13 @@ function setupVoice(buttonId, textarea, onFinal) {
     button.classList.remove("active");
     clearListeningNotice();
     const code = event?.error || "unknown";
-    showVoiceNotice(VOICE_ERROR_MESSAGES[code] || `Σφάλμα φωνητικής εισαγωγής (${code}).`);
+    let message = VOICE_ERROR_MESSAGES[code] || `Σφάλμα φωνητικής εισαγωγής (${code}).`;
+    // Σε άρνηση, ο πραγματικός λόγος μπορεί να είναι το περιβάλλον (http/iframe).
+    if (code === "not-allowed" || code === "service-not-allowed") {
+      const env = voiceEnvironmentProblem();
+      if (env) message = env;
+    }
+    showVoiceNotice(message);
   };
 
   button.addEventListener("click", async () => {
@@ -1410,13 +1498,33 @@ function setupVoice(buttonId, textarea, onFinal) {
       return;
     }
 
-    // Έλεγχος μικροφώνου ΠΡΙΝ την αναγνώριση: δίνει σαφές, στοχευμένο σφάλμα.
+    // 1) Έλεγχος περιβάλλοντος (http / iframe χωρίς allow="microphone").
+    const envProblem = voiceEnvironmentProblem();
+    if (envProblem) {
+      // Δίξοδος: άνοιγμα της εφαρμογής απευθείας, όπου το μικρόφωνο επιτρέπεται.
+      showVoiceNotice(
+        envProblem,
+        "warn",
+        isInIframe() ? { href: window.location.href, label: "Άνοιγμα της εφαρμογής σε νέα καρτέλα" } : null
+      );
+      return;
+    }
+
+    // 2) Έλεγχος μικροφώνου ΠΡΙΝ την αναγνώριση: σαφές, στοχευμένο σφάλμα.
     try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(track => track.stop());
-      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop());
     } catch (error) {
+      // Αν η άδεια φαίνεται χορηγημένη, ο λόγος είναι σχεδόν πάντα iframe/http.
+      if (error && error.name === "NotAllowedError") {
+        const state = await microphonePermissionState();
+        if (state === "granted") {
+          showVoiceNotice(
+            "Ο browser λέει ότι η άδεια μικροφώνου είναι χορηγημένη, αλλά η πρόσβαση μπλοκάρεται από τη σελίδα που φιλοξενεί την εφαρμογή (iframe/permissions policy). Δοκίμασε να ανοίξεις την εφαρμογή απευθείας στη διεύθυνσή της."
+          );
+          return;
+        }
+      }
       showVoiceNotice(describeMicError(error));
       return;
     }
@@ -1507,7 +1615,27 @@ function bindEvents() {
     if (event.target === dom.detailsModal) closeDetails();
   });
   document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && !dom.detailsModal.hidden) closeDetails();
+    if (dom.detailsModal.hidden) return;
+    if (event.key === "Escape") {
+      closeDetails();
+      return;
+    }
+    // Παγίδευση εστίασης μέσα στο modal (προσβασιμότητα πληκτρολογίου).
+    if (event.key === "Tab") {
+      const focusables = dom.detailsModal.querySelectorAll(
+        'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
   });
 
   initTts();
