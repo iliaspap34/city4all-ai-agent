@@ -1640,6 +1640,32 @@ function bindEvents() {
 
   initTts();
   setupVoice("searchVoiceBtn", dom.chatInput, () => sendSearchChat());
+  setupVoiceAvailabilityHint();
+}
+
+/**
+ * Όταν η εφαρμογή τρέχει μέσα σε iframe που δεν επιτρέπει μικρόφωνο
+ * (π.χ. ArcGIS Hub), εμφανίζει μόνιμη, διακριτική υπόδειξη με σύνδεσμο
+ * ανοίγματος σε νέα καρτέλα — εκεί η φωνητική αναζήτηση λειτουργεί.
+ */
+function setupVoiceAvailabilityHint() {
+  const hint = $("voiceHint");
+  if (!hint || !isInIframe()) return;
+  if (!voiceEnvironmentProblem()) return;
+
+  hint.hidden = false;
+  hint.innerHTML = "";
+
+  const text = document.createElement("span");
+  text.textContent = "Η φωνητική αναζήτηση δεν είναι διαθέσιμη μέσα σε αυτό το πλαίσιο (iframe).";
+  hint.appendChild(text);
+
+  const link = document.createElement("a");
+  link.href = window.location.href;
+  link.target = "_blank";
+  link.rel = "noopener";
+  link.textContent = "Άνοιξε την εφαρμογή σε νέα καρτέλα για φωνή";
+  hint.appendChild(link);
 }
 
 /* ============================ INIT ============================ */
