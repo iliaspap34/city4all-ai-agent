@@ -1316,6 +1316,46 @@ function initTts() {
 
 /* ============================ VOICE ============================ */
 
+/** Δείχνει ορατό μήνυμα για τη φωνητική εισαγωγή (όχι σιωπηλή αποτυχία). */
+function showVoiceNotice(message, kind = "warn") {
+  const log = dom.searchAiLog;
+  if (!log) {
+    alert(message);
+    return null;
+  }
+  const el = document.createElement("div");
+  el.className = "bubble ai voice-notice" + (kind === "info" ? " voice-info" : "");
+  el.textContent = message;
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+  return el;
+}
+
+/** Εξηγεί το σφάλμα του getUserMedia (έλεγχος μικροφώνου). */
+function describeMicError(error) {
+  const name = error?.name || "";
+  if (name === "NotAllowedError" || name === "SecurityError") {
+    return "Δεν δόθηκε άδεια μικροφώνου. Πάτα το εικονίδιο 🔒 στη γραμμή διευθύνσεων και επίτρεψε το μικρόφωνο.";
+  }
+  if (name === "NotFoundError" || name === "OverconstrainedError") {
+    return "Δεν βρέθηκε μικρόφωνο στη συσκευή σου.";
+  }
+  if (name === "NotReadableError" || name === "TrackStartError") {
+    return "Το μικρόφωνο χρησιμοποιείται από άλλη εφαρμογή. Κλείσε την άλλη εφαρμογή και δοκίμασε ξανά.";
+  }
+  return "Δεν ήταν δυνατή η πρόσβαση στο μικρόφωνο (" + (name || "άγνωστο σφάλμα") + ").";
+}
+
+const VOICE_ERROR_MESSAGES = {
+  "not-allowed": "Δεν δόθηκε άδεια μικροφώνου. Πάτα το εικονίδιο 🔒 στη γραμμή διευθύνσεων και επίτρεψε το μικρόφωνο.",
+  "service-not-allowed": "Ο browser μπλόκαρε τη φωνητική υπηρεσία. Δοκίμασε Google Chrome σε https.",
+  "audio-capture": "Δεν βρέθηκε ή δεν είναι προσβάσιμο μικρόφωνο. Έλεγξε ότι είναι συνδεδεμένο και ενεργό.",
+  "network": "Η φωνητική αναγνώριση απαιτεί σύνδεση στο διαδίκτυο.",
+  "no-speech": "Δεν ακούστηκε ομιλία. Μίλα πιο κοντά στο μικρόφωνο και δοκίμασε ξανά.",
+  "aborted": "Η φωνητική εισαγωγή διακόπηκε. Δοκίμασε ξανά.",
+  "language-not-supported": "Η ελληνική φωνητική αναγνώριση δεν υποστηρίζεται σε αυτόν τον browser."
+};
+
 function setupVoice(buttonId, textarea, onFinal) {
   const button = $(buttonId);
   if (!button) return;
@@ -1325,8 +1365,8 @@ function setupVoice(buttonId, textarea, onFinal) {
     // ΔΕΝ κρύβουμε το κουμπί — ενημερώνουμε τον χρήστη τι συμβαίνει.
     button.title = "Ο browser δεν υποστηρίζει φωνητική εισαγωγή";
     button.addEventListener("click", () => {
-      alert(
-        "Η φωνητική εισαγωγή δεν υποστηρίζεται σε αυτόν τον browser.\n\nΔοκίμασε Google Chrome σε ασφαλή σύνδεση (https) και επίτρεψε την πρόσβαση στο μικρόφωνο."
+      showVoiceNotice(
+        "Η φωνητική εισαγωγή δεν υποστηρίζεται σε αυτόν τον browser. Δοκίμασε Google Chrome (ή Edge/Safari) σε ασφαλή σύνδεση https."
       );
     });
     return;
@@ -1337,7 +1377,14 @@ function setupVoice(buttonId, textarea, onFinal) {
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
 
+  let listeningNotice = null;
+  const clearListeningNotice = () => {
+    if (listeningNotice && listeningNotice.parentNode) listeningNotice.parentNode.removeChild(listeningNotice);
+    listeningNotice = null;
+  };
+
   recognition.onresult = event => {
+    clearListeningNotice();
     const transcript = event.results[0][0].transcript;
     textarea.value = transcript;
     textarea.dispatchEvent(new Event("input"));
@@ -1347,35 +1394,44 @@ function setupVoice(buttonId, textarea, onFinal) {
   recognition.onend = () => {
     state.listening = false;
     button.classList.remove("active");
+    clearListeningNotice();
   };
   recognition.onerror = event => {
     state.listening = false;
     button.classList.remove("active");
-    const code = event?.error;
-    if (code === "not-allowed" || code === "service-not-allowed") {
-      alert(
-        "Δεν δόθηκε άδεια μικροφώνου. Επίτρεψε την πρόσβαση στο μικρόφωνο από τις ρυθμίσεις του browser και δοκίμασε ξανά."
-      );
-    } else if (code === "no-speech") {
-      // σιωπή — αγνοούμε
-    } else if (code === "network") {
-      alert("Η φωνητική αναγνώριση απαιτεί σύνδεση στο διαδίκτυο.");
-    }
+    clearListeningNotice();
+    const code = event?.error || "unknown";
+    showVoiceNotice(VOICE_ERROR_MESSAGES[code] || `Σφάλμα φωνητικής εισαγωγής (${code}).`);
   };
 
-  button.addEventListener("click", () => {
+  button.addEventListener("click", async () => {
     if (state.listening) {
-      recognition.stop();
+      try { recognition.stop(); } catch { /* αγνόησε */ }
       return;
     }
+
+    // Έλεγχος μικροφώνου ΠΡΙΝ την αναγνώριση: δίνει σαφές, στοχευμένο σφάλμα.
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+      }
+    } catch (error) {
+      showVoiceNotice(describeMicError(error));
+      return;
+    }
+
     recognition.lang = state.lang === "el" ? "el-GR" : "en-US";
     state.listening = true;
     button.classList.add("active");
     try {
+      listeningNotice = showVoiceNotice("Ακούω… μίλα τώρα.", "info");
       recognition.start();
-    } catch {
+    } catch (error) {
       state.listening = false;
       button.classList.remove("active");
+      clearListeningNotice();
+      showVoiceNotice("Δεν ξεκίνησε η φωνητική εισαγωγή (" + (error?.name || "σφάλμα") + "). Δοκίμασε ξανά.");
     }
   });
 }
