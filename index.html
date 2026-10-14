@@ -257,6 +257,12 @@
     .bubble.voice-notice { background: var(--amber-soft); border-color: #f0d9a0; color: var(--amber); font-size: 12.5px; }
     .bubble.voice-notice.voice-info { background: var(--brand-soft); border-color: #c5d8f7; color: var(--brand); }
     .bubble.voice-notice .voice-action { display: inline-block; margin-top: 8px; color: var(--brand); font-weight: 600; text-decoration: underline; }
+    .voice-hint {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+      background: var(--brand-soft); border: 1px solid #c5d8f7; border-radius: var(--radius-sm);
+      padding: 9px 12px; margin-bottom: 10px; font-size: 12px; line-height: 1.45; color: var(--ink);
+    }
+    .voice-hint a { color: var(--brand); font-weight: 600; text-decoration: underline; }
     .bubble .src { display: block; margin-top: 8px; font-size: 11.5px; color: var(--muted); }
     .bubble .src a { display: block; word-break: break-word; }
     .input-row { display: flex; gap: 8px; align-items: flex-end; }
@@ -454,6 +460,7 @@
           </div>
           <div class="ai-log" id="searchAiLog" aria-live="polite"></div>
           <div class="chat-suggestions" id="chatSuggestions"></div>
+          <div class="voice-hint" id="voiceHint" hidden></div>
           <div class="input-row">
             <button class="icon-btn" id="searchVoiceBtn" type="button" title="Φωνητική εισαγωγή" aria-label="Φωνητική εισαγωγή">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
