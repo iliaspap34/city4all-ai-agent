@@ -368,9 +368,23 @@ const MARKER_DIM_COLOR = "#9aa8bb";
 const MARKER_DIM_OUTLINE = "#ffffff";
 const MARKER_DEFAULT_COLOR = "#1256d6";
 
+/**
+ * Ετικέτες προσβασιμότητας με δίχτυ ασφαλείας: αν κάποιο token δεν αναγνωριστεί
+ * (accessibilityUnknown), το δείχνουμε ΩΣ ΕΧΕΙ αντί να το κρύψουμε. Έτσι δεν
+ * εμφανίζεται ποτέ ψευδώς «δεν υπάρχουν στοιχεία».
+ */
+function accessTagLabels(feature) {
+  if (feature.accessibility?.length) return feature.accessibility.map(a => a.label);
+  if (feature.accessibilityUnknown?.length) {
+    return feature.accessibilityUnknown.map(a => String(a).replace(/_/g, " "));
+  }
+  return [];
+}
+
 function popupHtml(feature) {
-  const access = feature.accessibility?.length
-    ? feature.accessibility.map(a => `<li>${escapeHtml(a.label)}</li>`).join("")
+  const labels = accessTagLabels(feature);
+  const access = labels.length
+    ? labels.map(l => `<li>${escapeHtml(l)}</li>`).join("")
     : `<li>${escapeHtml(t("noAccessData"))}</li>`;
   return `
     <div style="font-family:inherit;max-width:260px">
@@ -892,8 +906,9 @@ function renderResults(data) {
 }
 
 function cardHtml(feature) {
-  const tags = feature.accessibility?.length
-    ? feature.accessibility.map(a => `<span class="tag">${escapeHtml(a.label)}</span>`).join("")
+  const labels = accessTagLabels(feature);
+  const tags = labels.length
+    ? labels.map(l => `<span class="tag">${escapeHtml(l)}</span>`).join("")
     : `<span class="tag none">${escapeHtml(t("noAccessData").split(".")[0])}</span>`;
   return `
     <article class="card">
@@ -927,9 +942,10 @@ function openDetails(feature) {
   dom.detailCategory.textContent = feature.category;
   highlightFeature(feature);
 
-  const accessTags = feature.accessibility?.length
-    ? feature.accessibility.map(a => `<span class="tag">${escapeHtml(a.label)}</span>`).join("")
-    : "";
+  const detailLabels = accessTagLabels(feature);
+  const accessTags = detailLabels
+    .map(l => `<span class="tag">${escapeHtml(l)}</span>`)
+    .join("");
 
   const accessSection = accessTags
     ? `<div class="access-list">${accessTags}</div>`
