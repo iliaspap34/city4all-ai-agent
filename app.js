@@ -28,6 +28,8 @@ const ENDPOINTS = {
 
 const state = {
   lang: localStorage.getItem("city4all_lang") || "el",
+  // "auto" = δοκίμασε τη γλώσσα του UI και μετά την άλλη (πλήρης διγλωσσία).
+  voiceLang: localStorage.getItem("city4all_voice_lang") || "auto",
   mode: "home",
   fields: null,
   filters: {
@@ -374,9 +376,14 @@ const MARKER_DEFAULT_COLOR = "#1256d6";
  * εμφανίζεται ποτέ ψευδώς «δεν υπάρχουν στοιχεία».
  */
 function accessTagLabels(feature) {
-  if (feature.accessibility?.length) return feature.accessibility.map(a => a.label);
+  if (feature.accessibility?.length) {
+    return feature.accessibility.map(a => labelOf(a, "access"));
+  }
   if (feature.accessibilityUnknown?.length) {
-    return feature.accessibilityUnknown.map(a => String(a).replace(/_/g, " "));
+    return feature.accessibilityUnknown.map(a => {
+      const raw = String(a).replace(/_/g, " ");
+      return state.lang === "en" ? ACCESS_EN[a] || raw : raw;
+    });
   }
   return [];
 }
@@ -572,7 +579,7 @@ function renderCategoryChips() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "chip";
-    btn.textContent = cat.label;
+    btn.textContent = labelOf(cat, "category");
     btn.dataset.id = cat.id;
     if (state.filters.category.includes(cat.id)) btn.classList.add("active");
     btn.addEventListener("click", () => {
@@ -601,7 +608,7 @@ function renderAccessChips() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "chip chip-access";
-    btn.textContent = item.label;
+    btn.textContent = labelOf(item, "access");
     if (state.filters.accessibility.includes(item.id)) btn.classList.add("active");
     btn.addEventListener("click", () => {
       toggleArray(state.filters.accessibility, item.id);
@@ -822,7 +829,9 @@ async function requestAiSummary(data) {
       keyword: state.filters.keyword
     },
     total: data.total,
-    features: (data.features || []).slice(0, 10)
+    features: (data.features || []).slice(0, 10),
+    // lang: η σύνοψη ακολουθεί τη γλώσσα που επέλεξε ο χρήστης.
+    lang: state.lang
   };
   try {
     const res = await fetchJson(
@@ -915,7 +924,7 @@ function cardHtml(feature) {
       <div class="card-top">
         <div>
           <h4>${escapeHtml(feature.name)}</h4>
-          <div class="cat">${escapeHtml(feature.category)}</div>
+          <div class="cat">${escapeHtml(categoryLabelOf(feature))}</div>
           <div class="loc"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg> ${escapeHtml(locationLabelOf(feature) || "—")}</div>
         </div>
       </div>
@@ -959,7 +968,7 @@ function openDetails(feature) {
 
   dom.detailBody.innerHTML = `
     <dl class="kv">
-      <dt>${escapeHtml(t("category"))}</dt><dd>${escapeHtml(feature.category)}</dd>
+      <dt>${escapeHtml(t("category"))}</dt><dd>${escapeHtml(categoryLabelOf(feature))}</dd>
       <dt>${escapeHtml(t("location"))}</dt><dd>${escapeHtml(locationLabelOf(feature) || "—")}</dd>
       ${feature.area ? `<dt>${escapeHtml(t("area"))}</dt><dd>${escapeHtml(feature.area)}</dd>` : ""}
       ${feature.dimos ? `<dt>${escapeHtml(t("dimos"))}</dt><dd>${escapeHtml(feature.dimos)}</dd>` : ""}
@@ -1143,7 +1152,8 @@ async function askWebForFeature(feature) {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question })
+        // lang: η επιλογή EL/EN του χρήστη → ο worker απαντά στην ίδια γλώσσα.
+        body: JSON.stringify({ question, lang: state.lang })
       },
       90000
     );
@@ -1154,7 +1164,7 @@ async function askWebForFeature(feature) {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: question, conversation: [], previousFeatures: [] })
+          body: JSON.stringify({ message: question, conversation: [], previousFeatures: [], lang: state.lang })
         },
         90000
       );
@@ -1218,7 +1228,9 @@ async function sendSearchChat() {
         body: JSON.stringify({
           message,
           conversation: state.conversation,
-          previousFeatures: state.previousFeatures
+          previousFeatures: state.previousFeatures,
+          // lang: η επιλογή EL/EN του χρήστη → ο worker απαντά στην ίδια γλώσσα.
+          lang: state.lang
         })
       },
       90000
@@ -1318,6 +1330,93 @@ function stripForSpeech(text) {
     .trim();
 }
 
+/**
+ * Αγγλικές ετικέτες ΚΑΤΗΓΟΡΙΩΝ (κλειδί = id από /fields).
+ * Ξεχωριστός χάρτης από τις ετικέτες προσβασιμότητας, γιατί τα «ramp»/«parking»
+ * υπάρχουν ΚΑΙ στις δύο λίστες με διαφορετική σημασία.
+ */
+const CATEGORY_EN = {
+  supermarket: "Supermarket / Grocery",
+  cafe: "Café / Restaurant",
+  pharmacy: "Pharmacy",
+  bank: "Bank",
+  school: "School / Educational institution",
+  transport: "Public transport (stop, station)",
+  clothing: "Clothing / Footwear store",
+  church: "Church",
+  petshop: "Pet shop",
+  stadium: "Stadium or sports centre",
+  mall: "Shopping mall",
+  parking: "Parking spaces",
+  publicspace: "Public & Open spaces",
+  culture: "Cultural venues",
+  hotel: "Hotel",
+  health: "Health & Wellness",
+  beach: "Beach",
+  ramp: "Ramp",
+  port: "Port",
+  publicservice: "Public service",
+  other: "Other"
+};
+
+/** Αγγλικές ετικέτες ΠΡΟΣΒΑΣΙΜΟΤΗΤΑΣ (κλειδί = id από /fields). */
+const ACCESS_EN = {
+  ramp: "Ramp",
+  elevator: "Elevator / Stair lift",
+  signage: "Accessibility signage",
+  stepfree: "Step-free entrance",
+  autodoor: "Automatic door",
+  parking: "Accessible parking",
+  tactile: "Tactile paving guide",
+  handrail: "Handrails",
+  doorbutton: "Entry button",
+  wc: "Accessible WC"
+};
+
+/** Ετικέτα στη σωστή γλώσσα: κρατά το ελληνικό label όταν είμαστε σε EL. */
+function labelOf(item, kind) {
+  if (state.lang !== "en") return item.label;
+  const map = kind === "access" ? ACCESS_EN : CATEGORY_EN;
+  return map[item.id] || item.label;
+}
+
+/** Ετικέτα κατηγορίας σημείου (η κάρτα έχει categoryRaw + category). */
+function categoryLabelOf(feature) {
+  if (state.lang !== "en") return feature.category;
+  if (feature.categoryId) return CATEGORY_EN[feature.categoryId] || feature.category;
+  // Εφεδρικά: αντιστοίχιση μέσω των γνωστών ελληνικών ετικετών.
+  const byLabel = Object.keys(CATEGORY_EN).find(id => CATEGORY_EN[id] === feature.category);
+  return byLabel ? CATEGORY_EN[byLabel] : feature.category;
+}
+
+/**
+ * Ανιχνεύει τη γλώσσα ενός κειμένου: 'el' ή 'en'.
+ * Χρησιμοποιείται ώστε η ΕΚΦΩΝΗΣΗ να ακολουθεί τη γλώσσα της απάντησης
+ * (όχι τη γλώσσα του UI) — και η ΑΝΑΓΝΩΡΙΣΗ τη γλώσσα που μιλάει ο χρήστης.
+ */
+function detectLangOf(text) {
+  const s = String(text || "");
+  const greek = (s.match(/[\u0370-\u03ff\u1f00-\u1fff]/g) || []).length;
+  const latin = (s.match(/[A-Za-z]/g) || []).length;
+  if (greek === 0 && latin === 0) return state.lang === "en" ? "en" : "el";
+  return greek >= latin ? "el" : "en";
+}
+
+/**
+ * Γλώσσα αναγνώρισης ομιλίας.
+ * state.voiceLang: "auto" (προεπιλογή) | "el" | "en" — αποθηκεύεται τοπικά.
+ */
+function voiceLangPrimary() {
+  const pref = state.voiceLang;
+  if (pref === "el") return "el-GR";
+  if (pref === "en") return "en-US";
+  return state.lang === "el" ? "el-GR" : "en-US";
+}
+
+function voiceLangSecondary() {
+  return voiceLangPrimary() === "el-GR" ? "en-US" : "el-GR";
+}
+
 function speak(text) {
   if (!state.ttsEnabled || !("speechSynthesis" in window)) return;
   const clean = stripForSpeech(text);
@@ -1325,7 +1424,8 @@ function speak(text) {
   try {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(clean);
-    utterance.lang = state.lang === "el" ? "el-GR" : "en-US";
+    // Η εκφώνηση ακολουθεί τη γλώσσα ΤΟΥ ΚΕΙΜΕΝΟΥ (άρα της απάντησης).
+    utterance.lang = detectLangOf(clean) === "en" ? "en-US" : "el-GR";
     utterance.rate = 1.03;
     window.speechSynthesis.speak(utterance);
   } catch {
@@ -1471,7 +1571,7 @@ function setupVoice(buttonId, textarea, onFinal) {
   }
 
   const recognition = new SpeechRecognition();
-  recognition.lang = state.lang === "el" ? "el-GR" : "en-US";
+  recognition.lang = voiceLangPrimary();
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
 
@@ -1481,7 +1581,35 @@ function setupVoice(buttonId, textarea, onFinal) {
     listeningNotice = null;
   };
 
+  // ΔΙΓΛΩΣΣΙΑ: δοκιμάζουμε πρώτα τη γλώσσα του UI· αν δεν αναγνωριστεί τίποτα,
+  // ξαναπροσπαθούμε ΑΥΤΟΜΑΤΑ στην άλλη γλώσσα. Έτσι «καταλαβαίνει» και ελληνικά
+  // και αγγλικά χωρίς ο χρήστης να αλλάζει ρυθμίσεις.
+  let attemptQueue = [];
+  let gotResult = false;
+
+  const startAttempt = () => {
+    const lang = attemptQueue.shift();
+    if (!lang) return false;
+    recognition.lang = lang;
+    state.listening = true;
+    button.classList.add("active");
+    listeningNotice = showVoiceNotice(
+      lang === "el-GR" ? "Ακούω… μίλα τώρα (ελληνικά)." : "Listening… speak now (English).",
+      "info"
+    );
+    try {
+      recognition.start();
+      return true;
+    } catch {
+      state.listening = false;
+      button.classList.remove("active");
+      clearListeningNotice();
+      return false;
+    }
+  };
+
   recognition.onresult = event => {
+    gotResult = true;
     clearListeningNotice();
     const transcript = event.results[0][0].transcript;
     textarea.value = transcript;
@@ -1489,16 +1617,22 @@ function setupVoice(buttonId, textarea, onFinal) {
     // Αυτόματη αποστολή μετά την αναγνώριση.
     if (onFinal) onFinal(transcript);
   };
+
   recognition.onend = () => {
+    clearListeningNotice();
+    // Τίποτα δεν αναγνωρίστηκε → δοκίμασε την άλλη γλώσσα.
+    if (!gotResult && attemptQueue.length && startAttempt()) return;
     state.listening = false;
     button.classList.remove("active");
-    clearListeningNotice();
   };
+
   recognition.onerror = event => {
+    const code = event?.error || "unknown";
+    // «no-speech» → συνέχισε στην άλλη γλώσσα αντί να δείξεις σφάλμα.
+    if (code === "no-speech" && attemptQueue.length) return;
     state.listening = false;
     button.classList.remove("active");
     clearListeningNotice();
-    const code = event?.error || "unknown";
     let message = VOICE_ERROR_MESSAGES[code] || `Σφάλμα φωνητικής εισαγωγής (${code}).`;
     // Σε άρνηση, ο πραγματικός λόγος μπορεί να είναι το περιβάλλον (http/iframe).
     if (code === "not-allowed" || code === "service-not-allowed") {
@@ -1545,17 +1679,12 @@ function setupVoice(buttonId, textarea, onFinal) {
       return;
     }
 
-    recognition.lang = state.lang === "el" ? "el-GR" : "en-US";
-    state.listening = true;
-    button.classList.add("active");
-    try {
-      listeningNotice = showVoiceNotice("Ακούω… μίλα τώρα.", "info");
-      recognition.start();
-    } catch (error) {
-      state.listening = false;
-      button.classList.remove("active");
-      clearListeningNotice();
-      showVoiceNotice("Δεν ξεκίνησε η φωνητική εισαγωγή (" + (error?.name || "σφάλμα") + "). Δοκίμασε ξανά.");
+    // Σειρά προσπαθειών: γλώσσα UI → άλλη γλώσσα (μόνο σε auto).
+    const primary = voiceLangPrimary();
+    attemptQueue = state.voiceLang === "auto" ? [primary, voiceLangSecondary()] : [primary];
+    gotResult = false;
+    if (!startAttempt()) {
+      showVoiceNotice("Δεν ξεκίνησε η φωνητική εισαγωγή. Δοκίμασε ξανά.");
     }
   });
 }
