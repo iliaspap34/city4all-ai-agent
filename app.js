@@ -923,7 +923,7 @@ function cardHtml(feature) {
     <article class="card">
       <div class="card-top">
         <div>
-          <h4>${escapeHtml(feature.name)}</h4>
+          <h4>${escapeHtml(feature.name)}${photoBadge(feature)}</h4>
           <div class="cat">${escapeHtml(categoryLabelOf(feature))}</div>
           <div class="loc"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg> ${escapeHtml(locationLabelOf(feature) || "—")}</div>
         </div>
@@ -985,6 +985,8 @@ function openDetails(feature) {
       }
       <dt>${escapeHtml(t("recordId"))}</dt><dd>#${escapeHtml(feature.id)}</dd>
     </dl>
+
+    ${photosHtml(feature)}
 
     <div class="section-title">${escapeHtml(t("recordedAccess"))}</div>
     ${accessSection}
@@ -1378,6 +1380,46 @@ function labelOf(item, kind) {
   if (state.lang !== "en") return item.label;
   const map = kind === "access" ? ACCESS_EN : CATEGORY_EN;
   return map[item.id] || item.label;
+}
+
+/**
+ * ΠΡΟΣΘΗΚΗ: κείμενα για τις εικόνες (χωρίς να αγγίξουμε το I18N).
+ */
+const PHOTO_T = {
+  el: { photos: "Φωτογραφίες", open: "Άνοιγμα", alt: "Φωτογραφία σημείου" },
+  en: { photos: "Photos", open: "Open", alt: "Photo of the place" }
+};
+function pt(key) {
+  return (PHOTO_T[state.lang] || PHOTO_T.el)[key];
+}
+
+/**
+ * ΠΡΟΣΘΗΚΗ: HTML για τη συλλογή εικόνων ενός σημείου.
+ * Οι εικόνες είναι μεγάλες (2-4 MB), γι' αυτό φορτώνονται ΜΟΝΟ όταν ανοίξει
+ * η προβολή λεπτομερειών και με loading="lazy".
+ */
+function photosHtml(feature) {
+  const photos = Array.isArray(feature.photos) ? feature.photos : [];
+  if (!photos.length) return "";
+  const imgs = photos
+    .map(
+      (p, i) =>
+        `<a class="photo" href="${escapeHtml(p.url)}" target="_blank" rel="noopener" title="${escapeHtml(
+          pt("open")
+        )}"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(
+          pt("alt")
+        )} ${i + 1}" loading="lazy" decoding="async"></a>`
+    )
+    .join("");
+  return `<div class="section-title">${escapeHtml(pt("photos"))} (${photos.length})</div><div class="photo-grid">${imgs}</div>`;
+}
+
+/** Μικρό σήμα «📷 N» στην κάρτα, αν το σημείο έχει εικόνες. */
+function photoBadge(feature) {
+  const n = Array.isArray(feature.photos) ? feature.photos.length : 0;
+  if (!n) return "";
+  return `<span class="photo-badge" title="${escapeHtml(pt("photos"))}">
+    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>${n}</span>`;
 }
 
 /** Ετικέτα κατηγορίας σημείου (η κάρτα έχει categoryRaw + category). */
