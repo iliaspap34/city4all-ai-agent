@@ -118,6 +118,8 @@ const I18N = {
     recordedAccess: "Καταγεγραμμένα μέσα προσβασιμότητας",
     noAccessData:
       "Δεν υπάρχουν καταγεγραμμένα στοιχεία προσβασιμότητας για αυτό το σημείο. Η έλλειψη καταγραφής δεν σημαίνει έλλειψη υποδομής.",
+    chatLock:
+      "Ο βοηθός ενεργοποιείται μόλις βρεις σημεία. Κάνε πρώτα μια αναζήτηση — μετά μπορείς να μου μιλήσεις.",
     comments: "Σχόλια / Παρατηρήσεις",
     entrance: "Περιγραφή εισόδου",
     dataSource: "Προέλευση δεδομένων",
@@ -202,6 +204,8 @@ const I18N = {
     recordedAccess: "Recorded accessibility features",
     noAccessData:
       "No accessibility data is recorded for this place. Missing data does not mean missing infrastructure.",
+    chatLock:
+      "The assistant unlocks once you find some places. Run a search first — then you can talk to me.",
     comments: "Comments / Notes",
     entrance: "Entrance description",
     dataSource: "Data source",
