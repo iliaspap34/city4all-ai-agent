@@ -267,9 +267,22 @@
     .icon-btn.on { background: var(--brand); color: #fff; border-color: var(--brand); }
 
     /* ===================== CHAT / AI ===================== */
-    .ai-box { border-top: 1px solid var(--line); padding: 14px 20px; background: var(--surface); flex-shrink: 0; }
-    .ai-log { max-height: 230px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 11px; }
+    /* ΔΙΟΡΘΩΣΗ: το .ai-box πρέπει να ΜΠΟΡΕΙ να συρρικνωθεί, αλλιώς όταν το
+       ημερολόγιο γεμίζει (μετά την 1η ερώτηση) σπρώχνει τη μπάρα εισαγωγής
+       έξω από το panel, που έχει overflow:hidden. */
+    .ai-box {
+      border-top: 1px solid var(--line); padding: 14px 20px; background: var(--surface);
+      display: flex; flex-direction: column;
+      flex: 0 1 auto; min-height: 0;
+      max-height: 58%;
+    }
+    .ai-log {
+      flex: 1 1 auto; min-height: 0; max-height: none; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 10px; margin-bottom: 11px;
+      overscroll-behavior: contain;
+    }
     .ai-log:empty { display: none; }
+    .input-row, .ai-chat-lock, .chat-suggestions, .voice-hint { flex: 0 0 auto; }
     .bubble { border-radius: var(--radius); padding: 11px 14px; font-size: 13px; line-height: 1.55; max-width: 92%; }
     .bubble.user { align-self: flex-end; background: var(--brand); color: #fff; }
     .bubble.ai { align-self: flex-start; background: var(--surface-2); border: 1px solid var(--line); }
@@ -390,6 +403,10 @@
       /* Ασφάλεια για εγκοπές/στρογγυλεμένες γωνίες */
       .header { padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
       .side-body, .ai-box { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+      /* Σε κινητό το πλαίσιο του AI μπορεί να πάρει περισσότερο χώρο,
+         αλλά η μπάρα εισαγωγής μένει πάντα ορατή στο κάτω μέρος. */
+      .ai-box { max-height: 72%; }
+      .ai-log { max-height: none; }
     }
 
     @media (max-width: 520px) {
@@ -525,7 +542,7 @@
 
         <!-- AI assistant -->
         <div class="ai-box">
-          <div class="ai-chat-lock" id="chatLock">
+          <div class="ai-chat-lock" id="chatLock" data-i18n="chatLock">
             Ο βοηθός ενεργοποιείται μόλις βρεις σημεία. Κάνε πρώτα μια αναζήτηση — μετά μπορείς να μου μιλήσεις.
           </div>
           <div class="ai-log" id="searchAiLog" aria-live="polite"></div>
